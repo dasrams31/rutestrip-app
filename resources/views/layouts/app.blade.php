@@ -12,7 +12,7 @@
     @php
         $seoTitle = trim($__env->yieldContent('title', 'RuteStrip')) . ' - RuteStrip';
         $seoDescription = trim($__env->yieldContent('meta_description'))
-            ?: __('RuteStrip: cari dan bandingkan jalur pendakian gunung di Pulau Jawa berdasarkan data GPX — jarak, total tanjakan, estimasi waktu Naismith, kemiringan, dan peta jalur. Rekomendasi rute dengan AI (SBERT).');
+            ?: __('RuteStrip: cari dan bandingkan jalur pendakian gunung di Pulau Jawa dari data GPX: jarak, total tanjakan, estimasi waktu Naismith, kemiringan, dan peta jalur. Rekomendasi rute dengan SBERT.');
         // Same URL for both languages; the English version is ?lang=en (hreflang below).
         $seoBaseUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
         $seoWithLang = fn (string $url, string $lang) => $lang === 'id'
@@ -479,7 +479,7 @@
                         <span class="text-2xl font-bold">RuteStrip</span>
                     </div>
                     <p class="text-slate-400 text-sm leading-relaxed mb-6 max-w-md">
-                        {{ __('Sistem rekomendasi rute pendakian gunung berbasis AI menggunakan Content-Based Filtering dengan SBERT dan Cosine Similarity.') }}
+                        {{ __('Sistem rekomendasi rute pendakian gunung dengan content-based filtering, SBERT, dan cosine similarity.') }}
                     </p>
                     <!-- Social Links -->
                     <div class="flex flex-wrap items-center gap-3">
@@ -523,7 +523,7 @@
                 <!-- Features -->
                 <div class="lg:col-span-2">
                     <h3 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <x-icon name="lightning-bolt" class="w-5 h-5 mr-2 text-emerald-400" />
+                        <x-icon name="map" class="w-5 h-5 mr-2 text-emerald-400" />
                         {{ __('Fitur Unggulan') }}
                     </h3>
                     <ul class="space-y-3 text-sm">

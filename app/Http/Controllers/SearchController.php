@@ -58,6 +58,7 @@ class SearchController extends Controller
                 'url'        => route('routes.show', $r),
                 'difficulty' => $r->difficulty_level,
                 'distance'   => (float) $r->distance_km,
+                'gain'       => (int) round((float) $r->elevation_gain_m),
                 'hours'      => (float) $r->naismith_duration_hour,
                 'summit'     => $r->max_elevation_m,
                 'likes'      => (int) $r->likes_count,
