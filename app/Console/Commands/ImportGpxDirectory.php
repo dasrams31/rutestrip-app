@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  *  - noisy elevation: total gain above 2x the (max - min) elevation range, or
  *    an average grade above 35%;
  *  - wrong units (max elevation above 3,800 m, higher than any peak in Java)
- *    or lowland travel recorded (min elevation below 25% of max on a > 1,000 m peak).
+ *    or lowland travel recorded (min elevation below 20% of max on a > 1,000 m peak).
  */
 class ImportGpxDirectory extends Command
 {
@@ -96,7 +96,7 @@ class ImportGpxDirectory extends Command
             $grade = (float) ($result['average_grade_pct'] ?? 0);
             [$minEle, $maxEle] = preg_match('/dari (\d+)m\s+hingga (\d+)m/', $result['narrative_text'] ?? '', $m) ? [(int) $m[1], (int) $m[2]] : [0, 0];
             $range = max(0, $maxEle - $minEle);
-            if ($maxEle > self::MAX_ELEVATION_M || ($maxEle > 1000 && $minEle < 0.25 * $maxEle)) {
+            if ($maxEle > self::MAX_ELEVATION_M || ($maxEle > 1000 && $minEle < 0.2 * $maxEle)) {
                 $this->line(sprintf('skip  %s: implausible elevation %d-%d m (wrong units or travel to the trailhead recorded)', $filename, $minEle, $maxEle));
                 $skipped++;
                 continue;
@@ -167,6 +167,10 @@ class ImportGpxDirectory extends Command
         $name = Str::lower((string) $name);
         $name = preg_replace('/\b(mt|mount|gunung|via|jalur|to)\b/', ' ', $name);
 
-        return trim(preg_replace('/[^a-z]+/', ' ', $name));
+        // Word order ignored: "Argopuro Bremi Baderan" == "Argopuro Baderan to Bremi"
+        $words = array_unique(preg_split('/[^a-z]+/', $name, -1, PREG_SPLIT_NO_EMPTY));
+        sort($words);
+
+        return implode(' ', $words);
     }
 }
