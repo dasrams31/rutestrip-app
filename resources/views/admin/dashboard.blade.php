@@ -181,12 +181,12 @@
                 </div>
             </a>
 
-            <a href="{{ route('chat.index') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 transition-all">
+            <a href="{{ config('services.webchat.url') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 transition-all">
                 <div class="flex items-start gap-4">
                     <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-black">AI</div>
                     <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-rose-800">AI Chat RAG</h3>
-                        <p class="text-sm text-slate-500 mt-1">Buka chatbot RAG untuk tanya jawab berbasis data rute.</p>
+                        <h3 class="font-bold text-slate-800 group-hover:text-rose-800">AI Chat</h3>
+                        <p class="text-sm text-slate-500 mt-1">Buka RuteStrip AI Chat (chat.rutestrip.ai.id) untuk tanya jawab berbasis data rute.</p>
                     </div>
                 </div>
             </a>

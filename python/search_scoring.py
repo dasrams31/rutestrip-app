@@ -22,7 +22,7 @@ from processor import preprocess_text
 
 W_DOC = 0.4          # cosine(query, whole document)
 W_ASPECT = 0.6       # max cosine(query, aspect sentence)
-W_ATTR = 0.3         # share of attribute match when an intent is detected
+W_ATTR = 0.45        # share of attribute match when an intent is detected
 W_NAME = 0.35        # share of name match when a mountain/basecamp is named
 
 INTENT_WORDS = {
@@ -99,18 +99,34 @@ def _percentile(value: float, values: list) -> float:
     return (below + 0.5 * equal) / len(values)
 
 
+STEEP_GRADE_PCT = 15.0   # narrative: >= 15% is "sangat curam", never "landai"/"pemula"
+
+
 def attribute_score(intents: set, route: dict, all_routes: list) -> float:
+    """How well the route's GPX statistics fit the intent, as a 0..1 percentile mix.
+
+    "easy" (landai/mudah/pemula/...) is not only a low average grade: a 40 km
+    route can average 6% and still be a multi-day climb. It combines grade (40%),
+    total elevation gain (30%) and Naismith duration (30%), and routes averaging
+    >= 15% are halved. "hard" weights grade 60%, gain 20%, duration 20%.
+    """
     if not intents:
         return 0.0
     grades = [float(r.get("average_grade_pct") or 0) for r in all_routes]
     durations = [float(r.get("naismith_duration_hour") or 0) for r in all_routes]
-    g = _percentile(float(route.get("average_grade_pct") or 0), grades)
+    gains = [float(r.get("elevation_gain_m") or 0) for r in all_routes]
+    grade = float(route.get("average_grade_pct") or 0)
+    g = _percentile(grade, grades)
     d = _percentile(float(route.get("naismith_duration_hour") or 0), durations)
+    e = _percentile(float(route.get("elevation_gain_m") or 0), gains)
     parts = []
     if "easy" in intents:
-        parts.append(1 - g)
+        easy = 0.4 * (1 - g) + 0.3 * (1 - e) + 0.3 * (1 - d)
+        if grade >= STEEP_GRADE_PCT:
+            easy *= 0.5
+        parts.append(easy)
     if "hard" in intents:
-        parts.append(g)
+        parts.append(0.6 * g + 0.2 * e + 0.2 * d)
     if "short" in intents:
         parts.append(1 - d)
     if "long" in intents:

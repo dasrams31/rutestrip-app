@@ -187,6 +187,7 @@ class RecommendationSystem:
                 'name': it['name'],
                 'average_grade_pct': it['stats'].get('average_grade_pct'),
                 'naismith_duration_hour': it['stats'].get('naismith_duration_hour'),
+                'elevation_gain_m': it['stats'].get('elevation_gain_m'),
             }
             for it in self.db
         ]

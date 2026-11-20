@@ -46,10 +46,11 @@ Route::delete('/routes/{route}', [RouteController::class, 'destroy'])
 // Search
 Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 
-// RAG Chatbot
-Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+// AI chat lives at the dedicated webchat (WEBCHAT_URL, default chat.rutestrip.ai.id).
+// Old /chat links redirect there; the RAG endpoints below stay available.
+Route::redirect('/chat', config('services.webchat.url'), 302)->name('chat.index');
+Route::redirect('/chat/new', config('services.webchat.url'), 302)->name('chat.new');
 Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
-Route::get('/chat/new', [ChatController::class, 'newSession'])->name('chat.new');
 Route::get('/chat/history', [ChatController::class, 'history'])->name('chat.history');
 Route::post('/search', [SearchController::class, 'search'])->name('search.submit');
 

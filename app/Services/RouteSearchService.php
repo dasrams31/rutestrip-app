@@ -19,7 +19,8 @@ class RouteSearchService
 {
     public const W_DOC = 0.4;
     public const W_ASPECT = 0.6;
-    public const W_ATTR = 0.3;
+    public const W_ATTR = 0.45;
+    public const STEEP_GRADE_PCT = 15.0;
     public const W_NAME = 0.35;
 
     private const INTENT_WORDS = [
@@ -45,10 +46,11 @@ class RouteSearchService
 
         $grades    = $routes->map(fn($r) => (float) $r->average_grade_pct)->all();
         $durations = $routes->map(fn($r) => (float) $r->naismith_duration_hour)->all();
+        $gains     = $routes->map(fn($r) => (float) $r->elevation_gain_m)->all();
         $intents   = $this->detectIntents($query);
         $names     = $this->mentionedNames($query, $routes);
 
-        return $routes->map(function (HikingRoute $route) use ($query, $queryEmbedding, $grades, $durations, $intents, $names) {
+        return $routes->map(function (HikingRoute $route) use ($query, $queryEmbedding, $grades, $durations, $gains, $intents, $names) {
             $cosDoc = $this->cosine($queryEmbedding, $route->sbert_embedding);
 
             $cosAspect = $cosDoc;
@@ -63,7 +65,7 @@ class RouteSearchService
 
             if ($intents) {
                 $score = (1 - self::W_ATTR) * $score
-                    + self::W_ATTR * $this->attributeScore($intents, $route, $grades, $durations);
+                    + self::W_ATTR * $this->attributeScore($intents, $route, $grades, $durations, $gains);
             }
 
             if ($names) {
@@ -129,16 +131,24 @@ class RouteSearchService
         return array_values(array_intersect(array_unique($m[0]), $vocab));
     }
 
-    private function attributeScore(array $intents, HikingRoute $route, array $grades, array $durations): float
+    /**
+     * "easy" (landai/mudah/pemula) mixes grade 40%, elevation gain 30% and
+     * duration 30% — a 40 km route can average 6% and still be a long climb —
+     * and halves routes averaging >= 15%. "hard" is grade 60%, gain 20%,
+     * duration 20%.
+     */
+    private function attributeScore(array $intents, HikingRoute $route, array $grades, array $durations, array $gains): float
     {
-        $g = $this->percentile((float) $route->average_grade_pct, $grades);
-        $d = $this->percentile((float) $route->naismith_duration_hour, $durations);
+        $grade = (float) $route->average_grade_pct;
+        $g     = $this->percentile($grade, $grades);
+        $d     = $this->percentile((float) $route->naismith_duration_hour, $durations);
+        $e     = $this->percentile((float) $route->elevation_gain_m, $gains);
 
         $parts = [];
         foreach ($intents as $intent) {
             $parts[] = match ($intent) {
-                'easy'  => 1 - $g,
-                'hard'  => $g,
+                'easy'  => (0.4 * (1 - $g) + 0.3 * (1 - $e) + 0.3 * (1 - $d)) * ($grade >= self::STEEP_GRADE_PCT ? 0.5 : 1.0),
+                'hard'  => 0.6 * $g + 0.2 * $e + 0.2 * $d,
                 'short' => 1 - $d,
                 'long'  => $d,
             };

@@ -48,6 +48,12 @@
         <p class="text-slate-500">Ditemukan <span class="font-bold text-slate-700">{{ $results->count() }}</span> jalur yang cocok</p>
     </div>
 
+    @if(!empty($notice))
+    <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+        {{ $notice }}
+    </div>
+    @endif
+
     <!-- Cosine Similarity Formula Explanation -->
     <div class="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
         <div class="flex items-start space-x-4">

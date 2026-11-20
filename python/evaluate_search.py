@@ -10,7 +10,8 @@ Usage:
 
 Relevance labels are derived from the route statistics, so the evaluation is
 reproducible without manual annotation:
-    easy queries   -> average grade in the lowest third of the dataset
+    easy queries   -> average grade < 15% and total elevation gain in the
+                      lowest third (what hikers call a beginner route)
     hard queries   -> average grade in the highest third
     short queries  -> Naismith duration in the lowest third
     long queries   -> Naismith duration in the highest third
@@ -67,6 +68,11 @@ def relevant_ids(routes, label):
     if label.startswith("name:"):
         key = label.split(":", 1)[1]
         return {r["id"] for r in routes if key in (r["name"] or "").lower()}
+    if label == "easy":
+        gains = sorted(float(r["elevation_gain_m"] or 0) for r in routes)
+        gain_cut = gains[len(gains) // 3]
+        return {r["id"] for r in routes
+                if float(r["average_grade_pct"] or 0) < 15 and float(r["elevation_gain_m"] or 0) <= gain_cut}
     field = "average_grade_pct" if label in ("easy", "hard") else "naismith_duration_hour"
     values = sorted(float(r[field] or 0) for r in routes)
     low_cut = values[len(values) // 3]
@@ -119,6 +125,10 @@ def main():
             s = ss.hybrid_score(query, q_vec, doc_vecs[r["id"]], aspect_vecs[r["id"]], r, routes)
             scored.append((r["id"], s["score"]))
         hyb_ranked = sorted(scored, key=lambda x: -x[1])
+
+        if label == "easy":
+            names = {r["id"]: r["name"] for r in routes}
+            print(f"  {query!r}: top3 = {[names[rid] for rid, _ in hyb_ranked[:3]]}")
 
         for name, ranked in (("baseline", base_ranked), ("hybrid", hyb_ranked)):
             p5, rr = metrics(ranked, rel)
