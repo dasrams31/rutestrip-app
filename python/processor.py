@@ -278,6 +278,35 @@ SUITABILITY = {
     "sangat sulit": "sangat berpengalaman; umumnya perlu bermalam dan persiapan logistik matang",
 }
 
+STEEP_GRADE_PCT = 15.0   # same threshold as search_scoring.STEEP_GRADE_PCT
+
+
+def grade_description(grade_pct):
+    """Steepness only. Whether a route suits beginners is decided by the
+    difficulty rating (distance + climb), not by the average grade."""
+    if grade_pct < 5:
+        return "landai"
+    if grade_pct < 10:
+        return "menanjak sedang"
+    if grade_pct < STEEP_GRADE_PCT:
+        return "curam dan membutuhkan stamina yang baik"
+    if grade_pct < 25:
+        return "sangat curam"
+    return "sangat curam dengan tanjakan terjal"
+
+
+def difficulty_sentences(difficulty, grade_pct):
+    """'Tingkat kesulitan ...' + 'Cocok untuk ...', explaining short but steep
+    routes so the text never says "sangat curam" and plain "cocok untuk pemula"."""
+    steep = grade_pct >= STEEP_GRADE_PCT
+    if difficulty == "mudah" and steep:
+        return ("Tingkat kesulitan: mudah karena jalurnya pendek, meski tanjakannya curam. "
+                "Cocok untuk pendaki pemula yang cukup bugar.")
+    if difficulty == "sedang" and steep:
+        return ("Tingkat kesulitan: sedang dengan tanjakan curam. "
+                f"Cocok untuk pendaki {SUITABILITY['sedang']}.")
+    return f"Tingkat kesulitan: {difficulty}. Cocok untuk pendaki {SUITABILITY[difficulty]}."
+
 
 def generate_narrative(stats):
     """Generate narrative text from statistics for SBERT embedding"""
@@ -299,23 +328,15 @@ def generate_narrative(stats):
         waktu_desc = "lama"
     
     # Deskripsi kemiringan
-    if stats['average_grade_pct'] < 5:
-        grade_desc = "landai dan ramah pemula"
-    elif stats['average_grade_pct'] < 10:
-        grade_desc = "menantang dengan kemiringan sedang"
-    elif stats['average_grade_pct'] < 15:
-        grade_desc = "curam dan membutuhkan stamina yang baik"
-    else:
-        grade_desc = "sangat curam dan berbahaya"
-    
+    grade_desc = grade_description(stats['average_grade_pct'])
+
     narrative = (
         f"Jalur pendakian dengan jarak {jarak_desc} sekitar {stats['distance_km']} kilometer. "
         f"Estimasi waktu tempuh {waktu_desc} selama {stats['naismith_duration_hour']} jam menggunakan rumus Naismith. "
         f"Karakteristik jalur {grade_desc} dengan grade rata-rata {stats['average_grade_pct']}%. "
         f"Total kenaikan elevasi {stats['elevation_gain_m']} meter dengan ketinggian dari {stats['min_elevation']}m "
         f"hingga {stats['max_elevation']}m. "
-        f"Tingkat kesulitan: {stats['difficulty']}. "
-        f"Cocok untuk pendaki {SUITABILITY[stats['difficulty']]}."
+        + difficulty_sentences(stats['difficulty'], stats['average_grade_pct'])
     )
     
     return narrative

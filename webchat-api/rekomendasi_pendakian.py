@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 import search_scoring
-from processor import classify_difficulty as processor_difficulty
+from processor import classify_difficulty as processor_difficulty, grade_description
 
 CACHE_FILE = "/tmp/routes_cache.json"
 
@@ -93,14 +93,7 @@ def generate_narrative(stats, route_name, waypoints=None):
     j_desc = "pendek" if stats['distance_km'] < 8 else ("sedang" if stats['distance_km'] < 14 else "panjang")
     w_desc = "singkat" if stats['naismith_duration_hour'] < 5 else ("sedang" if stats['naismith_duration_hour'] < 9 else "lama")
     
-    if stats['average_grade_pct'] < 5:
-        g_desc = "landai dan sangat ramah pemula"
-    elif stats['average_grade_pct'] < 10:
-        g_desc = "menantang dengan kemiringan sedang"
-    elif stats['average_grade_pct'] < 15:
-        g_desc = "curam dan butuh stamina fisik prima"
-    else:
-        g_desc = "sangat curam dan ekstrem"
+    g_desc = grade_description(stats['average_grade_pct'])
 
     wpt_str = f" Pos lintasan: {', '.join(waypoints[:5])}." if waypoints else ""
 
