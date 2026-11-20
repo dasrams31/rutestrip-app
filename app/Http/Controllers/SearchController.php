@@ -22,7 +22,77 @@ class SearchController extends Controller
      */
     public function index()
     {
-        return view('search.index');
+        // Landing data, cached briefly: plain arrays only (no external calls, Cache-only locations).
+        $landing = Cache::remember('landing:v1', 600, fn() => $this->landingData());
+
+        return view('search.index', $landing);
+    }
+
+    /**
+     * Stats (routes, mountains, provinces from cached trailhead locations,
+     * total trail length) and a few featured routes for the home page.
+     */
+    private function landingData(): array
+    {
+        $conditions = app(\App\Services\RouteConditionsService::class);
+        $routes     = HikingRoute::query()
+            ->select(['id', 'name', 'distance_km', 'elevation_gain_m', 'naismith_duration_hour', 'average_grade_pct', 'narrative_text', 'route_coordinates'])
+            ->withCount('likes')
+            ->get();
+
+        $mountainOf = fn(HikingRoute $r) => preg_match('/^(?:mt\.?|gunung|g\.)\s+([\p{L}\-]+)/iu', trim((string) $r->name), $m)
+            ? mb_convert_case($m[1], MB_CASE_TITLE)
+            : null;
+
+        $provinces = $routes->map(fn($r) => $conditions->cachedLocation($r)['province'] ?? null)->filter()->unique();
+
+        // Featured: most liked first, then newest, one route per mountain, with a track to draw.
+        $featured = $routes
+            ->filter(fn($r) => is_array($r->route_coordinates) && count($r->route_coordinates) > 1 && $mountainOf($r))
+            ->sortBy([['likes_count', 'desc'], ['id', 'desc']])
+            ->unique(fn($r) => $mountainOf($r))
+            ->take(3)
+            ->map(fn($r) => [
+                'id'         => $r->id,
+                'name'       => $r->name,
+                'url'        => route('routes.show', $r),
+                'difficulty' => $r->difficulty_level,
+                'distance'   => (float) $r->distance_km,
+                'hours'      => (float) $r->naismith_duration_hour,
+                'summit'     => $r->max_elevation_m,
+                'likes'      => (int) $r->likes_count,
+                'basecamp'   => $conditions->basecampName($r),
+                'track'      => $this->thinTrack($r->route_coordinates, 80),
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'stats' => [
+                'routes'    => $routes->count(),
+                'mountains' => $routes->map($mountainOf)->filter()->unique()->count(),
+                'provinces' => $provinces->count(),
+                'km'        => (int) round($routes->sum('distance_km')),
+            ],
+            'featured' => $featured,
+        ];
+    }
+
+    /**
+     * At most $max [lat, lng] points of a track (for small map thumbnails).
+     */
+    private function thinTrack(array $coords, int $max): array
+    {
+        $coords = array_values(array_filter($coords, fn($p) => is_array($p) && isset($p[0], $p[1])));
+        $step   = max(1, (int) ceil(count($coords) / $max));
+        $out    = [];
+        foreach ($coords as $i => $p) {
+            if ($i % $step === 0 || $i === count($coords) - 1) {
+                $out[] = [round((float) $p[0], 5), round((float) $p[1], 5)];
+            }
+        }
+
+        return $out;
     }
 
     /**

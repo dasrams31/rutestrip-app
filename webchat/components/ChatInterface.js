@@ -3,92 +3,30 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { MAIN_SITE_URL } from '@/lib/i18n';
 import AuthForm from './AuthForm';
 import SidebarHistory from './SidebarHistory';
 import Icon from './Icon';
 import TelegramFab from './TelegramFab';
 import ImageLightbox from './ImageLightbox';
+import BottomTabBar from './BottomTabBar';
+import { UserMenu, AccountSheet } from './AccountMenu';
+import { useI18n } from './I18nProvider';
 
-const MAIN_SITE_URL = 'https://rutestrip.ai.id';
-
-/* ── Account dropdown in the header ── */
-function UserMenu({ user, onLogout }) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
-    };
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', onPointer);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  const name = user.full_name || user.username || 'Pengguna';
-  const initial = name.trim().charAt(0).toUpperCase() || 'U';
-
-  return (
-    <div className="user-menu" ref={wrapRef}>
-      <button
-        type="button"
-        className="user-menu-trigger"
-        onClick={() => setOpen(o => !o)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={`Menu akun ${name}`}
-      >
-        <span className="user-avatar" aria-hidden="true">{initial}</span>
-        <span className="user-menu-name">{name}</span>
-        <Icon name="chevron-down" size={14} className="user-menu-chevron" />
-      </button>
-
-      {open && (
-        <div className="user-menu-panel" role="menu" aria-label="Akun">
-          <div className="user-menu-head">
-            <p className="user-menu-title">{name}</p>
-            {user.email && <p className="user-menu-sub">{user.email}</p>}
-          </div>
-          <button
-            type="button"
-            role="menuitem"
-            className="user-menu-item danger"
-            onClick={() => { setOpen(false); onLogout(); }}
-          >
-            <Icon name="logout" size={16} />
-            <span>Keluar</span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Suggestion cards config ── */
-const SUGGESTIONS = [
-  { icon: 'map',             title: 'Rekomendasi Jalur', desc: 'Cari jalur sesuai preferensi',  query: 'Rekomendasikan jalur pendakian untuk pemula', hoverClass: '' },
-  { icon: 'cloud',           title: 'Cuaca Gunung',      desc: 'Prakiraan cuaca realtime',      query: 'Cuaca gunung Sumbing hari ini',               hoverClass: 'blue-hover' },
-  { icon: 'layers',          title: 'Peta Satelit',      desc: 'Foto satelit & topografi',      query: 'Foto satelit gunung Merbabu',                 hoverClass: 'purple-hover' },
-  { icon: 'calendar',        title: 'Itinerary',         desc: 'Jadwal pendakian Naismith',     query: 'Itinerary gunung Sindoro 2D1N',               hoverClass: 'amber-hover' },
-  { icon: 'currency',        title: 'Estimasi Biaya',    desc: 'Kalkulasi budget pendakian',    query: 'Biaya pendakian Sumbing 4 orang 2 hari',      hoverClass: '' },
-  { icon: 'clipboard-check', title: 'Logistik',          desc: 'Checklist perlengkapan',        query: 'Logistik pendakian 4 orang 3 hari',           hoverClass: 'blue-hover' },
-  { icon: 'shield-check',    title: 'Panduan Survival',  desc: 'P3K & keselamatan',             query: 'Panduan survival hipotermia di gunung',       hoverClass: 'amber-hover' },
-  { icon: 'users',           title: 'Kontak Porter',     desc: 'Porter & guide lokal',          query: 'Porter gunung Semeru',                        hoverClass: 'purple-hover' },
+/* ── Suggestion card look (text comes from the dictionary) ── */
+const SUGGESTION_STYLE = [
+  { icon: 'map',             hoverClass: '' },
+  { icon: 'cloud',           hoverClass: 'blue-hover' },
+  { icon: 'layers',          hoverClass: 'purple-hover' },
+  { icon: 'calendar',        hoverClass: 'amber-hover' },
+  { icon: 'currency',        hoverClass: '' },
+  { icon: 'clipboard-check', hoverClass: 'blue-hover' },
+  { icon: 'shield-check',    hoverClass: 'amber-hover' },
+  { icon: 'users',           hoverClass: 'purple-hover' },
 ];
 
-/* ── Loading stage texts ── */
-const STAGES = [
-  'Preprocessing query...',
-  'Generating SBERT embedding...',
-  'Mencari jalur relevan...',
-  'Menyusun konteks...',
-  'Generating response...',
-];
+/* Mountain name in a bot reply: "Gunung Merbabu" / "Mount Merbabu" */
+const mountainIn = (text) => text?.match(/(?:Gunung|Mount)\s+([A-Za-z-]+)/i)?.[1] || '';
 
 /* ── Markdown formatter ── */
 function formatInline(text) {
@@ -155,17 +93,25 @@ function formatMessage(content) {
   return `<p>${html}</p>`;
 }
 
+const hhmm = (d = new Date()) =>
+  `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+
 export default function ChatInterface() {
+  const { t, lang, tag, applyUserLocale } = useI18n();
+  const STAGES = t('stages');
+
   const [currentUser, setCurrentUser]   = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
+  const [authNotice, setAuthNotice]     = useState('');
   const [messages, setMessages]         = useState([]);
   const [input, setInput]               = useState('');
   const [isLoading, setIsLoading]       = useState(false);
   const [streamStarted, setStreamStarted] = useState(false);
-  const [loadingText, setLoadingText]   = useState(STAGES[0]);
+  const [stageIdx, setStageIdx]         = useState(0);
   const [showPipeline, setShowPipeline] = useState(false);
   const [isListening, setIsListening]   = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [showPwaBanner, setShowPwaBanner]   = useState(false);
   const [pwaPrompt, setPwaPrompt]           = useState(null);
@@ -177,92 +123,77 @@ export default function ChatInterface() {
   const recognitionRef = useRef(null);
   const stageTimer = useRef(null);
 
-  /* ── Check Authentication Session on Mount ── */
+  /* ── Session: the HttpOnly rs_sso cookie is shared with rutestrip.ai.id ── */
   useEffect(() => {
+    let cancelled = false;
     async function checkSession() {
-      const token = typeof window !== 'undefined'
-        ? (localStorage.getItem('rutestrip_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token'))
-        : null;
-      if (!token) {
-        setAuthChecking(false);
-        return;
-      }
       try {
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (res.ok && data.status === 'success' && data.user) {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && data.user) {
           setCurrentUser(data.user);
-        } else {
-          localStorage.removeItem('rutestrip_auth_token');
-          localStorage.removeItem('user_token');
-          localStorage.removeItem('token');
-          localStorage.removeItem('rutestrip_user_profile');
-          setCurrentUser(null);
+          applyUserLocale(data.user.locale);
+        } else if (res.status !== 401) {
+          // Account server unreachable: say so instead of silently showing the form
+          setAuthNotice(data.error || '');
         }
       } catch {
-        const local = localStorage.getItem('rutestrip_user_profile');
-        if (local) {
-          try { setCurrentUser(JSON.parse(local)); } catch {}
-        }
+        // offline: the sign-in form shows its own network error on submit
       } finally {
-        setAuthChecking(false);
+        if (!cancelled) setAuthChecking(false);
       }
     }
     checkSession();
+    return () => { cancelled = true; };
+    // applyUserLocale only matters for the first check
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Check if PWA banner was dismissed previously
-    const dismissed = typeof window !== 'undefined' && localStorage.getItem('rutestrip_pwa_dismissed') === 'true';
+  /* ── PWA install prompt ── */
+  useEffect(() => {
+    const dismissed = localStorage.getItem('rutestrip_pwa_dismissed') === 'true';
 
-    // Listen for PWA Before Install Prompt event
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       window.deferredPwaPrompt = e;
       setPwaPrompt(e);
-      if (!dismissed) {
-        setShowPwaBanner(true);
-      }
+      if (!dismissed) setShowPwaBanner(true);
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Also trigger banner for mobile devices if not standalone
-    const isMobile = typeof window !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isStandalone = typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone);
-    if (isMobile && !isStandalone && !dismissed) {
-      setShowPwaBanner(true);
-    }
+    // Also show the banner on phones when not installed yet
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isMobile && !isStandalone && !dismissed) setShowPwaBanner(true);
+
+    const onInstalled = () => { setShowPwaBanner(false); window.deferredPwaPrompt = null; setPwaPrompt(null); };
+    window.addEventListener('appinstalled', onInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
     };
   }, []);
 
-  const handleInstallPwa = () => {
-    if (pwaPrompt || (typeof window !== 'undefined' && window.deferredPwaPrompt)) {
-      const promptEvent = pwaPrompt || window.deferredPwaPrompt;
+  const handleInstallPwa = useCallback(() => {
+    const promptEvent = pwaPrompt || window.deferredPwaPrompt;
+    if (promptEvent) {
       promptEvent.prompt();
       promptEvent.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          setShowPwaBanner(false);
-        }
+        if (choiceResult.outcome === 'accepted') setShowPwaBanner(false);
         window.deferredPwaPrompt = null;
         setPwaPrompt(null);
       });
     } else {
-      alert('Untuk menginstall aplikasi PWA di HP Android Anda:\n1. Ketuk ikon titik tiga (⋮) di pojok kanan atas Chrome\n2. Pilih "Tambahkan ke Layar Utama" / "Install Aplikasi"\n3. Aplikasi RuteStrip AI siap dibuka dari Home Screen HP Anda.');
+      alert(t('pwa.help'));
     }
-  };
+  }, [pwaPrompt, t]);
 
   const dismissPwaBanner = () => {
     setShowPwaBanner(false);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('rutestrip_pwa_dismissed', 'true');
-    }
+    localStorage.setItem('rutestrip_pwa_dismissed', 'true');
   };
-
-
 
   /* ── Scroll to bottom ── */
   const scrollToBottom = useCallback(() => {
@@ -275,14 +206,13 @@ export default function ChatInterface() {
 
   useEffect(() => { scrollToBottom(); }, [messages, isLoading, scrollToBottom]);
 
-  /* ── Speech recognition ── */
+  /* ── Speech recognition (follows the UI language) ── */
   useEffect(() => {
-    if (typeof window === 'undefined') return;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return;
 
     const rec = new SR();
-    rec.lang = 'id-ID';
+    rec.lang = lang === 'en' ? 'en-US' : 'id-ID';
     rec.interimResults = true;
     rec.continuous = false;
 
@@ -306,54 +236,46 @@ export default function ChatInterface() {
     recognitionRef.current = rec;
 
     return () => { rec.abort(); };
-  }, []);
+  }, [lang]);
 
   const toggleSpeech = () => {
     if (!recognitionRef.current) {
-      alert('Browser Anda tidak mendukung Voice Input. Gunakan Chrome/Edge terbaru.');
+      alert(t('chat.voiceUnsupported'));
       return;
     }
-    if (isListening) {
-      recognitionRef.current.stop();
-    } else {
-      recognitionRef.current.start();
-    }
+    if (isListening) recognitionRef.current.stop();
+    else recognitionRef.current.start();
   };
+
+  /* ── Signed out elsewhere (or token stale): back to the sign-in form ── */
+  const handleUnauthorized = useCallback(() => {
+    setIsSidebarOpen(false);
+    setIsAccountOpen(false);
+    setCurrentUser(null);
+    setAuthNotice(t('chat.sessionExpired'));
+  }, [t]);
 
   /* ── Select session from history ── */
   const handleSelectSession = useCallback(async (session) => {
     if (!session?.session_id) return;
     setActiveSessionId(session.session_id);
-
-    let token = typeof window !== 'undefined'
-      ? (localStorage.getItem('rutestrip_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token'))
-      : null;
-    if (!token && typeof window !== 'undefined') {
-      try {
-        const profile = JSON.parse(localStorage.getItem('rutestrip_user_profile') || '{}');
-        if (profile?.token) token = profile.token;
-      } catch {}
-    }
-
     try {
-      const res = await fetch(`/api/chat/sessions/${session.session_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`/api/chat/sessions/${encodeURIComponent(session.session_id)}`, { cache: 'no-store' });
+      if (res.status === 401) { handleUnauthorized(); return; }
       const data = await res.json();
       if (res.ok && data.messages) {
-        const loaded = data.messages.map((m) => ({
+        setMessages(data.messages.map((m) => ({
           role: m.sender === 'user' ? 'user' : 'assistant',
           content: m.text,
           time: m.timestamp
-            ? new Date(m.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            ? new Date(m.timestamp).toLocaleTimeString(tag, { hour: '2-digit', minute: '2-digit' })
             : '',
-        }));
-        setMessages(loaded);
+        })));
       }
     } catch (err) {
       console.error('Error loading session details:', err);
     }
-  }, []);
+  }, [tag, handleUnauthorized]);
 
   const handleNewChat = useCallback(() => {
     setActiveSessionId(null);
@@ -361,13 +283,16 @@ export default function ChatInterface() {
   }, []);
 
   const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+  const closeAccount = useCallback(() => setIsAccountOpen(false), []);
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem('rutestrip_auth_token');
-    localStorage.removeItem('user_token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('rutestrip_user_profile');
+  /* Logout here deletes the shared cookie, so rutestrip.ai.id is signed out too. */
+  const handleLogout = useCallback(async () => {
+    try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
     setIsSidebarOpen(false);
+    setIsAccountOpen(false);
+    setMessages([]);
+    setActiveSessionId(null);
+    setAuthNotice('');
     setCurrentUser(null);
   }, []);
 
@@ -376,55 +301,30 @@ export default function ChatInterface() {
     const message = (text || input).trim();
     if (!message || isLoading) return;
 
-    const now = new Date();
-    const timeStr = now.getHours().toString().padStart(2, '0') + ':'
-                  + now.getMinutes().toString().padStart(2, '0');
-
-    setMessages(prev => [...prev, { role: 'user', content: message, time: timeStr }]);
+    setMessages(prev => [...prev, { role: 'user', content: message, time: hhmm() }]);
     setInput('');
     setIsLoading(true);
 
-    // Reset textarea height
     if (inputRef.current) inputRef.current.style.height = '2.75rem';
 
     // Rotate loading stages
     let idx = 0;
     stageTimer.current = setInterval(() => {
       idx = (idx + 1) % STAGES.length;
-      setLoadingText(STAGES[idx]);
+      setStageIdx(idx);
     }, 1800);
 
     try {
-      // Build history to send (exclude current message, last 10 turns)
-      const historyToSend = messages.slice(-10).map(m => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      let token = typeof window !== 'undefined'
-        ? (localStorage.getItem('rutestrip_auth_token') || localStorage.getItem('user_token') || localStorage.getItem('token'))
-        : null;
-      if (!token && typeof window !== 'undefined') {
-        try {
-          const profile = JSON.parse(localStorage.getItem('rutestrip_user_profile') || '{}');
-          if (profile?.token) token = profile.token;
-        } catch {}
-      }
-
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      // Last 10 turns, without the message being sent
+      const historyToSend = messages.slice(-10).map(m => ({ role: m.role, content: m.content }));
 
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ message, history: historyToSend, session_id: activeSessionId, stream: true }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: historyToSend, session_id: activeSessionId, stream: true, locale: lang }),
       });
 
-      const replyTime = new Date();
-      const replyTimeStr = replyTime.getHours().toString().padStart(2, '0') + ':'
-                         + replyTime.getMinutes().toString().padStart(2, '0');
+      const replyTimeStr = hhmm();
 
       // ── Streaming (NDJSON) response ──
       if ((res.headers.get('content-type') || '').includes('application/x-ndjson') && res.body) {
@@ -494,29 +394,25 @@ export default function ChatInterface() {
           ensureMessage();
           updateStreamMsg(m => ({
             ...m,
-            content: m.content
-              ? `${m.content}\n\n*(Koneksi terputus, jawaban mungkin tidak lengkap.)*`
-              : 'Maaf, terjadi kesalahan koneksi. Pastikan koneksi internet Anda stabil.',
+            content: m.content ? `${m.content}\n\n*${t('chat.connLost')}*` : t('chat.connError'),
           }));
           return;
         }
 
         ensureMessage();
-        updateStreamMsg(m => (m.content ? m : { ...m, content: 'Maaf, terjadi kesalahan.' }));
+        updateStreamMsg(m => (m.content ? m : { ...m, content: t('chat.replyError') }));
         return;
       }
 
       // ── Plain JSON response (non-streaming intents / older server) ──
       const data = await res.json();
-      if (data?.session_id) {
-        setActiveSessionId(data.session_id);
-      }
+      if (data?.session_id) setActiveSessionId(data.session_id);
 
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          content: data.response || 'Maaf, terjadi kesalahan.',
+          content: data.response || data.error || t('chat.replyError'),
           retrieved_routes: data.retrieved_routes || [],
           timing: data.timing || null,
           time: replyTimeStr,
@@ -525,22 +421,14 @@ export default function ChatInterface() {
         },
       ]);
     } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: 'Maaf, terjadi kesalahan koneksi. Pastikan koneksi internet Anda stabil.',
-          time: new Date().getHours().toString().padStart(2, '0') + ':'
-              + new Date().getMinutes().toString().padStart(2, '0'),
-        },
-      ]);
+      setMessages(prev => [...prev, { role: 'assistant', content: t('chat.connError'), time: hhmm() }]);
     } finally {
       clearInterval(stageTimer.current);
       setIsLoading(false);
       setStreamStarted(false);
-      setLoadingText(STAGES[0]);
+      setStageIdx(0);
     }
-  }, [input, isLoading, messages, activeSessionId]);
+  }, [input, isLoading, messages, activeSessionId, lang, t, STAGES.length]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -560,24 +448,49 @@ export default function ChatInterface() {
     el.style.height = Math.min(el.scrollHeight, 112) + 'px';
   };
 
-  /* ── Auth Protection Guard ── */
+  /* ── Bottom tab bar (phones) ── */
+  const activeTab = isSidebarOpen ? 'history' : isAccountOpen ? 'account' : 'chat';
+  const goChat = () => {
+    setIsSidebarOpen(false);
+    setIsAccountOpen(false);
+    if (activeTab === 'chat') scrollToBottom();
+  };
+  const toggleHistory = () => {
+    setIsAccountOpen(false);
+    setIsSidebarOpen((o) => !o);
+  };
+  const toggleAccount = () => {
+    setIsSidebarOpen(false);
+    setIsAccountOpen((o) => !o);
+  };
+
+  /* ── Auth guard ── */
   if (authChecking) {
     return (
       <div className="auth-overlay">
-        <div className="auth-card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
-          <div className="auth-logo-wrap" style={{ margin: '0 auto 1rem' }}>
-            <img src="/logo.svg" alt="RuteStrip AI" width={48} height={48} style={{ borderRadius: '12px' }} />
+        <div className="auth-card auth-card-loading" role="status">
+          <div className="auth-logo-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="" width={48} height={48} className="auth-logo" />
           </div>
-          <h2 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: 800, margin: 0 }}>RuteStrip AI WebChat</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.5rem' }}>Memverifikasi sesi autentikasi...</p>
+          <h2 className="auth-loading-title">RuteStrip AI</h2>
+          <p className="auth-loading-text">{t('auth.checking')}</p>
         </div>
       </div>
     );
   }
 
   if (!currentUser) {
-    return <AuthForm onAuthSuccess={(user) => setCurrentUser(user)} />;
+    return (
+      <AuthForm
+        key={authNotice}
+        initialError={authNotice}
+        onAuthSuccess={(user) => { setAuthNotice(''); setCurrentUser(user); }}
+      />
+    );
   }
+
+  const suggestions = t('suggestions');
 
   return (
     <div className="app-shell">
@@ -586,29 +499,23 @@ export default function ChatInterface() {
         <div className="pwa-banner-bar msg-appear">
           <div className="pwa-banner-left">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.svg"
-              alt="RuteStrip AI Logo"
-              width={32}
-              height={32}
-              style={{ borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-            />
+            <img src="/logo.svg" alt="" width={32} height={32} className="pwa-banner-logo" />
             <div className="pwa-banner-text">
-              <strong>Install RuteStrip AI di HP Android</strong>
-              <p>Tambahkan ke layar utama HP untuk akses cepat & pengalaman aplikasi tanpa browser!</p>
+              <strong>{t('pwa.title')}</strong>
+              <p>{t('pwa.text')}</p>
             </div>
           </div>
           <div className="pwa-banner-right">
             <button type="button" onClick={handleInstallPwa} className="pwa-install-btn">
               <Icon name="download" size={14} />
-              <span>Install</span>
+              <span>{t('pwa.install')}</span>
             </button>
             <button
               type="button"
               onClick={dismissPwaBanner}
               className="pwa-dismiss-btn"
-              aria-label="Tutup notifikasi install"
-              title="Tutup notifikasi"
+              aria-label={t('pwa.dismiss')}
+              title={t('pwa.dismiss')}
             >
               <Icon name="x" size={14} strokeWidth={2} />
             </button>
@@ -625,7 +532,11 @@ export default function ChatInterface() {
         onSelectSession={handleSelectSession}
         onNewChat={handleNewChat}
         onLogout={handleLogout}
+        onInstall={handleInstallPwa}
+        onUnauthorized={handleUnauthorized}
       />
+
+      <AccountSheet open={isAccountOpen} user={currentUser} onLogout={handleLogout} onClose={closeAccount} />
 
       {/* ── Header ── */}
       <header className="header">
@@ -633,9 +544,9 @@ export default function ChatInterface() {
           <button
             type="button"
             onClick={() => setIsSidebarOpen(prev => !prev)}
-            className="icon-btn"
-            title="Riwayat percakapan & menu"
-            aria-label={isSidebarOpen ? 'Tutup menu riwayat' : 'Buka menu riwayat'}
+            className="icon-btn header-menu-btn"
+            title={t('header.menuTitle')}
+            aria-label={isSidebarOpen ? t('header.menuClose') : t('header.menuOpen')}
             aria-expanded={isSidebarOpen}
             aria-controls="chat-sidebar"
           >
@@ -644,31 +555,24 @@ export default function ChatInterface() {
 
           <div className="header-brand">
             <div className="logo-img-wrap">
-              <Image
-                src="/logo.svg"
-                alt=""
-                width={36}
-                height={36}
-                className="logo-img"
-                priority
-              />
+              <Image src="/logo.svg" alt="" width={36} height={36} className="logo-img" priority />
               <span className="online-dot" aria-hidden="true" />
             </div>
             <div className="header-brand-text">
               <h1 className="header-title">RuteStrip AI</h1>
-              <p className="header-subtitle">Asisten Pendakian</p>
+              <p className="header-subtitle">{t('brand.subtitle')}</p>
             </div>
           </div>
         </div>
 
-        <nav className="header-nav" aria-label="Navigasi utama">
-          <a href={MAIN_SITE_URL} className="nav-link" title="Kembali ke rutestrip.ai.id" aria-label="Situs Utama">
+        <nav className="header-nav" aria-label={t('header.navAria')}>
+          <a href={MAIN_SITE_URL} className="nav-link" title={t('header.mainSiteTitle')} aria-label={t('header.mainSite')}>
             <Icon name="home" size={16} />
-            <span>Situs Utama</span>
+            <span>{t('header.mainSite')}</span>
           </a>
-          <Link href="/system" className="nav-link" title="Status sistem & monitoring" aria-label="Status Sistem">
+          <Link href="/system" className="nav-link" title={t('header.systemTitle')} aria-label={t('header.system')}>
             <Icon name="chart-bar" size={16} />
-            <span>Status Sistem</span>
+            <span>{t('header.system')}</span>
           </Link>
         </nav>
 
@@ -679,9 +583,9 @@ export default function ChatInterface() {
               id="btn-pipeline"
               className={`icon-btn${showPipeline ? ' active' : ''}`}
               onClick={() => setShowPipeline(p => !p)}
-              aria-label="Tampilkan info pipeline RAG"
+              aria-label={t('header.pipeline')}
               aria-pressed={showPipeline}
-              title="Info pipeline RAG"
+              title={t('header.pipelineTitle')}
             >
               <Icon name="clipboard-list" size={18} />
             </button>
@@ -690,8 +594,8 @@ export default function ChatInterface() {
               id="btn-export"
               className="icon-btn print-hide"
               onClick={() => window.print()}
-              aria-label="Export percakapan ke PDF"
-              title="Export PDF"
+              aria-label={t('header.export')}
+              title={t('header.exportTitle')}
             >
               <Icon name="printer" size={18} />
             </button>
@@ -703,11 +607,11 @@ export default function ChatInterface() {
             id="btn-new-chat"
             className="btn-primary"
             onClick={handleNewChat}
-            aria-label="Mulai chat baru"
-            title="Chat baru"
+            aria-label={t('header.newChatAria')}
+            title={t('header.newChat')}
           >
             <Icon name="plus" size={16} strokeWidth={2} />
-            <span>Chat Baru</span>
+            <span>{t('header.newChat')}</span>
           </button>
 
           <UserMenu user={currentUser} onLogout={handleLogout} />
@@ -740,30 +644,21 @@ export default function ChatInterface() {
           {/* Welcome screen */}
           {messages.length === 0 && (
             <div className="welcome-screen">
-              <Image
-                src="/logo.svg"
-                alt="RuteStrip AI"
-                width={80}
-                height={80}
-                className="welcome-logo"
-                priority
-              />
-              <h2 className="welcome-title">Tanya Seputar Pendakian</h2>
-              <p className="welcome-subtitle">
-                Tanyakan jalur, estimasi waktu, tingkat kesulitan, atau rekomendasi pendakian
-              </p>
+              <Image src="/logo.svg" alt="RuteStrip AI" width={80} height={80} className="welcome-logo" priority />
+              <h2 className="welcome-title">{t('welcome.title')}</h2>
+              <p className="welcome-subtitle">{t('welcome.subtitle')}</p>
 
               <div className="suggestion-grid">
-                {SUGGESTIONS.map((s, i) => (
+                {suggestions.map((s, i) => (
                   <button
                     key={i}
                     id={`suggestion-${i}`}
                     type="button"
-                    className={`suggestion-card ${s.hoverClass}`}
+                    className={`suggestion-card ${SUGGESTION_STYLE[i]?.hoverClass || ''}`}
                     onClick={() => sendMessage(s.query)}
                     aria-label={s.query}
                   >
-                    <span className="suggestion-icon" aria-hidden="true"><Icon name={s.icon} size={20} /></span>
+                    <span className="suggestion-icon" aria-hidden="true"><Icon name={SUGGESTION_STYLE[i]?.icon || 'map'} size={20} /></span>
                     <div>
                       <p className="suggestion-card-title">{s.title}</p>
                       <p className="suggestion-card-desc">{s.desc}</p>
@@ -776,20 +671,11 @@ export default function ChatInterface() {
 
           {/* Messages */}
           {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`message-row msg-appear ${msg.role}`}
-            >
+            <div key={idx} className={`message-row msg-appear ${msg.role}`}>
               <div className="message-pair">
                 {/* AI avatar */}
                 {msg.role === 'assistant' && (
-                  <Image
-                    src="/logo.svg"
-                    alt="RuteStrip AI"
-                    width={32}
-                    height={32}
-                    className="avatar avatar-ai"
-                  />
+                  <Image src="/logo.svg" alt="RuteStrip AI" width={32} height={32} className="avatar avatar-ai" />
                 )}
 
                 <div className="message-content-wrap">
@@ -803,8 +689,8 @@ export default function ChatInterface() {
 
                     {/* Satellite map image */}
                     {msg.map_url && (() => {
-                      const mtn = msg.content?.match(/Gunung\s+([A-Za-z-]+)/)?.[1];
-                      const alt = mtn ? `Peta Gunung ${mtn}` : 'Peta satelit';
+                      const mtn = mountainIn(msg.content);
+                      const alt = mtn ? t('chat.mapAlt', { m: mtn }) : t('chat.mapAltDefault');
                       return (
                         <button
                           type="button"
@@ -815,8 +701,8 @@ export default function ChatInterface() {
                             alt,
                             name: `rutestrip-peta${mtn ? `-${mtn.toLowerCase()}` : ''}`,
                           })}
-                          aria-label={`${alt}, buka ukuran penuh`}
-                          title="Perbesar peta"
+                          aria-label={t('chat.mapOpen', { alt })}
+                          title={t('chat.mapZoom')}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -826,7 +712,7 @@ export default function ChatInterface() {
                             loading="lazy"
                             onLoad={idx === messages.length - 1 ? scrollToBottom : undefined}
                           />
-                          <span className="map-img-overlay print-hide"><Icon name="zoom-in" size={14} /><span>Ketuk untuk perbesar</span></span>
+                          <span className="map-img-overlay print-hide"><Icon name="zoom-in" size={14} /><span>{t('chat.mapTap')}</span></span>
                         </button>
                       );
                     })()}
@@ -841,15 +727,14 @@ export default function ChatInterface() {
                         rel="noopener noreferrer"
                       >
                         <Icon name="download" size={16} />
-                        Download {msg.gpx_url?.includes('kml') ? 'KML' : 'GPX'} File
+                        {t('chat.download', { fmt: msg.gpx_url?.includes('kml') ? 'KML' : 'GPX' })}
                       </a>
                     )}
                   </div>
                   )}
 
                   {/* Route chips */}
-                  {msg.role === 'assistant' &&
-                   msg.retrieved_routes?.length > 0 && (
+                  {msg.role === 'assistant' && msg.retrieved_routes?.length > 0 && (
                     <div className="route-chips">
                       {msg.retrieved_routes.map((r, ri) => (
                         <span key={ri} className="route-chip">
@@ -870,9 +755,9 @@ export default function ChatInterface() {
                     <div className="quick-actions">
                       {msg.retrieved_routes.slice(0, 2).map((r, ri) => (
                         <span key={`qa-${ri}`} className="quick-action-group">
-                          <button type="button" className="quick-action" onClick={() => sendMessage(`Cuaca ${r.name}`)} title={`Cek cuaca ${r.name}`}><Icon name="cloud" size={13} />Cuaca</button>
-                          <button type="button" className="quick-action" onClick={() => sendMessage(`Foto satelit ${r.name}`)} title={`Peta ${r.name}`}><Icon name="map" size={13} />Peta</button>
-                          <button type="button" className="quick-action" onClick={() => sendMessage(`Itinerary ${r.name}`)} title={`Itinerary ${r.name}`}><Icon name="calendar" size={13} />Itinerary</button>
+                          <button type="button" className="quick-action" onClick={() => sendMessage(t('qa.qWeather', { m: r.name }))} title={t('qa.tWeather', { m: r.name })}><Icon name="cloud" size={13} />{t('qa.weather')}</button>
+                          <button type="button" className="quick-action" onClick={() => sendMessage(t('qa.qMap', { m: r.name }))} title={t('qa.tMap', { m: r.name })}><Icon name="map" size={13} />{t('qa.map')}</button>
+                          <button type="button" className="quick-action" onClick={() => sendMessage(t('qa.qItinerary', { m: r.name }))} title={t('qa.qItinerary', { m: r.name })}><Icon name="calendar" size={13} />{t('qa.itinerary')}</button>
                         </span>
                       ))}
                     </div>
@@ -881,9 +766,9 @@ export default function ChatInterface() {
                   {/* Quick actions for map responses */}
                   {msg.role === 'assistant' && msg.timing?.type === 'map' && (
                     <div className="quick-actions">
-                      <button type="button" className="quick-action" onClick={() => sendMessage(`Cuaca ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}><Icon name="cloud" size={13} />Cek Cuaca</button>
-                      <button type="button" className="quick-action" onClick={() => sendMessage(`Itinerary ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}><Icon name="calendar" size={13} />Itinerary</button>
-                      <button type="button" className="quick-action" onClick={() => sendMessage(`Porter ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}><Icon name="phone" size={13} />Porter</button>
+                      <button type="button" className="quick-action" onClick={() => sendMessage(t('qa.qWeather', { m: mountainIn(msg.content) }))}><Icon name="cloud" size={13} />{t('qa.checkWeather')}</button>
+                      <button type="button" className="quick-action" onClick={() => sendMessage(t('qa.qItinerary', { m: mountainIn(msg.content) }))}><Icon name="calendar" size={13} />{t('qa.itinerary')}</button>
+                      <button type="button" className="quick-action" onClick={() => sendMessage(t('qa.qPorter', { m: mountainIn(msg.content) }))}><Icon name="phone" size={13} />{t('qa.porter')}</button>
                     </div>
                   )}
 
@@ -891,12 +776,12 @@ export default function ChatInterface() {
                   {msg.role === 'assistant' && msg.timing && (
                     <div className="timing-row">
                       {msg.timing.retrieval_ms > 0 && (
-                        <span className="timing-item" title="Waktu retrieval">
+                        <span className="timing-item" title={t('chat.retrievalTime')}>
                           <Icon name="clock" size={11} />{msg.timing.retrieval_ms}ms
                         </span>
                       )}
                       {msg.timing.generation_ms > 0 && (
-                        <span className="timing-item" title="Waktu generasi jawaban">
+                        <span className="timing-item" title={t('chat.generationTime')}>
                           <Icon name="sparkles" size={11} />{msg.timing.generation_ms}ms
                         </span>
                       )}
@@ -922,20 +807,14 @@ export default function ChatInterface() {
           {isLoading && !streamStarted && (
             <div className="message-row assistant msg-appear">
               <div className="typing-row">
-                <Image
-                  src="/logo.svg"
-                  alt="RuteStrip AI thinking"
-                  width={32}
-                  height={32}
-                  className="avatar avatar-ai"
-                />
+                <Image src="/logo.svg" alt={t('chat.thinking')} width={32} height={32} className="avatar avatar-ai" />
                 <div className="typing-bubble">
                   <div className="dot-wrap" aria-hidden="true">
                     <div className="dot" />
                     <div className="dot" />
                     <div className="dot" />
                   </div>
-                  <span className="typing-label">{loadingText}</span>
+                  <span className="typing-label">{STAGES[stageIdx] || STAGES[0]}</span>
                 </div>
               </div>
             </div>
@@ -948,22 +827,20 @@ export default function ChatInterface() {
       <footer className="input-footer print-hide">
         <TelegramFab />
 
-        <form className="input-form" onSubmit={handleSubmit} aria-label="Chat form">
+        <form className="input-form" onSubmit={handleSubmit} aria-label={t('chat.formAria')}>
           <div className="input-wrap">
-            {/* Voice button */}
             <button
               type="button"
               id="btn-voice"
               className={`voice-btn${isListening ? ' listening' : ''}`}
               onClick={toggleSpeech}
-              aria-label={isListening ? 'Hentikan input suara' : 'Mulai input suara'}
-              title={isListening ? 'Hentikan input suara' : 'Input suara'}
+              aria-label={isListening ? t('chat.voiceStop') : t('chat.voiceStart')}
+              title={isListening ? t('chat.voiceStop') : t('chat.voiceTitle')}
               aria-pressed={isListening}
             >
               <Icon name="microphone" size={20} />
             </button>
 
-            {/* Textarea */}
             <textarea
               id="chat-input"
               ref={inputRef}
@@ -973,26 +850,21 @@ export default function ChatInterface() {
               onInput={autoResize}
               disabled={isLoading}
               rows={1}
-              placeholder="Ketik atau gunakan suara..."
+              placeholder={t('chat.inputPh')}
               className="chat-textarea"
               style={{ minHeight: '2.75rem' }}
-              aria-label="Pesan chat"
+              aria-label={t('chat.inputAria')}
             />
           </div>
 
-          {/* Send button */}
           <button
             type="submit"
             id="btn-send"
             className="send-btn"
             disabled={isLoading || !input.trim()}
-            aria-label="Kirim pesan"
+            aria-label={t('chat.send')}
           >
-            {isLoading ? (
-              <Icon name="refresh" size={20} className="spin" />
-            ) : (
-              <Icon name="send" size={20} />
-            )}
+            {isLoading ? <Icon name="refresh" size={20} className="spin" /> : <Icon name="send" size={20} />}
           </button>
         </form>
 
@@ -1000,9 +872,11 @@ export default function ChatInterface() {
           <p className="powered-by">
             Powered by <span className="sbert">SBERT</span> + <span className="gemini">Gemini</span> / <span className="qwen">Qwen</span>
           </p>
-          <p>Shift+Enter baris baru</p>
+          <p className="input-hint">{t('chat.newLine')}</p>
         </div>
       </footer>
+
+      <BottomTabBar active={activeTab} onChat={goChat} onHistory={toggleHistory} onAccount={toggleAccount} />
 
       <ImageLightbox key={lightbox?.id || 'none'} image={lightbox} onClose={closeLightbox} />
     </div>

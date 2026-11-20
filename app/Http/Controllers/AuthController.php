@@ -3,13 +3,32 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\AltchaService;
+use App\Services\SsoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    /** Sign-up rules, shared with the SSO API (POST /api/sso/register). */
+    public const REGISTER_RULES = [
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|string|email|max:255|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+    ];
+
+    public function __construct(private SsoService $sso)
+    {
+    }
+
+    /** Translated validation messages and attribute names for the account forms. */
+    public static function validationTexts(): array
+    {
+        return [__('account.validation'), __('account.attributes')];
+    }
+
     /**
      * Show login form
      */
@@ -44,26 +63,25 @@ class AuthController extends Controller
         // Anti-robot checks run first so bots cannot probe which emails exist.
         // "website" is a honeypot field that humans never see.
         if (filled($request->input('website')) || ! $altcha->verify($request->input('altcha'))) {
-            throw ValidationException::withMessages(['altcha' => AltchaService::ERROR_MESSAGE]);
+            throw ValidationException::withMessages(['altcha' => __('account.altcha_failed')]);
         }
 
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+        $validated = $request->validate(self::REGISTER_RULES, ...self::validationTexts());
 
         $user = User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role'     => 'user',
+            'locale'   => $this->sso->normalizeLocale(app()->getLocale()),
         ]);
 
         Auth::login($user);
+        $request->session()->regenerate();
+        Cookie::queue($this->sso->cookie($user));
 
         return redirect()->intended(route('user.dashboard'))
-            ->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name);
+            ->with('success', __('account.register.success', ['name' => $user->name]));
     }
 
     /**
@@ -83,34 +101,36 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string',
-        ]);
+        ], ...self::validationTexts());
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            $user     = Auth::user();
+            $user = Auth::user();
+            Cookie::queue($this->sso->cookie($user));
             $redirect = $user->isAdmin() ? route('admin.dashboard') : route('user.dashboard');
 
             return redirect()->intended($redirect)
-                ->with('success', 'Selamat datang, ' . $user->name . '!');
+                ->with('success', __('account.login.welcome', ['name' => $user->name]));
         }
 
         return back()
-            ->withErrors(['email' => 'Email atau password salah.'])
+            ->withErrors(['email' => __('account.login.failed')])
             ->withInput(['email' => $credentials['email']]);
     }
 
     /**
-     * Logout user
+     * Logout user (here and, through the shared rs_sso cookie, on the chat)
      */
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        Cookie::queue($this->sso->forgetCookie());
 
         return redirect()->route('login')
-            ->with('success', 'Anda telah logout.');
+            ->with('success', __('account.logout.success'));
     }
 
     /**
@@ -135,7 +155,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string',
-        ]);
+        ], ...self::validationTexts());
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::user();
@@ -144,18 +164,19 @@ class AuthController extends Controller
             if (! $user->isAdmin()) {
                 Auth::logout();
                 return back()
-                    ->withErrors(['email' => 'Akun ini bukan akun admin. Silakan login di halaman user.'])
+                    ->withErrors(['email' => __('account.admin.not_admin')])
                     ->withInput(['email' => $credentials['email']]);
             }
 
             $request->session()->regenerate();
+            Cookie::queue($this->sso->cookie($user));
 
             return redirect()->intended(route('admin.dashboard'))
-                ->with('success', 'Selamat datang, Admin ' . $user->name . '!');
+                ->with('success', __('account.admin.welcome', ['name' => $user->name]));
         }
 
         return back()
-            ->withErrors(['email' => 'Email atau password salah.'])
+            ->withErrors(['email' => __('account.login.failed')])
             ->withInput(['email' => $credentials['email']]);
     }
 }

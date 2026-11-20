@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { smartRoute } from '@/lib/api';
 import { extractRoutes } from '@/lib/formatter';
+import { apiAuthHeaders, requestLang, API_BASE } from '@/lib/sso';
 
 const BASE = (process.env.RUTESTRIP_API_BASE && !process.env.RUTESTRIP_API_BASE.includes('cement-affiliation'))
   ? process.env.RUTESTRIP_API_BASE
@@ -59,22 +60,25 @@ function detectIntent(message) {
   const greetings = [
     'halo', 'hallo', 'halloo', 'haloo', 'hai', 'hay', 'hi', 'hii', 'hello', 'helo',
     'selamat pagi', 'selamat siang', 'selamat sore', 'selamat malam', 'apa kabar',
-    'pagi', 'siang', 'sore', 'malam', 'ping', 'p', 'tes', 'test'
+    'pagi', 'siang', 'sore', 'malam', 'ping', 'p', 'tes', 'test',
+    'hey', 'good morning', 'good afternoon', 'good evening', 'how are you'
   ];
 
   // Goodbyes & typos
   const goodbyes = [
     'terima kasih', 'terimakasih', 'makasih', 'makasi', 'thanks', 'thx', 'tengks',
-    'bye', 'sampai jumpa', 'dadah', 'ok', 'oke', 'baik', 'siap', 'maturnuwun', 'suwun'
+    'bye', 'sampai jumpa', 'dadah', 'ok', 'oke', 'baik', 'siap', 'maturnuwun', 'suwun',
+    'thank you', 'thanks a lot', 'see you', 'goodbye', 'okay'
   ];
 
   // Identity / General chit-chat
   const identityKw = [
     'siapa kamu', 'kamu siapa', 'siapa anda', 'anda siapa', 'siapa dirimu',
-    'apa itu rutestrip', 'siapa pembuatmu', 'fungsi kamu', 'kamu bisa apa', 'bisa apa saja'
+    'apa itu rutestrip', 'siapa pembuatmu', 'fungsi kamu', 'kamu bisa apa', 'bisa apa saja',
+    'who are you', 'what are you', 'what is rutestrip', 'who made you', 'what can you do'
   ];
 
-  const helpWords = ['/help', 'bantuan fitur', 'menu bantuan', 'panduan aplikasi', 'cara pakai bot'];
+  const helpWords = ['/help', 'help', 'bantuan', 'bantuan fitur', 'menu bantuan', 'panduan aplikasi', 'cara pakai bot', 'how to use'];
 
   // Check exact / prefix / suffix for greetings
   if (greetings.some(g => msg === g || msg.startsWith(g + ' ') || msg.endsWith(' ' + g)))
@@ -88,7 +92,7 @@ function detectIntent(message) {
   if (identityKw.some(id => msg.includes(id)))
     return { type: 'identity', isHiking: false };
 
-  if (helpWords.some(h => msg === h || msg.startsWith(h + ' ')))
+  if (helpWords.some(h => msg === h || (h.length > 4 && msg.startsWith(h + ' '))))
     return { type: 'help', isHiking: false };
 
   // Hiking-specific keywords
@@ -107,6 +111,7 @@ function detectIntent(message) {
     'bromo', 'batur', 'agung', 'latimojong', 'tambora', 'slamet',
     'pemula', 'menantang', 'sulit', 'mudah', 'estimasi', 'durasi',
     'budget', 'harga', 'cost', 'ojek', 'pemandu', 'guide',
+    'mountain', 'trail', 'hike', 'weather', 'hypothermia', 'logistics', 'beginner', 'route', 'camp',
   ];
 
   if (hikingKw.some(k => msg.includes(k)))
@@ -290,16 +295,36 @@ Kamu BISA menjawab pertanyaan bebas secara fleksibel dan luas JIKA pertanyaan be
    - Setelah menyajikan data angka resmi dari API di bagian atas, berikan ulasan, analisis, dan tips pendakian tambahan yang ramah & bermanfaat.
 3. **Jika Tidak Ada Data API**: Jawab pertanyaan seputar dunia pendakian/outdoor secara umum menggunakan pengetahuan pendakian yang baik.`;
 
+const LANGUAGE_RULE_EN = `
+
+## LANGUAGE (OVERRIDES THE LANGUAGE RULES ABOVE)
+The user has set the interface to English. Always answer in natural, clear English, even though these instructions and the API data are written in Indonesian:
+- Translate data labels and descriptions into English; keep mountain names, trail names, places, phone numbers and figures unchanged (amounts stay in Rupiah, written as "Rp").
+- Out-of-scope refusals are also in English, for example: "Sorry, as RuteStrip AI I focus on mountain hiking, outdoor tips and nature information. Is there anything about your hike I can help with?"
+- Still no emoji.`;
+
+function systemPrompt(locale) {
+  return locale === 'en' ? SYSTEM_PROMPT + LANGUAGE_RULE_EN : SYSTEM_PROMPT;
+}
+
 /* ─────────────────────────────────────────────
    STATIC RESPONSES for non-hiking intents
 ───────────────────────────────────────────── */
-const GREETING_RESPONSES = [
-  'Halo! Selamat datang di **RuteStrip AI**. Saya siap membantu kamu menemukan jalur pendakian yang sempurna.\n\nMau tanya apa hari ini? Rekomendasi jalur, info cuaca, estimasi biaya, atau panduan survival?',
-  'Hai! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Ada yang bisa saya bantu?\n\nCoba tanya:\n- *"Rekomendasikan jalur untuk pemula"*\n- *"Cuaca Gunung Sumbing"*\n- *"Itinerary Merbabu 2D1N"*',
-  'Halo, pendaki! Siap jelajahi gunung hari ini?\n\nSaya bisa bantu:\n- Rekomendasi jalur sesuai kemampuan\n- Info cuaca realtime\n- Estimasi biaya pendakian\n- Panduan survival',
-];
+const GREETING_RESPONSES = {
+  id: [
+    'Halo! Selamat datang di **RuteStrip AI**. Saya siap membantu kamu menemukan jalur pendakian yang sempurna.\n\nMau tanya apa hari ini? Rekomendasi jalur, info cuaca, estimasi biaya, atau panduan survival?',
+    'Hai! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Ada yang bisa saya bantu?\n\nCoba tanya:\n- *"Rekomendasikan jalur untuk pemula"*\n- *"Cuaca Gunung Sumbing"*\n- *"Itinerary Merbabu 2D1N"*',
+    'Halo, pendaki! Siap jelajahi gunung hari ini?\n\nSaya bisa bantu:\n- Rekomendasi jalur sesuai kemampuan\n- Info cuaca realtime\n- Estimasi biaya pendakian\n- Panduan survival',
+  ],
+  en: [
+    'Hello! Welcome to **RuteStrip AI**. I can help you find the right hiking trail.\n\nWhat would you like to know today? Trail recommendations, weather, cost estimates or survival tips?',
+    'Hi! I am RuteStrip AI, a hiking assistant for Indonesian mountains. How can I help?\n\nTry asking:\n- *"Recommend a trail for beginners"*\n- *"Weather on Mount Sumbing"*\n- *"Itinerary Merbabu 2D1N"*',
+    'Hello, hiker! Ready for the mountains today?\n\nI can help with:\n- Trail recommendations for your level\n- Real-time weather\n- Hiking cost estimates\n- Survival guides',
+  ],
+};
 
-const HELP_RESPONSE = `## Panduan Penggunaan RuteStrip AI
+const HELP_RESPONSE = {
+  id: `## Panduan Penggunaan RuteStrip AI
 
 Saya bisa menjawab berbagai pertanyaan seputar pendakian gunung!
 
@@ -326,12 +351,77 @@ Saya bisa menjawab berbagai pertanyaan seputar pendakian gunung!
 > "Tips survival tersesat di gunung"
 
 **Kontak Porter**
-> "Porter Gunung Semeru"`;
+> "Porter Gunung Semeru"`,
+  en: `## How to use RuteStrip AI
+
+I can answer all kinds of questions about mountain hiking.
+
+**Trail recommendations**
+> "Recommend a hiking trail for beginners"
+> "Trails with the best savanna views"
+
+**Weather**
+> "Weather on Mount Sumbing now"
+> "Weather Merbabu today"
+
+**Itinerary**
+> "Itinerary Mount Sindoro 2D1N"
+> "Itinerary Prau tektok"
+
+**Cost estimate**
+> "Hiking cost Sumbing 3 people 2 days"
+
+**Logistics**
+> "Logistics for 4 people 3 days"
+
+**Survival guide**
+> "First aid for hypothermia"
+> "Survival tips when lost on a mountain"
+
+**Porter contacts**
+> "Porter Mount Semeru"`,
+};
+
+const IDENTITY_RESPONSE = {
+  id: 'Halo! Saya **RuteStrip AI**, asisten cerdas khusus pendakian gunung di Indonesia.\n\nSaya bisa membantu kamu dengan:\n- **Rekomendasi Jalur** pendakian sesuai kemampuanmu\n- **Info Cuaca** realtime di berbagai gunung\n- **Itinerary & Kalkulasi Naismith** per pos\n- **Estimasi Biaya & Logistik** kelompok\n- **Panduan Survival & P3K** darurat\n- **Peta Satelit & Download File GPX/KML**\n\nAda yang ingin kamu persiapkan untuk pendakianmu berikutnya?',
+  en: 'Hello! I am **RuteStrip AI**, an assistant dedicated to mountain hiking in Indonesia.\n\nI can help you with:\n- **Trail recommendations** that match your level\n- **Real-time weather** for many mountains\n- **Itineraries & Naismith timing** per checkpoint\n- **Cost & logistics estimates** for your group\n- **Survival & first-aid guides**\n- **Satellite maps & GPX/KML downloads**\n\nWhat would you like to prepare for your next hike?',
+};
+
+const GOODBYE_RESPONSE = {
+  id: 'Sama-sama! Semoga pendakianmu menyenangkan dan aman. **Happy hiking!**\n\nKalau butuh info lain, saya siap membantu kapan saja!',
+  en: 'You are welcome! Have a safe and enjoyable hike. **Happy hiking!**\n\nIf you need anything else, I am here to help.',
+};
+
+const JAILBREAK_RESPONSE = {
+  id: 'Maaf, saya adalah **RuteStrip AI**, asisten resmi pendakian gunung dan kegiatan outdoor di Indonesia.\n\nIdentitas, prinsip keselamatan, dan batasan operasional saya bersifat permanen dan tidak dapat diubah oleh instruksi luar. Ada informasi seputar pendakian gunung yang bisa saya bantu?',
+  en: 'Sorry, I am **RuteStrip AI**, the official assistant for mountain hiking and outdoor activities in Indonesia.\n\nMy identity, safety principles and limits are permanent and cannot be changed by outside instructions. Is there anything about mountain hiking I can help with?',
+};
+
+const TEXTS = {
+  id: {
+    empty: 'Pesan tidak boleh kosong',
+    answerTail: 'Jawab pertanyaan pengguna di atas dengan ramah, natural, dan informatif.',
+    fallbackWithData: 'Berikut informasi pendakian yang saya temukan:',
+    fallbackBusy: 'Halo! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Mohon maaf, server AI sedang mengalami antrean padat. Silakan coba tanyakan kembali beberapa saat lagi.',
+    techError: 'Maaf, terjadi kesalahan teknis. Silakan coba lagi.',
+    map: (type, mtn) => `Berikut peta **${type}** Gunung ${mtn}.\n\nKlik gambar untuk memperbesar.`,
+    gpx: (fmt, mtn) => `File **${fmt}** Gunung ${mtn} siap didownload.`,
+  },
+  en: {
+    empty: 'The message cannot be empty',
+    answerTail: 'Answer the user question above in English, in a friendly, natural and informative way.',
+    fallbackWithData: 'Here is the hiking information I found:',
+    fallbackBusy: 'Hello! I am RuteStrip AI, a hiking assistant for Indonesian mountains. Sorry, the AI server is very busy right now. Please ask again in a moment.',
+    techError: 'Sorry, a technical error occurred. Please try again.',
+    map: (type, mtn) => `Here is the **${type === 'topografi' ? 'topographic' : 'satellite'}** map of Mount ${mtn}.\n\nTap the image to enlarge it.`,
+    gpx: (fmt, mtn) => `The **${fmt}** file for Mount ${mtn} is ready to download.`,
+  },
+};
 
 /* ─────────────────────────────────────────────
    HERMES / 9router (OpenAI-compatible) — optional primary
 ───────────────────────────────────────────── */
-async function callHermes(prompt) {
+async function callHermes(prompt, system) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000); // 15s max timeout
@@ -350,7 +440,7 @@ async function callHermes(prompt) {
       body: JSON.stringify({
         model: HERMES_MODEL,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: system },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
@@ -394,7 +484,7 @@ async function callHermes(prompt) {
 /* ─────────────────────────────────────────────
    GEMINI — streaming with first-token timeout + model fallback
 ───────────────────────────────────────────── */
-async function tryGeminiModel(genAI, modelName, generationConfig, history, prompt, onDelta, remainingMs) {
+async function tryGeminiModel(genAI, modelName, generationConfig, system, history, prompt, onDelta, remainingMs) {
   const controller = new AbortController();
   const started = Date.now();
   let text = '';
@@ -414,7 +504,7 @@ async function tryGeminiModel(genAI, modelName, generationConfig, history, promp
   try {
     const model = genAI.getGenerativeModel({
       model: modelName,
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: system,
       generationConfig,
     });
     const chat = model.startChat({ history: buildGeminiHistory(history) });
@@ -441,7 +531,7 @@ async function tryGeminiModel(genAI, modelName, generationConfig, history, promp
   }
 }
 
-async function generateWithGemini(history, prompt, onDelta) {
+async function generateWithGemini(system, history, prompt, onDelta) {
   if (!GEMINI_KEY) return { text: '', model: null, error: 'GEMINI_API_KEY not set' };
 
   const genAI = new GoogleGenerativeAI(GEMINI_KEY);
@@ -462,7 +552,7 @@ async function generateWithGemini(history, prompt, onDelta) {
         ? { maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS, thinkingConfig: { thinkingBudget: 0 } }
         : { maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS };
 
-      const r = await tryGeminiModel(genAI, modelName, generationConfig, history, prompt, onDelta, remainingMs);
+      const r = await tryGeminiModel(genAI, modelName, generationConfig, system, history, prompt, onDelta, remainingMs);
       // Once text has been streamed we cannot switch models; keep what we have.
       if (r.text) {
         if (r.error) console.error(`Gemini ${modelName} stopped mid-stream:`, r.error);
@@ -486,14 +576,16 @@ async function generateWithGemini(history, prompt, onDelta) {
    GENERATE ANSWER: Hermes → Gemini fallback chain → friendly fallback
    onDelta(text) is called for every piece of text produced.
 ───────────────────────────────────────────── */
-async function generateAnswer({ message, history, contextText, onDelta = () => {} }) {
+async function generateAnswer({ message, history, contextText, locale = 'id', onDelta = () => {} }) {
+  const T = TEXTS[locale];
+  const system = systemPrompt(locale);
   const augmentedMessage = contextText
-    ? `${message}\n\n---\n${contextText}\n---\n\nJawab pertanyaan pengguna di atas dengan ramah, natural, dan informatif.`
-    : message;
+    ? `${message}\n\n---\n${contextText}\n---\n\n${T.answerTail}`
+    : (locale === 'en' ? `${message}\n\n(${T.answerTail})` : message);
 
   // ── 1. PRIMARY: Coba Hermes / 9router API (HERMES_API_BASE) ──
   if (HERMES_BASE) {
-    const h = await callHermes(augmentedMessage);
+    const h = await callHermes(augmentedMessage, system);
     if (h.text) {
       onDelta(h.text);
       return { text: h.text, model: `hermes:${HERMES_MODEL}` };
@@ -501,30 +593,32 @@ async function generateAnswer({ message, history, contextText, onDelta = () => {
   }
 
   // ── 2. Gemini with streaming, timeouts and model fallback ──
-  const g = await generateWithGemini(history, augmentedMessage, onDelta);
+  const g = await generateWithGemini(system, history, augmentedMessage, onDelta);
   if (g.text) return g;
 
   // ── 3. Fallback Ramah ──
   const fallback = contextText
-    ? `Berikut informasi pendakian yang saya temukan:\n\n${contextText}`
-    : 'Halo! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Mohon maaf, server AI sedang mengalami antrean padat. Silakan coba tanyakan kembali beberapa saat lagi.';
+    ? `${T.fallbackWithData}\n\n${contextText}`
+    : T.fallbackBusy;
   onDelta(fallback);
   return { text: fallback, model: 'fallback', error: g.error };
 }
 
 /* ─────────────────────────────────────────────
-   SYNC HISTORY to VPS backend (only when Authorization present)
+   SYNC HISTORY to webchat-api (only for signed-in users: rs_sso cookie)
    Resolves to the session id to return; never rejects.
 ───────────────────────────────────────────── */
-function syncChatHistory(authHeader, message, session_id) {
-  if (!authHeader) return Promise.resolve(session_id);
-  return fetch(`${process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010'}/api/chat/query`, {
+function syncChatHistory(request, message, session_id, locale, reply, replyType) {
+  const auth = apiAuthHeaders(request);
+  if (!auth.Authorization || !reply) return Promise.resolve(session_id);
+  return fetch(`${API_BASE}/api/chat/query`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': authHeader,
+      ...auth,
     },
-    body: JSON.stringify({ prompt: message, session_id }),
+    // Save the finished answer (not a placeholder) so reopened chats show it.
+    body: JSON.stringify({ prompt: message, session_id, locale, bot_reply: reply, reply_type: replyType }),
     signal: AbortSignal.timeout(15000),
   })
     .then(async (vpsRes) => {
@@ -541,7 +635,7 @@ function syncChatHistory(authHeader, message, session_id) {
 /* ─────────────────────────────────────────────
    NDJSON STREAM RESPONSE
 ───────────────────────────────────────────── */
-function ndjsonResponse(run) {
+function ndjsonResponse(run, errorText = TEXTS.id.techError) {
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     async start(controller) {
@@ -558,7 +652,7 @@ function ndjsonResponse(run) {
         await run(send);
       } catch (err) {
         console.error('Chat stream fatal error:', err);
-        send({ type: 'delta', text: `Maaf, terjadi kesalahan teknis. Silakan coba lagi.\n\n*Error: ${err.message}*` });
+        send({ type: 'delta', text: `${errorText}\n\n*Error: ${err.message}*` });
         send({ type: 'done', session_id: null, timing: null });
       } finally {
         if (open) {
@@ -580,12 +674,15 @@ function ndjsonResponse(run) {
    MAIN POST HANDLER
 ───────────────────────────────────────────── */
 export async function POST(request) {
+  let locale = requestLang(request);
   try {
     const body = await request.json();
     const { message, history = [], session_id = null, stream = false } = body;
+    if (body.locale === 'en' || body.locale === 'id') locale = body.locale;
+    const T = TEXTS[locale];
 
-    if (!message?.trim()) {
-      return NextResponse.json({ error: 'Pesan tidak boleh kosong' }, { status: 400 });
+    if (typeof message !== 'string' || !message.trim()) {
+      return NextResponse.json({ error: T.empty }, { status: 400 });
     }
 
     const t0 = Date.now();
@@ -593,14 +690,15 @@ export async function POST(request) {
 
     if (intentType === 'jailbreak') {
       return NextResponse.json({
-        response: 'Maaf, saya adalah **RuteStrip AI**, asisten resmi pendakian gunung dan kegiatan outdoor di Indonesia.\n\nIdentitas, prinsip keselamatan, dan batasan operasional saya bersifat permanen dan tidak dapat diubah oleh instruksi luar. Ada informasi seputar pendakian gunung yang bisa saya bantu?',
+        response: JAILBREAK_RESPONSE[locale],
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'jailbreak_blocked' },
       });
     }
 
     if (intentType === 'greeting') {
-      const resp = GREETING_RESPONSES[Math.floor(Math.random() * GREETING_RESPONSES.length)];
+      const options = GREETING_RESPONSES[locale];
+      const resp = options[Math.floor(Math.random() * options.length)];
       return NextResponse.json({
         response: resp,
         retrieved_routes: [],
@@ -610,7 +708,7 @@ export async function POST(request) {
 
     if (intentType === 'identity') {
       return NextResponse.json({
-        response: 'Halo! Saya **RuteStrip AI**, asisten cerdas khusus pendakian gunung di Indonesia.\n\nSaya bisa membantu kamu dengan:\n- **Rekomendasi Jalur** pendakian sesuai kemampuanmu\n- **Info Cuaca** realtime di berbagai gunung\n- **Itinerary & Kalkulasi Naismith** per pos\n- **Estimasi Biaya & Logistik** kelompok\n- **Panduan Survival & P3K** darurat\n- **Peta Satelit & Download File GPX/KML**\n\nAda yang ingin kamu persiapkan untuk pendakianmu berikutnya?',
+        response: IDENTITY_RESPONSE[locale],
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'identity' },
       });
@@ -618,7 +716,7 @@ export async function POST(request) {
 
     if (intentType === 'help') {
       return NextResponse.json({
-        response: HELP_RESPONSE,
+        response: HELP_RESPONSE[locale],
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'help' },
       });
@@ -626,7 +724,7 @@ export async function POST(request) {
 
     if (intentType === 'goodbye') {
       return NextResponse.json({
-        response: 'Sama-sama! Semoga pendakianmu menyenangkan dan aman. **Happy hiking!**\n\nKalau butuh info lain, saya siap membantu kapan saja!',
+        response: GOODBYE_RESPONSE[locale],
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'goodbye' },
       });
@@ -642,7 +740,7 @@ export async function POST(request) {
     if (apiType === 'map' && map_url) {
       const cap = mapMountain ? mapMountain.charAt(0).toUpperCase() + mapMountain.slice(1) : '';
       directResponse = {
-        response: `Berikut peta **${mapType}** Gunung ${cap}.\n\nKlik gambar untuk memperbesar.`,
+        response: T.map(mapType, cap),
         map_url,
         retrieved_routes: [],
         timing: { retrieval_ms, generation_ms: 0, total_ms: Date.now() - t0, type: 'map' },
@@ -650,7 +748,7 @@ export async function POST(request) {
     } else if (apiType === 'gpx' && gpx_url) {
       const cap = mapMountain ? mapMountain.charAt(0).toUpperCase() + mapMountain.slice(1) : '';
       directResponse = {
-        response: `File **${format?.toUpperCase()}** Gunung ${cap} siap didownload.`,
+        response: T.gpx(format?.toUpperCase(), cap),
         gpx_url,
         retrieved_routes: [],
         timing: { retrieval_ms, generation_ms: 0, total_ms: Date.now() - t0, type: 'gpx' },
@@ -658,17 +756,16 @@ export async function POST(request) {
     }
 
     if (directResponse) {
-      if (!stream) return NextResponse.json(directResponse);
+      // History keeps the text only; the map image (data URL) is not stored.
+      const savedSessionId = await syncChatHistory(request, message, session_id, locale, directResponse.response, apiType);
+      if (!stream) return NextResponse.json({ ...directResponse, session_id: savedSessionId });
       const { response, timing, ...rest } = directResponse;
       return ndjsonResponse(async (send) => {
         send({ type: 'meta', ...rest, timing: { retrieval_ms, type: timing.type } });
         send({ type: 'delta', text: response });
-        send({ type: 'done', session_id, timing });
-      });
+        send({ type: 'done', session_id: savedSessionId, timing });
+      }, T.techError);
     }
-
-    // ── Start chat-history sync now so it runs in parallel with generation ──
-    const syncPromise = syncChatHistory(request.headers.get('authorization'), message, session_id);
 
     const buildTiming = (gen, t2) => ({
       retrieval_ms,
@@ -687,18 +784,19 @@ export async function POST(request) {
           message,
           history,
           contextText,
+          locale,
           onDelta: (text) => send({ type: 'delta', text }),
         });
         const timing = buildTiming(gen, t2);
-        const returnedSessionId = await syncPromise;
+        const returnedSessionId = await syncChatHistory(request, message, session_id, locale, gen.text, apiType);
         send({ type: 'done', session_id: returnedSessionId, timing });
-      });
+      }, T.techError);
     }
 
     const t2 = Date.now();
-    const gen = await generateAnswer({ message, history, contextText });
+    const gen = await generateAnswer({ message, history, contextText, locale });
     const timing = buildTiming(gen, t2);
-    const returnedSessionId = await syncPromise;
+    const returnedSessionId = await syncChatHistory(request, message, session_id, locale, gen.text, apiType);
 
     return NextResponse.json({
       response: gen.text,
@@ -710,7 +808,7 @@ export async function POST(request) {
   } catch (err) {
     console.error('Chat API fatal error:', err);
     return NextResponse.json({
-      response: `Maaf, terjadi kesalahan teknis. Silakan coba lagi.\n\n*Error: ${err.message}*`,
+      response: `${TEXTS[locale].techError}\n\n*Error: ${err.message}*`,
       retrieved_routes: [],
       timing: null,
     }, { status: 200 });

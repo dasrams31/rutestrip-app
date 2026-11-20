@@ -1,28 +1,23 @@
 import { NextResponse } from 'next/server';
+import { laravelFetch, laravelError, ssoToken, clearSsoCookie, publicUser, requestLang } from '@/lib/sso';
 
+export const dynamic = 'force-dynamic';
+
+const NOT_SIGNED_IN = { id: 'Belum masuk.', en: 'Not signed in.' };
+
+// Who is signed in, according to the shared rs_sso cookie.
 export async function GET(request) {
-  try {
-    const authHeader = request.headers.get('authorization') || '';
-    const res = await fetch(`${process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010'}/api/auth/me`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: authHeader,
-      },
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      return NextResponse.json(
-        { error: data.message || 'Sesi tidak valid' },
-        { status: res.status }
-      );
-    }
-    return NextResponse.json(data);
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Gagal verifikasi sesi token' },
-      { status: 500 }
-    );
+  const token = ssoToken(request);
+  if (!token) {
+    return NextResponse.json({ error: NOT_SIGNED_IN[requestLang(request)] }, { status: 401 });
   }
+  const result = await laravelFetch(request, '/api/sso/me', { token });
+  const user = publicUser(result.data?.user);
+  if (result.ok && user) {
+    return NextResponse.json({ user }, { headers: { 'Cache-Control': 'no-store' } });
+  }
+  const res = laravelError(request, result);
+  // Invalid, expired or stale token: drop it on both sites (shared cookie).
+  if (result.status === 401) clearSsoCookie(res);
+  return res;
 }

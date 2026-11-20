@@ -31,7 +31,7 @@ class RouteController extends Controller
     {
         $filter = $request->query('provenance_filter');
 
-        $routesQuery = HikingRoute::with(['activeGpxVersion', 'uploader'])->latest();
+        $routesQuery = HikingRoute::with(['activeGpxVersion', 'uploader'])->withCount('likes')->latest();
 
         match ($filter) {
             'invalid' => $routesQuery->whereHas('activeGpxVersion', fn($query) => $query->where('verification_status', 'invalid')),
@@ -114,7 +114,7 @@ class RouteController extends Controller
             );
 
             return redirect()->route('routes.index')
-                ->with('success', 'Jalur pendakian berhasil ditambahkan!');
+                ->with('success', __('Jalur pendakian berhasil ditambahkan!'));
 
         } catch (\Exception $e) {
             // Delete uploaded file if processing fails
@@ -168,7 +168,9 @@ class RouteController extends Controller
                 ->take(4);
         }
 
-        return view('routes.show', compact('route', 'similarRoutes'));
+        $likedByViewer = $route->isLikedByViewer(Auth::id(), Auth::check() ? null : self::visitorId(request()));
+
+        return view('routes.show', compact('route', 'similarRoutes', 'likedByViewer'));
     }
 
     /**
@@ -183,7 +185,7 @@ class RouteController extends Controller
         $route->delete();
 
         return redirect()->route('routes.index')
-            ->with('success', 'Jalur pendakian berhasil dihapus!');
+            ->with('success', __('Jalur pendakian berhasil dihapus!'));
     }
 
     /**
@@ -291,14 +293,14 @@ class RouteController extends Controller
 
         if ($failedCount === 0) {
             return redirect()->route('routes.index')
-                ->with('success', "Berhasil mengupload {$successCount} file GPX!");
+                ->with('success', __('Berhasil mengupload :count file GPX!', ['count' => $successCount]));
         } elseif ($successCount === 0) {
             return back()
                 ->withErrors(['gpx_files' => 'Semua file gagal diproses.'])
                 ->with('batch_results', $results);
         } else {
             return redirect()->route('routes.index')
-                ->with('warning', "Berhasil: {$successCount} file, Gagal: {$failedCount} file.")
+                ->with('warning', __('Berhasil: :ok file, Gagal: :failed file.', ['ok' => $successCount, 'failed' => $failedCount]))
                 ->with('batch_results', $results);
         }
     }
@@ -330,30 +332,73 @@ class RouteController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Review berhasil dikirim!');
+        return back()->with('success', __('Review berhasil dikirim!'));
     }
 
     /**
-     * Toggle like (favorite) for a route
+     * Like / unlike a route. Works without login: guests are recognised by the
+     * rs_vid cookie (random UUID), logged-in users by their id.
+     * With liked=1|0 the request sets that state (a repeated click stays
+     * idempotent); without it the like is toggled.
      */
-    public function toggleLike(HikingRoute $route)
+    public function toggleLike(Request $request, HikingRoute $route)
     {
-        $userId = Auth::id();
-        $like   = Favorite::where('user_id', $userId)
-            ->where('hiking_route_id', $route->id)
-            ->first();
-
-        if ($like) {
-            $like->delete();
-            return back()->with('success', 'Like dihapus');
+        $userId    = Auth::id();
+        $visitorId   = $userId ? null : self::visitorId($request);
+        $issueCookie = ! $userId && $visitorId === null;
+        if ($issueCookie) {
+            $visitorId = (string) Str::uuid();
         }
 
-        Favorite::create([
-            'user_id'         => $userId,
-            'hiking_route_id' => $route->id,
-        ]);
+        $owner = fn() => Favorite::where('hiking_route_id', $route->id)
+            ->when($userId, fn($q) => $q->where('user_id', $userId), fn($q) => $q->whereNull('user_id')->where('visitor_id', $visitorId));
 
-        return back()->with('success', 'Rute disukai!');
+        $liked  = $owner()->exists();
+        $wanted = $request->has('liked') ? $request->boolean('liked') : ! $liked;
+
+        if ($wanted && ! $liked) {
+            try {
+                Favorite::create([
+                    'user_id'         => $userId,
+                    'visitor_id'      => $visitorId,
+                    'hiking_route_id' => $route->id,
+                ]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // A parallel request (double click) already stored this like.
+            }
+        } elseif (! $wanted && $liked) {
+            $owner()->delete();
+        }
+
+        $count = $route->likes()->count();
+
+        $response = $request->expectsJson()
+            ? response()->json(['liked' => $wanted, 'count' => $count])
+            : back()->with('success', $wanted ? __('Rute disukai!') : __('Like dihapus'));
+
+        if ($issueCookie) {
+            $response->withCookie(self::visitorCookie($visitorId));
+        }
+
+        return $response;
+    }
+
+    public const VISITOR_COOKIE = 'rs_vid';
+
+    /**
+     * Anonymous visitor id from the rs_vid cookie, or null when missing/malformed.
+     */
+    public static function visitorId(Request $request): ?string
+    {
+        $id = $request->cookie(self::VISITOR_COOKIE);
+
+        return is_string($id) && Str::isUuid($id) ? strtolower($id) : null;
+    }
+
+    private static function visitorCookie(string $visitorId): \Symfony\Component\HttpFoundation\Cookie
+    {
+        // 2 years, HttpOnly, SameSite=Lax; only Laravel reads it.
+        return cookie(self::VISITOR_COOKIE, $visitorId, 60 * 24 * 365 * 2, '/', null, null, true, false, 'lax');
     }
 
     /**

@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import FastAPI, Query, HTTPException, Header, Body, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -32,15 +32,14 @@ import broadcast_channel_bulletin
 import broadcast_weekend_getaway
 import broadcast_survival_tips
 import broadcast_bot_usage
-import auth_handler
-import altcha_guard
+import sso_auth
 import guardrail
 import chat_history_handler
 
 app = FastAPI(
     title='RuteStrip Pendakian API',
-    description='REST API Asisten Pendakian Gunung, Auth Service, Reset Password & Multi-Session Chat History untuk WebChat AI',
-    version='1.7.0'
+    description='REST API Asisten Pendakian Gunung & Multi-Session Chat History untuk WebChat AI (akun via SSO rutestrip.ai.id)',
+    version='1.8.0'
 )
 
 app.add_middleware(
@@ -83,92 +82,53 @@ def _mount_laravel_processor():
 _mount_laravel_processor()
 
 # Schema Models
-class UserRegisterModel(BaseModel):
-    username: str
-    email: str
-    password: str
-    full_name: Optional[str] = None
-    altcha: Optional[str] = None   # ALTCHA proof-of-work payload (base64 JSON)
-    website: Optional[str] = None  # honeypot, must stay empty
-
-class UserLoginModel(BaseModel):
-    username_or_email: str
-    password: str
-
-class ResetPasswordModel(BaseModel):
-    username_or_email: str
-    old_password: str
-    new_password: str
-
 class ChatPromptModel(BaseModel):
     prompt: str
     session_id: Optional[str] = None
+    locale: Optional[str] = None   # 'id' (default) or 'en'
+    # The web chat generates the answer itself (Gemini) and sends it here once
+    # it is complete, so the saved history holds the real answer.
+    bot_reply: Optional[str] = None
+    reply_type: Optional[str] = None
+
+MAX_SAVED_REPLY_CHARS = 20000
 
 @app.get('/')
 def root():
     return {
         'status': 'online',
-        'service': 'RuteStrip Pendakian Bot REST API, WebChat Auth & Reset Password',
-        'version': '1.7.0',
+        'service': 'RuteStrip Pendakian Bot REST API & WebChat history',
+        'version': '1.8.0',
         'docs_url': '/docs'
     }
 
-# --- AUTHENTICATION & PASSWORD RESET ENDPOINTS (WEBCHAT AI ASSISTANT) ---
+# --- RETIRED AUTH ENDPOINTS ---
+# Accounts moved to Laravel (rutestrip.ai.id) with single sign-on, see docs/SSO.md.
+# The old users/auth_tokens tables are kept in PostgreSQL but no longer used.
 
-@app.get('/api/auth/altcha-challenge', summary='Tantangan Anti-Robot (ALTCHA) untuk Registrasi')
-def altcha_challenge(request: Request):
-    if not altcha_guard.challenge_limiter.hit(altcha_guard.client_ip(request)):
-        raise HTTPException(status_code=429, detail=altcha_guard.RATE_LIMIT_MESSAGE)
-    return JSONResponse(altcha_guard.create_challenge(), headers={'Cache-Control': 'no-store'})
+RETIRED_AUTH_MESSAGE = (
+    'Endpoint ini sudah tidak dipakai. Akun RuteStrip sekarang dikelola di https://rutestrip.ai.id '
+    '(masuk/daftar lewat https://chat.rutestrip.ai.id atau https://rutestrip.ai.id). '
+    'This endpoint was retired; RuteStrip accounts are managed at https://rutestrip.ai.id.'
+)
 
-@app.post('/api/auth/register', summary='Registrasi Akun Baru WebChat AI')
-def register_account(body: UserRegisterModel, request: Request):
-    if not altcha_guard.register_limiter.hit(altcha_guard.client_ip(request)):
-        raise HTTPException(status_code=429, detail=altcha_guard.RATE_LIMIT_MESSAGE)
-    # Anti-robot checks before touching the user store (no account probing by bots)
-    if body.website or not altcha_guard.verify_payload(body.altcha):
-        raise HTTPException(status_code=400, detail=altcha_guard.ERROR_MESSAGE)
-    res = auth_handler.register_user(
-        username=body.username,
-        email=body.email,
-        password=body.password,
-        full_name=body.full_name or body.username
-    )
-    if res.get('status') == 'error':
-        raise HTTPException(status_code=400, detail=res.get('message'))
-    return res
+@app.api_route('/api/auth/register', methods=['GET', 'POST'], include_in_schema=False)
+@app.api_route('/api/auth/login', methods=['GET', 'POST'], include_in_schema=False)
+@app.api_route('/api/auth/reset-password', methods=['GET', 'POST'], include_in_schema=False)
+@app.api_route('/api/auth/me', methods=['GET', 'POST'], include_in_schema=False)
+@app.api_route('/api/auth/altcha-challenge', methods=['GET'], include_in_schema=False)
+def retired_auth_endpoint():
+    return JSONResponse({'status': 'gone', 'detail': RETIRED_AUTH_MESSAGE, 'error': RETIRED_AUTH_MESSAGE}, status_code=410)
 
-@app.post('/api/auth/login', summary='Login Pengguna WebChat AI')
-def login_account(body: UserLoginModel):
-    res = auth_handler.login_user(
-        username_or_email=body.username_or_email,
-        password=body.password
-    )
-    if res.get('status') == 'error':
-        raise HTTPException(status_code=401, detail=res.get('message'))
-    return res
 
-@app.post('/api/auth/reset-password', summary='Reset Password Akun WebChat AI')
-def reset_user_password(body: ResetPasswordModel):
-    res = auth_handler.reset_password(
-        username_or_email=body.username_or_email,
-        old_password=body.old_password,
-        new_password=body.new_password
-    )
-    if res.get('status') == 'error':
-        raise HTTPException(status_code=400, detail=res.get('message'))
-    return res
-
-@app.get('/api/auth/me', summary='Verifikasi Sesi Token & Profil Pengguna')
-def get_user_profile(authorization: Optional[str] = Header(None, description='Bearer <token>')):
+def _require_user(authorization: Optional[str]) -> dict:
+    """SSO identity for the request (Bearer rs_sso token), else HTTP 401."""
     if not authorization:
         raise HTTPException(status_code=401, detail='Authorization header wajib disertakan.')
-    
-    token = authorization.replace('Bearer ', '').strip()
-    res = auth_handler.verify_token(token)
-    if not res.get('valid'):
-        raise HTTPException(status_code=401, detail=res.get('message'))
-    return res
+    identity = sso_auth.authenticate(authorization)
+    if not identity:
+        raise HTTPException(status_code=401, detail='Sesi tidak valid atau sudah berakhir. Silakan masuk lagi.')
+    return identity
 
 # --- AI CHAT QUERY & MULTI-SESSION CHAT HISTORY ENDPOINTS ---
 
@@ -176,14 +136,24 @@ def get_user_profile(authorization: Optional[str] = Header(None, description='Be
 def process_chat_query(body: ChatPromptModel, authorization: Optional[str] = Header(None)):
     user_id = "anonymous_guest"
     if authorization:
-        token = authorization.replace('Bearer ', '').strip()
-        v_res = auth_handler.verify_token(token)
-        if v_res.get('valid'):
-            user_id = v_res['user']['user_id']
+        identity = sso_auth.authenticate(authorization)
+        if identity:
+            user_id = identity['key']
+    english = (body.locale or '').lower() == 'en'
 
     session_id = body.session_id or str(uuid.uuid4())
 
     chat_history_handler.save_session_message(user_id=user_id, session_id=session_id, sender='user', text=body.prompt)
+
+    if body.bot_reply is not None:
+        chat_history_handler.save_session_message(
+            user_id=user_id,
+            session_id=session_id,
+            sender='bot',
+            text=body.bot_reply[:MAX_SAVED_REPLY_CHARS],
+            meta={'type': (body.reply_type or 'llm')[:30]},
+        )
+        return {'status': 'success', 'session_id': session_id}
 
     g_res = guardrail.validate_webchat_query(body.prompt)
     if not g_res.get('allowed'):
@@ -198,7 +168,7 @@ def process_chat_query(body: ChatPromptModel, authorization: Optional[str] = Hea
 
     query = g_res.get('clean_prompt')
     rec_results = rec_system.search(query, top_n=3)
-    
+
     formatted_results = []
     for r in rec_results:
         item = r['item']
@@ -208,12 +178,13 @@ def process_chat_query(body: ChatPromptModel, authorization: Optional[str] = Hea
             'narrative': item['narrative']
         })
 
-    bot_reply = f"Berikut adalah informasi pendakian terbaik berdasarkan kriteria '{query}':"
+    bot_reply = (f"Here is the best hiking information for '{query}':" if english
+                 else f"Berikut adalah informasi pendakian terbaik berdasarkan kriteria '{query}':")
     chat_history_handler.save_session_message(
-        user_id=user_id, 
-        session_id=session_id, 
-        sender='bot', 
-        text=bot_reply, 
+        user_id=user_id,
+        session_id=session_id,
+        sender='bot',
+        text=bot_reply,
         meta={'guardrail_passed': True, 'recommendations_count': len(formatted_results)}
     )
 
@@ -228,15 +199,7 @@ def process_chat_query(body: ChatPromptModel, authorization: Optional[str] = Hea
 
 @app.get('/api/chat/sessions', summary='Ambil Daftar Sesi Percakapan Pengguna')
 def get_user_chat_sessions(authorization: Optional[str] = Header(None)):
-    if not authorization:
-        raise HTTPException(status_code=401, detail='Authorization header wajib disertakan.')
-    
-    token = authorization.replace('Bearer ', '').strip()
-    v_res = auth_handler.verify_token(token)
-    if not v_res.get('valid'):
-        raise HTTPException(status_code=401, detail=v_res.get('message'))
-
-    user_id = v_res['user']['user_id']
+    user_id = _require_user(authorization)['key']
     sessions = chat_history_handler.get_user_sessions(user_id=user_id)
     return {
         'status': 'success',
@@ -247,15 +210,7 @@ def get_user_chat_sessions(authorization: Optional[str] = Header(None)):
 
 @app.get('/api/chat/sessions/{session_id}', summary='Ambil Pesan Obrolan Spesifik dari Satu Sesi')
 def get_session_chat_messages(session_id: str, authorization: Optional[str] = Header(None)):
-    if not authorization:
-        raise HTTPException(status_code=401, detail='Authorization header wajib disertakan.')
-    
-    token = authorization.replace('Bearer ', '').strip()
-    v_res = auth_handler.verify_token(token)
-    if not v_res.get('valid'):
-        raise HTTPException(status_code=401, detail=v_res.get('message'))
-
-    user_id = v_res['user']['user_id']
+    user_id = _require_user(authorization)['key']
     messages = chat_history_handler.get_session_messages(user_id=user_id, session_id=session_id)
     return {
         'status': 'success',
@@ -267,16 +222,8 @@ def get_session_chat_messages(session_id: str, authorization: Optional[str] = He
 
 @app.delete('/api/chat/sessions/{session_id}', summary='Hapus Satu Sesi Percakapan Spesifik')
 def delete_single_session(session_id: str, authorization: Optional[str] = Header(None)):
-    if not authorization:
-        raise HTTPException(status_code=401, detail='Authorization header wajib disertakan.')
-    
-    token = authorization.replace('Bearer ', '').strip()
-    v_res = auth_handler.verify_token(token)
-    if not v_res.get('valid'):
-        raise HTTPException(status_code=401, detail=v_res.get('message'))
-
-    user_id = v_res['user']['user_id']
-    res = chat_history_handler.delete_session(user_id=user_id, session_id=session_id)
+    user_id = _require_user(authorization)['key']
+    chat_history_handler.delete_session(user_id=user_id, session_id=session_id)
     return {
         'status': 'success',
         'message': f'Sesi percakapan {session_id} berhasil dihapus.'
@@ -284,15 +231,7 @@ def delete_single_session(session_id: str, authorization: Optional[str] = Header
 
 @app.delete('/api/chat/history', summary='Hapus Seluruh Sesi Riwayat Obrolan Pengguna')
 def delete_all_chat_history(authorization: Optional[str] = Header(None)):
-    if not authorization:
-        raise HTTPException(status_code=401, detail='Authorization header wajib disertakan.')
-    
-    token = authorization.replace('Bearer ', '').strip()
-    v_res = auth_handler.verify_token(token)
-    if not v_res.get('valid'):
-        raise HTTPException(status_code=401, detail=v_res.get('message'))
-
-    user_id = v_res['user']['user_id']
+    user_id = _require_user(authorization)['key']
     chat_history_handler.clear_all_user_sessions(user_id=user_id)
     return {
         'status': 'success',

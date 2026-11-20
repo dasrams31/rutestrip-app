@@ -100,7 +100,7 @@ class HikingRoute extends Model
     {
         $hours   = floor($this->naismith_duration_hour);
         $minutes = round(($this->naismith_duration_hour - $hours) * 60);
-        return "{$hours} jam {$minutes} menit";
+        return __(':hours jam :minutes menit', ['hours' => $hours, 'minutes' => $minutes]);
     }
 
     /**
@@ -164,6 +164,19 @@ class HikingRoute extends Model
     }
 
     /**
+     * One-line explanation of the difficulty level (Indonesian; views pass it through __()).
+     */
+    public function getDifficultyHintAttribute(): string
+    {
+        return match ($this->difficulty_level) {
+            'Mudah'  => 'Jalur pendek dan landai, cocok untuk pemula.',
+            'Sedang' => 'Jarak dan tanjakan menengah, butuh stamina yang cukup.',
+            'Sulit'  => 'Tanjakan panjang dan curam, untuk pendaki berpengalaman.',
+            default  => 'Jalur panjang dan berat, butuh fisik prima dan persiapan matang.',
+        };
+    }
+
+    /**
      * Relationships
      */
     public function uploader()
@@ -217,7 +230,8 @@ class HikingRoute extends Model
      */
     public function getLikesCountAttribute(): int
     {
-        return $this->likes()->count();
+        // withCount('likes') fills the attribute; otherwise count all likes (users + visitors).
+        return (int) ($this->attributes['likes_count'] ?? $this->likes()->count());
     }
 
     /**
@@ -225,6 +239,19 @@ class HikingRoute extends Model
      */
     public function isLikedBy($userId): bool
     {
-        return $this->likes()->where('user_id', $userId)->exists();
+        return $userId !== null && $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Liked by the logged-in user, or (for guests) by the anonymous visitor id.
+     */
+    public function isLikedByViewer(?int $userId, ?string $visitorId): bool
+    {
+        if ($userId !== null) {
+            return $this->isLikedBy($userId);
+        }
+
+        return $visitorId !== null
+            && $this->likes()->whereNull('user_id')->where('visitor_id', $visitorId)->exists();
     }
 }

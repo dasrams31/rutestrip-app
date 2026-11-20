@@ -3,8 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/Icon';
+import { LanguageSwitch, useI18n } from '@/components/I18nProvider';
+import { MAIN_SITE_URL } from '@/lib/i18n';
 
 export default function SystemDashboardPage() {
+  const { t, tag } = useI18n();
   const [statusData, setStatusData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -20,15 +23,15 @@ export default function SystemDashboardPage() {
       const data = await res.json();
       setStatusData(data);
       setError(null);
-      setLastUpdated(new Date().toLocaleTimeString('id-ID'));
+      setLastUpdated(new Date().toLocaleTimeString(tag));
     } catch (err) {
       console.error('Fetch status error:', err);
-      setError('Gagal memperbarui status sistem VPS');
+      setError('sys.error');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [tag]);
 
   useEffect(() => {
     fetchStatus();
@@ -79,7 +82,7 @@ export default function SystemDashboardPage() {
     <div className="sys-container">
       {/* ── Navbar ── */}
       <header className="sys-header">
-        <Link href="/chat" className="sys-brand" aria-label="RuteStrip AI, kembali ke chat">
+        <Link href="/chat" className="sys-brand" aria-label={t('sys.back')}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" width={36} height={36} className="sys-brand-logo" />
           <span className="sys-brand-text">
@@ -88,10 +91,10 @@ export default function SystemDashboardPage() {
           </span>
         </Link>
 
-        <nav className="sys-controls" aria-label="Navigasi dan kontrol">
-          <a href="https://rutestrip.ai.id" className="sys-nav-link" aria-label="Situs utama" title="Kembali ke rutestrip.ai.id">
+        <nav className="sys-controls" aria-label={t('sys.navAria')}>
+          <a href={MAIN_SITE_URL} className="sys-nav-link" aria-label={t('header.mainSite')} title={t('header.mainSiteTitle')}>
             <Icon name="home" size={16} />
-            <span>Situs Utama</span>
+            <span>{t('header.mainSite')}</span>
           </a>
 
           <button
@@ -99,7 +102,7 @@ export default function SystemDashboardPage() {
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`sys-btn-auto${autoRefresh ? ' active' : ''}`}
             aria-pressed={autoRefresh}
-            aria-label={`Auto refresh ${autoRefresh ? 'aktif, tiap 4 detik' : 'nonaktif'}`}
+            aria-label={autoRefresh ? t('sys.autoOn') : t('sys.autoOff')}
             title="Auto refresh"
           >
             <span className={autoRefresh ? 'sys-dot-pulse' : ''} style={{ display: 'inline-block' }} />
@@ -111,13 +114,15 @@ export default function SystemDashboardPage() {
             onClick={() => fetchStatus(true)}
             disabled={refreshing}
             className="sys-btn-icon"
-            aria-label="Segarkan data sekarang"
-            title="Segarkan data sekarang"
+            aria-label={t('sys.refresh')}
+            title={t('sys.refresh')}
           >
             <Icon name="refresh" size={16} className={refreshing ? 'spin-anim' : ''} />
           </button>
 
-          <Link href="/chat" className="sys-btn-chat" aria-label="Buka chat assistant">
+          <LanguageSwitch showLabel={false} className="lang-switch-dark" />
+
+          <Link href="/chat" className="sys-btn-chat" aria-label={t('sys.openChat')}>
             <Icon name="chat" size={16} />
             <span>Chat Assistant</span>
           </Link>
@@ -143,7 +148,7 @@ export default function SystemDashboardPage() {
             </div>
             <h1 className="sys-banner-title">RuteStrip Monitoring & AI Engine Control (v1.7.0)</h1>
             <p className="sys-banner-sub">
-              Real-time telemetri hardware VPS, Hermes LLM Gateway, 9Router AI Token Pool, serta status microservices REST API v1.7.0 RuteStrip.
+              {t('sys.bannerSub')}
             </p>
           </div>
 
@@ -156,9 +161,9 @@ export default function SystemDashboardPage() {
             </div>
             <div style={{ width: '1px', height: '24px', backgroundColor: '#334155' }} />
             <div>
-              <div style={{ fontSize: '0.6875rem', color: '#94a3b8' }}>Terakhir Diperbarui</div>
+              <div style={{ fontSize: '0.6875rem', color: '#94a3b8' }}>{t('sys.lastUpdated')}</div>
               <div style={{ fontSize: '0.875rem', fontWeight: 700, fontFamily: 'monospace', color: '#34d399' }}>
-                {lastUpdated || 'Memuat...'}
+                {lastUpdated || t('common.loading')}
               </div>
             </div>
           </div>
@@ -168,14 +173,14 @@ export default function SystemDashboardPage() {
           <div className="sys-alert" role="alert">
             <span className="sys-inline-link" style={{ gap: '0.5rem' }}>
               <Icon name="warning" size={18} />
-              {error}
+              {t(error)}
             </span>
             <button
               type="button"
               onClick={() => fetchStatus(true)}
               style={{ color: '#fde047', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              Coba lagi
+              {t('common.retry')}
             </button>
           </div>
         )}
@@ -279,7 +284,7 @@ export default function SystemDashboardPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <span className="sys-card-val" style={{ color: '#34d399' }}>
-                  {vps.uptime_hours} <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 400 }}>Jam</span>
+                  {vps.uptime_hours} <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 400 }}>{t('sys.hours')}</span>
                 </span>
                 <span className="sys-badge-online">ONLINE</span>
               </div>
@@ -425,7 +430,7 @@ export default function SystemDashboardPage() {
               <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(51, 65, 85, 0.5)', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8' }}>
                 <span>Vercel Edge Platform</span>
                 <Link href="/chat" className="sys-inline-link" style={{ color: '#34d399', fontWeight: 600 }}>
-                  Buka Chat UI <Icon name="arrow-right" size={12} />
+                  {t('sys.openChatUi')} <Icon name="arrow-right" size={12} />
                 </Link>
               </div>
             </div>
@@ -443,7 +448,7 @@ export default function SystemDashboardPage() {
                 9Router AI Token Pool & Account Diagnostics
               </h2>
               <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
-                Rotasi otomatis multi-akun AI API (Antigravity & Gemini CLI) untuk respon instan tanpa rate limit.
+                {t('sys.poolSub')}
               </p>
             </div>
             <div className="sys-meta-box" style={{ padding: '0.5rem 1rem' }}>
@@ -455,9 +460,9 @@ export default function SystemDashboardPage() {
               </div>
               <div style={{ width: '1px', height: '20px', backgroundColor: '#334155' }} />
               <div>
-                <div style={{ fontSize: '0.625rem', color: '#94a3b8', textTransform: 'uppercase' }}>Akun Terdaftar</div>
+                <div style={{ fontSize: '0.625rem', color: '#94a3b8', textTransform: 'uppercase' }}>{t('sys.accounts')}</div>
                 <div style={{ fontSize: '1rem', fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>
-                  {aiTokens.active_providers?.length || 0} Akun
+                  {t('sys.accountsN', { n: aiTokens.active_providers?.length || 0 })}
                 </div>
               </div>
             </div>
@@ -469,10 +474,10 @@ export default function SystemDashboardPage() {
               <thead>
                 <tr>
                   <th>Provider</th>
-                  <th>Email Akun</th>
+                  <th>{t('sys.colEmail')}</th>
                   <th>Project ID</th>
-                  <th>Status Akun</th>
-                  <th>Diagnosa / Catatan</th>
+                  <th>{t('sys.colStatus')}</th>
+                  <th>{t('sys.colNotes')}</th>
                 </tr>
               </thead>
               <tbody style={{ fontFamily: 'monospace' }}>
@@ -515,7 +520,7 @@ export default function SystemDashboardPage() {
                 ) : (
                   <tr>
                     <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b' }}>
-                      Tidak ada akun provider terdeteksi.
+                      {t('sys.noProviders')}
                     </td>
                   </tr>
                 )}
@@ -545,7 +550,7 @@ export default function SystemDashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.75rem', background: 'rgba(2, 6, 23, 0.6)', border: '1px solid #1e293b' }}>
                 <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Database Jalur GPX</span>
                 <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#2dd4bf', fontFamily: 'monospace' }}>
-                  {botStats.gpx_database_count} Gunung
+                  {t('sys.mountains', { n: botStats.gpx_database_count })}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', borderRadius: '0.75rem', background: 'rgba(2, 6, 23, 0.6)', border: '1px solid #1e293b' }}>

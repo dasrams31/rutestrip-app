@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Upload Versi GPX Baru - ' . $route->name)
+@section('title', __('Upload Versi GPX Baru') . ' - ' . $route->name)
 
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -9,11 +9,11 @@
             <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-            Kembali ke Provenance
+            {{ __('Kembali ke Provenance') }}
         </a>
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Upload Versi GPX Baru</h1>
-        <p class="text-slate-600">Rute: <span class="font-semibold text-emerald-700">{{ $route->name }}</span></p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Upload Versi GPX Baru') }}</h1>
+        <p class="text-slate-600">{{ __('Rute:') }} <span class="font-semibold text-emerald-700">{{ $route->name }}</span></p>
     </div>
 
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
@@ -25,9 +25,9 @@
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-white">Dataset Version Control</h2>
+                    <h2 class="text-xl font-bold text-white">{{ __('Dataset Version Control') }}</h2>
                     <p class="text-emerald-100 text-sm">
-                        Versi aktif saat ini: {{ $route->activeGpxVersion ? 'v' . $route->activeGpxVersion->version_number : 'belum ada' }}
+                        {{ __('Versi aktif saat ini:') }} {{ $route->activeGpxVersion ? 'v' . $route->activeGpxVersion->version_number : __('belum ada') }}
                     </p>
                 </div>
             </div>
@@ -38,15 +38,15 @@
 
             <div class="mb-6">
                 <label for="change_log" class="block text-sm font-semibold text-slate-700 mb-2">
-                    Change Log <span class="text-red-500">*</span>
+                    {{ __('Change Log') }} <span class="text-red-500">*</span>
                 </label>
                 <textarea name="change_log"
                           id="change_log"
                           rows="4"
                           class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none @error('change_log') border-red-500 @enderror"
-                          placeholder="Contoh: Perbaikan track GPS pada segmen pos 2 sampai puncak, menghapus titik koordinat noise."
+                          placeholder="{{ __('Contoh: Perbaikan track GPS pada segmen pos 2 sampai puncak, menghapus titik koordinat noise.') }}"
                           required>{{ old('change_log') }}</textarea>
-                <p class="mt-2 text-xs text-slate-500">Wajib diisi agar alasan perubahan dataset terdokumentasi untuk provenance history.</p>
+                <p class="mt-2 text-xs text-slate-500">{{ __('Wajib diisi agar alasan perubahan dataset terdokumentasi untuk provenance history.') }}</p>
                 @error('change_log')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -54,7 +54,7 @@
 
             <div class="mb-8">
                 <label for="gpx_file" class="block text-sm font-semibold text-slate-700 mb-2">
-                    File GPX Versi Baru <span class="text-red-500">*</span>
+                    {{ __('File GPX Versi Baru') }} <span class="text-red-500">*</span>
                 </label>
 
                 <input type="file"
@@ -63,7 +63,7 @@
                        accept=".gpx,.xml"
                        class="block w-full text-sm text-slate-700 border border-slate-200 rounded-xl cursor-pointer bg-slate-50 focus:outline-none file:mr-4 file:py-3 file:px-4 file:rounded-l-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 @error('gpx_file') border-red-500 @enderror"
                        required>
-                <p class="mt-2 text-xs text-slate-500">Format yang didukung: GPX atau XML, maksimal 10MB.</p>
+                <p class="mt-2 text-xs text-slate-500">{{ __('Format yang didukung: GPX atau XML, maksimal 10MB.') }}</p>
                 @error('gpx_file')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -75,8 +75,8 @@
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                     </svg>
                     <div class="text-sm text-blue-700">
-                        <p class="font-semibold mb-1">Dampak Upload Versi Baru</p>
-                        <p>File akan diproses ulang, hash SHA-256 dibuat, versi baru menjadi aktif, dan versi lama tetap tersimpan di riwayat provenance.</p>
+                        <p class="font-semibold mb-1">{{ __('Dampak Upload Versi Baru') }}</p>
+                        <p>{{ __('File akan diproses ulang, hash SHA-256 dibuat, versi baru menjadi aktif, dan versi lama tetap tersimpan di riwayat provenance.') }}</p>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19A9 9 0 0119 5"/>
                 </svg>
-                <span>Upload Sebagai Versi Baru</span>
+                <span>{{ __('Upload Sebagai Versi Baru') }}</span>
             </button>
         </form>
     </div>

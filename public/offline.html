@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#047857">
+    <title>Offline - RuteStrip</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <style>
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+               font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f0fdf4; color: #0f172a; }
+        main { max-width: 26rem; padding: 2rem 1.5rem; text-align: center; }
+        img { width: 72px; height: 72px; }
+        h1 { font-size: 1.35rem; margin: 1.25rem 0 .5rem; }
+        p { color: #475569; line-height: 1.55; margin: .25rem 0; }
+        .en { font-size: .9rem; color: #64748b; margin-top: 1rem; }
+        button { margin-top: 1.5rem; padding: .75rem 1.5rem; border: 0; border-radius: .75rem;
+                 background: #059669; color: #fff; font-weight: 600; font-size: 1rem; cursor: pointer; }
+        button:hover { background: #047857; }
+    </style>
+</head>
+<body>
+<main>
+    <img src="/images/logo.svg" alt="RuteStrip">
+    <h1>Kamu sedang offline</h1>
+    <p>RuteStrip butuh koneksi internet untuk mencari jalur dan memuat peta. Periksa sinyal atau Wi-Fi, lalu coba lagi.</p>
+    <p class="en" lang="en">You are offline. RuteStrip needs an internet connection to search routes and load maps.</p>
+    <button type="button" onclick="location.reload()">Coba lagi / Try again</button>
+</main>
+</body>
+</html>

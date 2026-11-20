@@ -218,6 +218,23 @@ class RouteConditionsService
     }
 
     /**
+     * The trailhead location if location() has already cached it; never calls
+     * an external API (safe while rendering lists of routes).
+     */
+    public function cachedLocation(HikingRoute $route): ?array
+    {
+        $coords = $this->coordinates($route);
+
+        if (! $coords) {
+            return null;
+        }
+
+        $cached = Cache::get(sprintf('route-location:%d:%.4f,%.4f', $route->id, round($coords[0][0], 6), round($coords[0][1], 6)));
+
+        return is_array($cached) ? $cached : null;
+    }
+
+    /**
      * Current weather at basecamp and summit, cached WEATHER_TTL seconds per route.
      */
     public function weather(HikingRoute $route, array $points): ?array

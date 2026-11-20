@@ -1,4 +1,7 @@
 import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
+import { I18nProvider } from '@/components/I18nProvider';
+import { LANG_COOKIE, normalizeLang } from '@/lib/i18n';
 import './globals.css';
 
 const inter = Inter({
@@ -15,6 +18,7 @@ export const metadata = {
     'Asisten pintar berbasis AI untuk pendakian gunung Indonesia. Dapatkan rekomendasi jalur, cuaca realtime, itinerary, estimasi biaya, dan panduan survival.',
   keywords: 'pendakian gunung, RuteStrip AI, chat.rutestrip.ai.id, AI chatbot, jalur pendakian, SBERT, rekomendasi gunung Indonesia',
   alternates: { canonical: '/chat' },
+  manifest: '/manifest.json',
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
   // Ownership codes from Google Search Console / Bing Webmaster Tools (set at build time)
   verification: {
@@ -26,11 +30,17 @@ export const metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
-      { url: '/favicon.png', type: 'image/png' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
       { url: '/logo.svg', type: 'image/svg+xml' },
     ],
     shortcut: '/favicon.ico',
-    apple: '/logo.png',
+    // iOS fills transparent corners with black: use the full-bleed icon.
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'RuteStrip AI',
+    statusBarStyle: 'default',
   },
   openGraph: {
     title: 'RuteStrip AI – Asisten Pendakian Gunung Indonesia',
@@ -61,23 +71,19 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover', // lets env(safe-area-inset-*) work for the bottom tab bar
   themeColor: '#059669',
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const cookieStore = await cookies();
+  const langCookie = cookieStore.get(LANG_COOKIE)?.value;
+  const lang = normalizeLang(langCookie);
+
   return (
-    <html lang="id" className={inter.variable}>
+    <html lang={lang} className={inter.variable}>
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/logo.svg" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="RuteStrip AI" />
-        <meta name="theme-color" content="#059669" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta property="og:image" content="https://chat.rutestrip.ai.id/og-image.jpg" />
         <meta property="og:image:secure_url" content="https://chat.rutestrip.ai.id/og-image.jpg" />
         <meta property="og:image:type" content="image/jpeg" />
@@ -85,7 +91,14 @@ export default function RootLayout({ children }) {
         <meta property="og:image:height" content="630" />
       </head>
       <body>
-        {children}
+        <I18nProvider
+          initialLang={lang}
+          hasLangCookie={langCookie === 'id' || langCookie === 'en'}
+          cookieDomain={(process.env.SSO_COOKIE_DOMAIN || '').trim() || undefined}
+          cookieSecure={/^(1|true|yes|on)$/i.test(process.env.SSO_COOKIE_SECURE || '')}
+        >
+          {children}
+        </I18nProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -104,4 +117,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-

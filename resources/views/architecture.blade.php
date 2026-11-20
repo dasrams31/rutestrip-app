@@ -1,20 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Arsitektur Sistem')
+@section('title', __('Arsitektur Sistem'))
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->
     <div class="text-center mb-12">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-4">Arsitektur Sistem Rekomendasi</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-4">{{ __('Arsitektur Sistem Rekomendasi') }}</h1>
         <p class="text-slate-600 max-w-2xl mx-auto">
-            Content-Based Filtering dengan SBERT dan Cosine Similarity
+            {{ __('Content-Based Filtering dengan SBERT dan Cosine Similarity') }}
         </p>
     </div>
 
     <!-- Architecture Diagram -->
     <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-8 mb-8 border border-slate-100">
-        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center justify-center gap-2"><x-icon name="chart-bar" class="w-5 h-5 text-emerald-600" /> Diagram Alur Sistem</h2>
+        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center justify-center gap-2"><x-icon name="chart-bar" class="w-5 h-5 text-emerald-600" /> {{ __('Diagram Alur Sistem') }}</h2>
 
         <div class="flex flex-col lg:flex-row items-center justify-center gap-4 overflow-x-auto py-4">
             <!-- Step 1: Input -->
@@ -24,7 +24,7 @@
                         <svg class="w-8 h-8 text-blue-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span class="text-xs font-medium text-blue-800">File GPX</span>
+                        <span class="text-xs font-medium text-blue-800">{{ __('File GPX') }}</span>
                     </div>
                 </div>
                 <span class="text-xs text-slate-500 mt-2">Input</span>
@@ -60,7 +60,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                         <span class="text-xs font-medium text-emerald-800">SBERT Embedding</span>
-                        <span class="text-[10px] text-emerald-600 block">384 dimensi</span>
+                        <span class="text-[10px] text-emerald-600 block">{{ __('384 dimensi') }}</span>
                     </div>
                 </div>
                 <span class="text-xs text-slate-500 mt-2">Feature Extraction</span>
@@ -96,7 +96,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                         <span class="text-xs font-medium text-rose-800">Top-N Ranking</span>
-                        <span class="text-[10px] text-rose-600 block">Rekomendasi</span>
+                        <span class="text-[10px] text-rose-600 block">{{ __('Rekomendasi') }}</span>
                     </div>
                 </div>
                 <span class="text-xs text-slate-500 mt-2">Output</span>
@@ -119,15 +119,15 @@
             <ul class="text-sm text-slate-600 space-y-2">
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Ekstraksi fitur dari GPX (jarak, elevasi, grade, durasi Naismith)
+                    {{ __('Ekstraksi fitur dari GPX (jarak, elevasi, grade, durasi Naismith)') }}
                 </li>
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Deskripsi manual (vegetasi, sumber air, panorama)
+                    {{ __('Deskripsi manual (vegetasi, sumber air, panorama)') }}
                 </li>
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Koordinat rute untuk visualisasi peta
+                    {{ __('Koordinat rute untuk visualisasi peta') }}
                 </li>
             </ul>
         </div>
@@ -146,7 +146,7 @@
             <ul class="text-sm text-slate-600 space-y-2">
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Data Cleaning (regex: URL, karakter non-ASCII)
+                    {{ __('Data Cleaning (regex: URL, karakter non-ASCII)') }}
                 </li>
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -154,11 +154,11 @@
                 </li>
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Stopword Removal Selektif (pertahankan negasi & kata sifat)
+                    {{ __('Stopword Removal Selektif (pertahankan negasi & kata sifat)') }}
                 </li>
                 <li class="flex items-start">
                     <x-icon name="x" class="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
-                    No Stemming (SBERT sensitif konteks)
+                    {{ __('No Stemming (SBERT sensitif konteks)') }}
                 </li>
             </ul>
         </div>
@@ -176,15 +176,15 @@
             <ul class="text-sm text-slate-600 space-y-2">
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Model: <code class="bg-slate-100 px-1 rounded">paraphrase-multilingual-MiniLM-L12-v2</code>
+                    {{ __('Model:') }} <code class="bg-slate-100 px-1 rounded">paraphrase-multilingual-MiniLM-L12-v2</code>
                 </li>
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Dimensi embedding: 384
+                    {{ __('Dimensi embedding: 384') }}
                 </li>
                 <li class="flex items-start">
                     <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Support bahasa Indonesia
+                    {{ __('Support bahasa Indonesia') }}
                 </li>
             </ul>
         </div>
@@ -205,9 +205,9 @@
                 </p>
             </div>
             <ul class="text-sm text-slate-600 space-y-1">
-                <li><strong>Q</strong> = Query embedding (user search)</li>
-                <li><strong>D</strong> = Document embedding (route)</li>
-                <li><strong>Range</strong> = -1 to 1 (1 = identical)</li>
+                <li><strong>Q</strong> = {{ __('Query embedding (pencarian pengguna)') }}</li>
+                <li><strong>D</strong> = {{ __('Document embedding (jalur)') }}</li>
+                <li><strong>{{ __('Rentang') }}</strong> = {{ __('-1 sampai 1 (1 = identik)') }}</li>
             </ul>
         </div>
     </div>

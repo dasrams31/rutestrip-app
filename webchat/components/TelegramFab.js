@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
+import { useI18n } from './I18nProvider';
 
 export const TELEGRAM_CHANNEL_URL = 'https://t.me/rutestrip';
 export const TELEGRAM_BOT_URL = 'https://t.me/rutestrip_hikingbot';
@@ -13,9 +14,11 @@ const LINKS = [
 
 /*
  * Floating Telegram button. Rendered inside the chat footer and positioned
- * just above it, so it never covers the composer or the send button.
+ * just above it, so it never covers the composer, the send button or the
+ * phone tab bar (which sits below the footer).
  */
 export default function TelegramFab() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -64,7 +67,7 @@ export default function TelegramFab() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="tg-fab-menu"
-        aria-label={open ? 'Tutup menu Telegram' : 'Telegram RuteStrip: channel dan bot'}
+        aria-label={open ? t('tg.close') : t('tg.open')}
         title="Telegram RuteStrip"
       >
         {open ? <Icon name="x" size={20} strokeWidth={2} /> : <Icon name="telegram-plane" size={26} />}

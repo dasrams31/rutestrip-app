@@ -52,10 +52,17 @@ class ProvenanceFeatureTest extends TestCase
     {
         [$route] = $this->makeRouteWithVersion();
 
+        // Route cards show mountain info; a verified GPX needs no badge there.
         $this->get(route('routes.index'))
             ->assertOk()
             ->assertSee($route->name)
-            ->assertSee('GPX VERIFIED')
+            ->assertDontSee('GPX Verified')
+            ->assertDontSee('IPFS')
+            ->assertDontSee('Blockchain');
+
+        $this->get(route('routes.show', $route))
+            ->assertOk()
+            ->assertSee('VERIFIED')
             ->assertSee('File GPX cocok dengan hash tersimpan')
             ->assertDontSee('IPFS')
             ->assertDontSee('Blockchain');

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Rute Serupa - ' . $route->name)
+@section('title', __('Rute Serupa') . ' - ' . $route->name)
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -10,18 +10,18 @@
             <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-            Kembali ke {{ $route->name }}
+            {{ __('Kembali ke :name', ['name' => $route->name]) }}
         </a>
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Rute Serupa dengan {{ $route->name }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Rute Serupa dengan :name', ['name' => $route->name]) }}</h1>
         <p class="text-slate-600">
-            Ditemukan <span class="font-semibold text-emerald-600">{{ $similarRoutes->count() }}</span> rute dengan kemiripan > 30%
+            {{ __('Ditemukan') }} <span class="font-semibold text-emerald-600">{{ $similarRoutes->count() }}</span> {{ __('rute dengan kemiripan > 30%') }}
         </p>
 
         <!-- Formula -->
         <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg inline-block">
             <p class="text-sm text-amber-800">
-                <strong>Formula:</strong> Cosine Similarity = (A · B) / (||A|| × ||B||)
+                <strong>{{ __('Formula:') }}</strong> Cosine Similarity = (A · B) / (||A|| × ||B||)
             </p>
         </div>
     </div>
@@ -44,7 +44,7 @@
                 <!-- Similarity Badge -->
                 <div class="flex items-center justify-between mb-3">
                     <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-bold rounded-full">
-                        {{ $similar->similarity_score }}% match
+                        {{ __(':score% cocok', ['score' => $similar->similarity_score]) }}
                     </span>
                     <span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
                         cos={{ $similar->cosine_value }}
@@ -64,15 +64,15 @@
                 <!-- Stats -->
                 <div class="grid grid-cols-3 gap-2 mb-4 text-center">
                     <div class="bg-slate-50 p-2 rounded-lg">
-                        <p class="text-xs text-slate-500">Jarak</p>
+                        <p class="text-xs text-slate-500">{{ __('Jarak') }}</p>
                         <p class="font-semibold text-slate-700">{{ $similar->formatted_distance }}</p>
                     </div>
                     <div class="bg-slate-50 p-2 rounded-lg">
-                        <p class="text-xs text-slate-500">Elevasi</p>
+                        <p class="text-xs text-slate-500">{{ __('Elevasi') }}</p>
                         <p class="font-semibold text-slate-700">{{ number_format($similar->elevation_gain_m) }}m</p>
                     </div>
                     <div class="bg-slate-50 p-2 rounded-lg">
-                        <p class="text-xs text-slate-500">Grade</p>
+                        <p class="text-xs text-slate-500">{{ __('Grade') }}</p>
                         <p class="font-semibold text-slate-700">{{ $similar->formatted_grade }}</p>
                     </div>
                 </div>
@@ -85,12 +85,12 @@
                         @elseif($similar->difficulty_level === 'Sulit') bg-orange-100 text-orange-700
                         @else bg-red-100 text-red-700
                         @endif">
-                        {{ $similar->difficulty_level }}
+                        {{ __($similar->difficulty_level) }}
                     </span>
 
                     <a href="{{ route('routes.show', $similar) }}"
                        class="px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors">
-                        Lihat Detail
+                        {{ __('Lihat Detail') }}
                     </a>
                 </div>
             </div>
@@ -100,8 +100,8 @@
     @else
     <div class="text-center py-16 bg-white rounded-2xl shadow-lg">
         <x-icon name="search" class="w-14 h-14 mx-auto mb-4 text-slate-300" />
-        <h3 class="text-xl font-semibold text-slate-700 mb-2">Tidak Ada Rute Serupa</h3>
-        <p class="text-slate-500">Tidak ditemukan rute dengan kemiripan > 30%</p>
+        <h3 class="text-xl font-semibold text-slate-700 mb-2">{{ __('Tidak Ada Rute Serupa') }}</h3>
+        <p class="text-slate-500">{{ __('Tidak ditemukan rute dengan kemiripan > 30%') }}</p>
     </div>
     @endif
 </div>

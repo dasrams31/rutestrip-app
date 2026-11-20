@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Upload GPX')
+@section('title', __('Upload GPX'))
 
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -10,11 +10,11 @@
             <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-            Kembali ke Daftar Rute
+            {{ __('Kembali ke Daftar Rute') }}
         </a>
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Upload File GPX</h1>
-        <p class="text-slate-600">Upload file GPX dari perangkat GPS atau aplikasi tracking Anda.</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Upload File GPX') }}</h1>
+        <p class="text-slate-600">{{ __('Upload file GPX dari perangkat GPS atau aplikasi tracking Anda.') }}</p>
     </div>
 
     <!-- Upload Form -->
@@ -25,18 +25,17 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
             </svg>
         </div>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">Masuk dulu untuk mengunggah GPX</h2>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">{{ __('Masuk dulu untuk mengunggah GPX') }}</h2>
         <p class="text-slate-600 mb-6 max-w-md mx-auto">
-            Setiap jalur yang diunggah akan ditandai dengan nama pengunggahnya. Silakan masuk atau daftar akun gratis,
-            lalu Anda akan kembali ke halaman ini.
+            {{ __('Setiap jalur yang diunggah akan ditandai dengan nama pengunggahnya. Silakan masuk atau daftar akun gratis, lalu Anda akan kembali ke halaman ini.') }}
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="{{ route('login') }}" class="px-6 py-3 rounded-xl bg-mountain-gradient text-white font-semibold shadow-lg hover:shadow-xl transition-all">Masuk</a>
-            <a href="{{ route('register') }}" class="px-6 py-3 rounded-xl border border-emerald-200 text-emerald-700 font-semibold hover:bg-emerald-50 transition-all">Daftar Akun</a>
+            <a href="{{ route('login') }}" class="px-6 py-3 rounded-xl bg-mountain-gradient text-white font-semibold shadow-lg hover:shadow-xl transition-all">{{ __('Masuk') }}</a>
+            <a href="{{ route('register') }}" class="px-6 py-3 rounded-xl border border-emerald-200 text-emerald-700 font-semibold hover:bg-emerald-50 transition-all">{{ __('Daftar Akun') }}</a>
         </div>
     </div>
     @else
-    <p class="mb-4 text-sm text-slate-500">Jalur yang Anda unggah akan ditandai: <span class="font-semibold text-slate-700">Diunggah oleh {{ auth()->user()->name }}</span></p>
+    <p class="mb-4 text-sm text-slate-500">{{ __('Jalur yang Anda unggah akan ditandai:') }} <span class="font-semibold text-slate-700">{{ __('Diunggah oleh :name', ['name' => auth()->user()->name]) }}</span></p>
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
         <div class="bg-mountain-gradient p-6">
             <div class="flex items-center space-x-3">
@@ -46,8 +45,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-white">Upload Jalur Baru</h2>
-                    <p class="text-emerald-100 text-sm">Format yang didukung: .gpx, .xml</p>
+                    <h2 class="text-xl font-bold text-white">{{ __('Upload Jalur Baru') }}</h2>
+                    <p class="text-emerald-100 text-sm">{{ __('Format yang didukung: .gpx, .xml') }}</p>
                 </div>
             </div>
         </div>
@@ -58,13 +57,13 @@
             <!-- Route Name -->
             <div class="mb-6">
                 <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
-                    Nama Jalur/Gunung <span class="text-red-500">*</span>
+                    {{ __('Nama Jalur/Gunung') }} <span class="text-red-500">*</span>
                 </label>
                 <input type="text"
                        name="name"
                        id="name"
                        value="{{ old('name') }}"
-                       placeholder="Contoh: Gunung Semeru via Ranu Pani"
+                       placeholder="{{ __('Contoh: Gunung Semeru via Ranu Pani') }}"
                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('name') border-red-500 @enderror"
                        required>
                 @error('name')
@@ -75,15 +74,15 @@
             <!-- Description (Optional) -->
             <div class="mb-6">
                 <label for="description" class="block text-sm font-semibold text-slate-700 mb-2">
-                    Deskripsi Jalur <span class="text-slate-400 font-normal">(Opsional)</span>
+                    {{ __('Deskripsi Jalur') }} <span class="text-slate-400 font-normal">({{ __('Opsional') }})</span>
                 </label>
                 <textarea name="description"
                           id="description"
                           rows="4"
                           class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none"
-                          placeholder="Contoh: Jalur dengan vegetasi hutan pinus, sumber air tersedia di pos 2, pemandangan sabana yang indah...">{{ old('description') }}</textarea>
+                          placeholder="{{ __('Contoh: Jalur dengan vegetasi hutan pinus, sumber air tersedia di pos 2, pemandangan sabana yang indah...') }}">{{ old('description') }}</textarea>
                 <p class="mt-2 text-xs text-slate-500">
-                    Tambahkan informasi seperti: tipe vegetasi, ketersediaan sumber air, panorama, kondisi medan, dll.
+                    {{ __('Tambahkan informasi seperti: tipe vegetasi, ketersediaan sumber air, panorama, kondisi medan, dll.') }}
                 </p>
                 @error('description')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -93,15 +92,15 @@
             <!-- Change Log -->
             <div class="mb-6">
                 <label for="change_log" class="block text-sm font-semibold text-slate-700 mb-2">
-                    Catatan Provenance <span class="text-slate-400 font-normal">(Opsional)</span>
+                    {{ __('Catatan Provenance') }} <span class="text-slate-400 font-normal">({{ __('Opsional') }})</span>
                 </label>
                 <textarea name="change_log"
                           id="change_log"
                           rows="3"
                           class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none"
-                          placeholder="Contoh: Upload awal dataset GPX dari tracking lapangan via aplikasi GPS.">{{ old('change_log') }}</textarea>
+                          placeholder="{{ __('Contoh: Upload awal dataset GPX dari tracking lapangan via aplikasi GPS.') }}">{{ old('change_log') }}</textarea>
                 <p class="mt-2 text-xs text-slate-500">
-                    Catatan ini akan muncul di riwayat provenance GPX untuk kebutuhan audit dan paper.
+                    {{ __('Catatan ini akan muncul di riwayat provenance GPX untuk kebutuhan audit dan paper.') }}
                 </p>
                 @error('change_log')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -111,7 +110,7 @@
             <!-- GPX File Upload -->
             <div class="mb-8">
                 <label for="gpx_file" class="block text-sm font-semibold text-slate-700 mb-2">
-                    File GPX <span class="text-red-500">*</span>
+                    {{ __('File GPX') }} <span class="text-red-500">*</span>
                 </label>
 
                 <div class="relative">
@@ -132,9 +131,9 @@
                                 </svg>
                             </div>
                             <p class="mb-2 text-sm text-slate-600">
-                                <span class="font-semibold text-emerald-600">Klik untuk upload</span> atau drag & drop
+                                <span class="font-semibold text-emerald-600">{{ __('Klik untuk upload') }}</span> {{ __('atau drag & drop') }}
                             </p>
-                            <p class="text-xs text-slate-500">File GPX atau XML (Maks. 10MB)</p>
+                            <p class="text-xs text-slate-500">{{ __('File GPX atau XML (Maks. 10MB)') }}</p>
                         </div>
                         <div class="hidden flex-col items-center justify-center pt-5 pb-6" id="file-selected">
                             <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
@@ -142,8 +141,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                             </div>
-                            <p class="mb-2 text-sm font-semibold text-green-600" id="file-name">File terpilih</p>
-                            <p class="text-xs text-slate-500">Klik untuk mengganti file</p>
+                            <p class="mb-2 text-sm font-semibold text-green-600" id="file-name">{{ __('File terpilih') }}</p>
+                            <p class="text-xs text-slate-500">{{ __('Klik untuk mengganti file') }}</p>
                         </div>
                     </label>
                 </div>
@@ -160,14 +159,14 @@
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                     </svg>
                     <div class="text-sm text-blue-700">
-                        <p class="font-semibold mb-1">Proses Analisis Otomatis</p>
-                        <p>Sistem akan mengekstrak data berikut secara otomatis:</p>
+                        <p class="font-semibold mb-1">{{ __('Proses Analisis Otomatis') }}</p>
+                        <p>{{ __('Sistem akan mengekstrak data berikut secara otomatis:') }}</p>
                         <ul class="mt-2 list-disc list-inside space-y-1">
-                            <li>Jarak total jalur (km)</li>
-                            <li>Total elevasi gain (meter)</li>
-                            <li>Estimasi waktu tempuh (Naismith)</li>
-                            <li>Grade rata-rata (%)</li>
-                            <li>Vector embedding untuk pencarian AI</li>
+                            <li>{{ __('Jarak total jalur (km)') }}</li>
+                            <li>{{ __('Total elevasi gain (meter)') }}</li>
+                            <li>{{ __('Estimasi waktu tempuh (Naismith)') }}</li>
+                            <li>{{ __('Grade rata-rata (%)') }}</li>
+                            <li>{{ __('Vector embedding untuk pencarian AI') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -179,7 +178,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                 </svg>
-                <span>Upload & Proses GPX</span>
+                <span>{{ __('Upload & Proses GPX') }}</span>
             </button>
         </form>
     </div>

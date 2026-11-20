@@ -59,4 +59,14 @@ return [
         'expires'    => (int) env('ALTCHA_EXPIRES', 600),
     ],
 
+    // Single sign-on with the web chat (docs/SSO.md).
+    // Empty RUTESTRIP_SSO_SECRET falls back to a key derived from APP_KEY (dev/tests only:
+    // the chat needs the same secret). Empty SSO_COOKIE_DOMAIN = host-only cookies.
+    'sso'      => [
+        'secret'          => env('RUTESTRIP_SSO_SECRET'),
+        'internal_secret' => env('RUTESTRIP_INTERNAL_SECRET'),
+        'cookie_domain'   => env('SSO_COOKIE_DOMAIN') ?: null,
+        'cookie_secure'   => (bool) env('SSO_COOKIE_SECURE', false),
+    ],
+
 ];

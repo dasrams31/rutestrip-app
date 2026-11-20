@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Icon from './Icon';
+import { useI18n } from './I18nProvider';
 
 function extFromSrc(src) {
   const m = /^data:image\/([a-z0-9+.-]+)[;,]/i.exec(src || '');
@@ -16,6 +17,7 @@ function extFromSrc(src) {
  * refuse to open as a top-level page, so they are shown here instead.
  */
 export default function ImageLightbox({ image, onClose }) {
+  const { t } = useI18n();
   const [zoomed, setZoomed] = useState(false);
   const closeRef = useRef(null);
 
@@ -61,18 +63,18 @@ export default function ImageLightbox({ image, onClose }) {
       className="lightbox"
       role="dialog"
       aria-modal="true"
-      aria-label={image.alt || 'Pratinjau gambar'}
+      aria-label={image.alt || t('lightbox.preview')}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="lightbox-bar">
-        <p className="lightbox-title">{image.alt || 'Gambar'}</p>
+        <p className="lightbox-title">{image.alt || t('lightbox.image')}</p>
         <div className="lightbox-actions">
           <button
             type="button"
             className="lightbox-btn"
             onClick={() => setZoomed((z) => !z)}
-            aria-label={zoomed ? 'Sesuaikan ke layar' : 'Perbesar ke ukuran asli'}
-            title={zoomed ? 'Sesuaikan ke layar' : 'Ukuran asli'}
+            aria-label={zoomed ? t('lightbox.fit') : t('lightbox.zoom')}
+            title={zoomed ? t('lightbox.fit') : t('lightbox.zoomTitle')}
           >
             <Icon name={zoomed ? 'zoom-out' : 'zoom-in'} size={20} />
           </button>
@@ -80,8 +82,8 @@ export default function ImageLightbox({ image, onClose }) {
             type="button"
             className="lightbox-btn"
             onClick={download}
-            aria-label="Unduh gambar"
-            title="Unduh"
+            aria-label={t('lightbox.download')}
+            title={t('lightbox.downloadTitle')}
           >
             <Icon name="download" size={20} />
           </button>
@@ -90,8 +92,8 @@ export default function ImageLightbox({ image, onClose }) {
             type="button"
             className="lightbox-btn"
             onClick={onClose}
-            aria-label="Tutup pratinjau"
-            title="Tutup (Esc)"
+            aria-label={t('lightbox.close')}
+            title={t('lightbox.closeTitle')}
           >
             <Icon name="x" size={20} strokeWidth={2} />
           </button>

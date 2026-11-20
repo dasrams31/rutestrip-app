@@ -1,10 +1,14 @@
-const CACHE_NAME = 'rutestrip-pwa-v1';
+// v2: new icons (no black corners); old caches are dropped on activate
+const CACHE_NAME = 'rutestrip-pwa-v2';
 const ASSETS_TO_CACHE = [
-  '/',
   '/manifest.json',
   '/logo.svg',
   '/icon.svg',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png',
+  '/apple-touch-icon.png'
 ];
 
 // Install Service Worker

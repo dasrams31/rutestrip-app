@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Profil')
+@section('title', __('Edit Profil'))
 
 @section('content')
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="user" class="w-7 h-7 text-emerald-600" /> Edit Profil</h1>
-            <p class="text-slate-600">Ubah informasi akun Anda</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="user" class="w-7 h-7 text-emerald-600" /> {{ __('Edit Profil') }}</h1>
+            <p class="text-slate-600">{{ __('Ubah informasi akun Anda') }}</p>
         </div>
-        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1"><x-icon name="arrow-left" class="w-4 h-4" /> Kembali</a>
+        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
     </div>
 
     @if(session('success'))
@@ -20,14 +20,14 @@
 
     <!-- Profile Info -->
     <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">Informasi Profil</h2>
+        <h2 class="text-lg font-bold text-slate-800 mb-4">{{ __('Informasi Profil') }}</h2>
 
         <form method="POST" action="{{ route('user.profile.update') }}">
             @csrf
             @method('PUT')
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Nama</label>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">{{ __('Nama') }}</label>
                 <input type="text" name="name" value="{{ old('name', $user->name) }}"
                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none @error('name') border-red-500 @enderror">
                 @error('name')
@@ -36,7 +36,7 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">{{ __('Email') }}</label>
                 <input type="email" name="email" value="{{ old('email', $user->email) }}"
                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none @error('email') border-red-500 @enderror">
                 @error('email')
@@ -45,21 +45,21 @@
             </div>
 
             <button type="submit" class="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium">
-                Simpan Perubahan
+                {{ __('Simpan Perubahan') }}
             </button>
         </form>
     </div>
 
     <!-- Change Password -->
     <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">Ubah Password</h2>
+        <h2 class="text-lg font-bold text-slate-800 mb-4">{{ __('Ubah Password') }}</h2>
 
         <form method="POST" action="{{ route('user.password.update') }}">
             @csrf
             @method('PUT')
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Password Saat Ini</label>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">{{ __('Password Saat Ini') }}</label>
                 <input type="password" name="current_password"
                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none @error('current_password') border-red-500 @enderror">
                 @error('current_password')
@@ -68,7 +68,7 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Password Baru</label>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">{{ __('Password Baru') }}</label>
                 <input type="password" name="password"
                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none @error('password') border-red-500 @enderror">
                 @error('password')
@@ -77,13 +77,13 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Konfirmasi Password Baru</label>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">{{ __('Konfirmasi Password Baru') }}</label>
                 <input type="password" name="password_confirmation"
                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
             </div>
 
             <button type="submit" class="px-6 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 font-medium">
-                Ubah Password
+                {{ __('Ubah Password') }}
             </button>
         </form>
     </div>

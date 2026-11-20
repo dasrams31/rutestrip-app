@@ -1,0 +1,3 @@
+# GPX copies are large and can be regenerated with: php artisan dataset:export <dir>
+# The full folder (with gpx/) is shipped as rutestrip-dataset-v2.zip
+gpx/

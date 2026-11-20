@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Provenance GPX - ' . $route->name)
+@section('title', __('Provenance GPX') . ' - ' . $route->name)
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -9,23 +9,23 @@
             <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-            Kembali ke Detail Rute
+            {{ __('Kembali ke Detail Rute') }}
         </a>
 
         <div class="bg-mountain-gradient rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-            <p class="text-emerald-100 text-sm font-semibold mb-2">GPX Dataset Provenance</p>
+            <p class="text-emerald-100 text-sm font-semibold mb-2">{{ __('GPX Dataset Provenance') }}</p>
             <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">{{ $route->name }}</h1>
             <p class="text-emerald-50 max-w-3xl">
-                Riwayat versi, hash SHA-256, uploader, dan status verifikasi file GPX. Data ini menjadi dasar audit trail perubahan file GPX.
+                {{ __('Riwayat versi, hash SHA-256, uploader, dan status verifikasi file GPX. Data ini menjadi dasar audit trail perubahan file GPX.') }}
             </p>
             @auth
             @if(Auth::user()->isAdmin())
             <div class="flex flex-wrap gap-3 mt-5">
                 <a href="{{ route('routes.versions.create', $route) }}" class="inline-flex items-center px-5 py-3 bg-white text-emerald-700 rounded-2xl font-bold shadow-lg hover:bg-emerald-50 transition-colors">
-                    Upload Versi GPX Baru
+                    {{ __('Upload Versi GPX Baru') }}
                 </a>
                 <a href="{{ route('routes.provenance.export-verification-logs', $route) }}" class="inline-flex items-center px-5 py-3 bg-emerald-900/40 text-white rounded-2xl font-bold border border-white/30 hover:bg-emerald-900/60 transition-colors">
-                    Export Verification CSV
+                    {{ __('Export Verification CSV') }}
                 </a>
             </div>
             @endif
@@ -35,22 +35,22 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-2xl border border-slate-100 shadow-lg p-6">
-            <p class="text-sm text-slate-500 mb-1">Total versi</p>
+            <p class="text-sm text-slate-500 mb-1">{{ __('Total versi') }}</p>
             <p class="text-3xl font-extrabold text-slate-800">{{ $route->gpxVersions->count() }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-lg p-6">
-            <p class="text-sm text-slate-500 mb-1">Versi aktif</p>
+            <p class="text-sm text-slate-500 mb-1">{{ __('Versi aktif') }}</p>
             <p class="text-3xl font-extrabold text-slate-800">
                 {{ $route->activeGpxVersion ? 'v' . $route->activeGpxVersion->version_number : '-' }}
             </p>
             @if($route->activeGpxVersion)
             <a href="{{ route('routes.provenance.download-version', [$route, $route->activeGpxVersion]) }}" class="inline-flex mt-3 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100">
-                Download GPX Aktif
+                {{ __('Download GPX Aktif') }}
             </a>
             @endif
         </div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-lg p-6">
-            <p class="text-sm text-slate-500 mb-1">Status aktif</p>
+            <p class="text-sm text-slate-500 mb-1">{{ __('Status aktif') }}</p>
             @if($route->activeGpxVersion)
             <span class="inline-flex px-3 py-1 rounded-full text-sm font-bold
                 @if($route->activeGpxVersion->verification_status === 'verified') bg-emerald-100 text-emerald-800
@@ -61,19 +61,19 @@
             </span>
             <p class="text-xs text-slate-500 mt-3">{{ $route->activeGpxVersion->verification_status_explanation }}</p>
             @else
-            <span class="inline-flex px-3 py-1 rounded-full text-sm font-bold bg-slate-100 text-slate-600">BELUM ADA</span>
+            <span class="inline-flex px-3 py-1 rounded-full text-sm font-bold bg-slate-100 text-slate-600">{{ __('BELUM ADA') }}</span>
             @endif
         </div>
     </div>
 
     <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         <div class="p-6 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-xl font-bold text-slate-800">Riwayat Versi GPX</h2>
-            <p class="text-sm text-slate-500 mt-1">Versi terbaru ditampilkan paling atas.</p>
+            <h2 class="text-xl font-bold text-slate-800">{{ __('Riwayat Versi GPX') }}</h2>
+            <p class="text-sm text-slate-500 mt-1">{{ __('Versi terbaru ditampilkan paling atas.') }}</p>
         </div>
 
         @if($route->gpxVersions->isEmpty())
-        <div class="p-10 text-center text-slate-500">Belum ada metadata provenance.</div>
+        <div class="p-10 text-center text-slate-500">{{ __('Belum ada metadata provenance.') }}</div>
         @else
         <div class="divide-y divide-slate-100">
             @foreach($route->gpxVersions as $version)
@@ -81,9 +81,9 @@
                 <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
                     <div>
                         <div class="flex flex-wrap items-center gap-2 mb-2">
-                            <h3 class="text-lg font-extrabold text-slate-800">Versi {{ $version->version_number }}</h3>
+                            <h3 class="text-lg font-extrabold text-slate-800">{{ __('Versi :number', ['number' => $version->version_number]) }}</h3>
                             @if($version->is_active)
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">AKTIF</span>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{{ __('AKTIF') }}</span>
                             @endif
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold
                                 @if($version->verification_status === 'verified') bg-emerald-100 text-emerald-700
@@ -94,30 +94,30 @@
                             </span>
                         </div>
                         <p class="text-sm text-slate-500">
-                            Diupload {{ $version->created_at->format('d M Y, H:i') }}
+                            {{ __('Diupload :date', ['date' => $version->created_at->format('d M Y, H:i')]) }}
                             @if($version->uploader)
-                            oleh {{ $version->uploader->name }}
+                            {{ __('oleh :name', ['name' => $version->uploader->name]) }}
                             @endif
                         </p>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('routes.provenance.download-version', [$route, $version]) }}" class="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100">
-                            Download GPX
+                            {{ __('Download GPX') }}
                         </a>
                         @auth
                         @if(Auth::user()->isAdmin())
                         <form action="{{ route('routes.provenance.verify', [$route, $version]) }}" method="POST">
                             @csrf
                             <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-bold hover:bg-emerald-100">
-                                Verify Ulang
+                                {{ __('Verify Ulang') }}
                             </button>
                         </form>
                         @unless($version->is_active)
-                        <form action="{{ route('routes.provenance.restore', [$route, $version]) }}" method="POST" onsubmit="return confirm('Pulihkan versi GPX ini sebagai versi aktif?')">
+                        <form action="{{ route('routes.provenance.restore', [$route, $version]) }}" method="POST" onsubmit="return confirm(@js(__('Pulihkan versi GPX ini sebagai versi aktif?')))">
                             @csrf
                             <button type="submit" class="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 text-sm font-bold hover:bg-blue-100">
-                                Restore
+                                {{ __('Restore') }}
                             </button>
                         </form>
                         @endunless
@@ -128,19 +128,19 @@
 
                 <div class="grid md:grid-cols-2 gap-4">
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">SHA-256 Hash</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{{ __('SHA-256 Hash') }}</p>
                         <code class="block text-xs text-slate-700 break-all">{{ $version->file_hash }}</code>
                     </div>
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">File GPX</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{{ __('File GPX') }}</p>
                         <p class="text-sm text-slate-700 break-all">{{ $version->gpx_file_path }}</p>
                     </div>
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Change Log</p>
-                        <p class="text-sm text-slate-700">{{ $version->change_log ?: 'Tidak ada catatan perubahan.' }}</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{{ __('Change Log') }}</p>
+                        <p class="text-sm text-slate-700">{{ $version->change_log ?: __('Tidak ada catatan perubahan.') }}</p>
                     </div>
                     <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Verifikasi Terakhir</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{{ __('Verifikasi Terakhir') }}</p>
                         <p class="text-sm text-slate-700">{{ $version->verified_at ? $version->verified_at->format('d M Y, H:i') : '-' }}</p>
                         <p class="text-xs text-slate-500 mt-2">{{ $version->verification_status_explanation }}</p>
                     </div>
@@ -148,7 +148,7 @@
 
                 @if($version->verificationLogs->isNotEmpty())
                 <div class="mt-4 bg-white rounded-2xl border border-slate-100 overflow-hidden">
-                    <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 text-sm font-bold text-slate-700">Log Verifikasi Terbaru</div>
+                    <div class="px-4 py-3 bg-slate-50 border-b border-slate-100 text-sm font-bold text-slate-700">{{ __('Log Verifikasi Terbaru') }}</div>
                     <div class="divide-y divide-slate-100">
                         @foreach($version->verificationLogs as $log)
                         <div class="px-4 py-3 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2">

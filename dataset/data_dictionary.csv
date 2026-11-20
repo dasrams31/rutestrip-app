@@ -1,0 +1,35 @@
+column,type,unit,description
+route_id,integer,,RuteStrip route id (matches https://rutestrip.ai.id/routes/<id>)
+slug,string,,URL slug of the route name
+name,string,,Route name
+mountain,string,,Mountain/peak name derived from the route name
+via,string,,Trailhead/basecamp part of the name after "via" (empty if none)
+village,string,,Village (desa/kelurahan) of the trailhead (OpenStreetMap Nominatim)
+district,string,,District (kecamatan) of the trailhead
+regency,string,,Regency/city (kabupaten/kota) of the trailhead
+province,string,,Province of the trailhead
+distance_km,float,km,3D track distance from the GPX
+elevation_gain_m,integer,m,Total ascent along the track (smoothed GPX)
+naismith_duration_hour,float,hour,Naismith estimate: distance_km/5 + elevation_gain_m/600
+average_grade_pct,float,%,elevation_gain_m / (distance_km*1000) * 100
+min_elevation_m,integer,m,Lowest GPX elevation (from the narrative)
+max_elevation_m,integer,m,Highest GPX elevation (from the narrative)
+difficulty,string,,"Mudah, Sedang, Sulit or Sangat Sulit (Shenandoah-based rating)"
+difficulty_score,float,,Shenandoah difficulty score with grade/altitude factors
+trailhead_lat,float,deg,Latitude of the first track point
+trailhead_lng,float,deg,Longitude of the first track point
+trailhead_elevation_m,integer,m,Trailhead elevation (GPX or Open-Meteo DEM)
+summit_lat,float,deg,Latitude of the highest point
+summit_lng,float,deg,Longitude of the highest point
+summit_elevation_m,integer,m,Summit elevation (GPX maximum or DEM)
+elevation_source,string,,"gpx, dem (Open-Meteo 90 m) or narrative"
+track_points,integer,,Number of points in the simplified stored track
+narrative_text,string,,Generated Indonesian description used as SBERT input
+description,string,,Manual description (when available)
+likes,integer,,Likes on rutestrip.ai.id at export time
+average_rating,float,,Average user rating (0-5) at export time
+source,string,,"OpenStreetMap, RuteStrip research collection or RuteStrip user upload"
+source_url,string,,OpenStreetMap relation/way URL for OSM-derived routes
+license,string,,ODbL-1.0 for OSM-derived routes; otherwise see README
+gpx_file,string,,Path of the GPX file inside this dataset
+url,string,,Route page on rutestrip.ai.id

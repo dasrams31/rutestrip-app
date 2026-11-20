@@ -45,7 +45,6 @@ Route::get('/routes/{route}/review/login', [RouteConditionsController::class, 'l
 // Reviews & Ratings (Auth required)
 Route::middleware('auth')->group(function () {
     Route::post('/routes/{route}/review', [RouteController::class, 'storeReview'])->name('routes.review.store');
-    Route::post('/routes/{route}/like', [RouteController::class, 'toggleLike'])->name('routes.like.toggle');
     Route::get('/routes/{route}/versions/create', [ProvenanceController::class, 'createVersion'])->name('routes.versions.create');
     Route::post('/routes/{route}/versions', [ProvenanceController::class, 'storeVersion'])->name('routes.versions.store');
     Route::get('/routes/{route}/provenance/export-verification-logs', [ProvenanceController::class, 'exportVerificationLogs'])->name('routes.provenance.export-verification-logs');
@@ -111,9 +110,7 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
     Route::get('/favorites', [UserController::class, 'favorites'])->name('favorites');
     Route::post('/favorite/{route}', [UserController::class, 'toggleFavorite'])->name('favorite.toggle');
     Route::get('/history', [UserController::class, 'history'])->name('history');
-    Route::get('/profile', [UserController::class, 'editProfile'])->name('profile');
-    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/password', [UserController::class, 'updatePassword'])->name('password.update');
+    // user.profile, user.profile.update, user.password.update: see "Account settings" below.
 });
 
 // Admin Dashboard
@@ -137,3 +134,28 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/paper-outputs/provenance/export-before-after', [AdminEvaluationController::class, 'exportBeforeAfterTable'])->name('paper-outputs.provenance.export-before-after');
     Route::get('/paper-outputs/provenance/export-evaluation-results', [AdminEvaluationController::class, 'exportEvaluationResults'])->name('paper-outputs.provenance.export-evaluation-results');
 });
+
+// ---------------------------------------------------------------------------
+// Account settings (unified account for the site and the chat, docs/SSO.md).
+// The old profile page redirects here; its form routes keep their names and
+// go through SettingsController so a password change always bumps sso_version.
+// SSO JSON API: routes/api.php.
+// ---------------------------------------------------------------------------
+Route::middleware('auth')->group(function () {
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'show'])->name('settings');
+    Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
+    Route::get('/user/profile', fn () => redirect()->route('settings', status: 301))->name('user.profile');
+    Route::put('/user/profile', [\App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('user.profile.update');
+    Route::put('/user/password', [\App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('user.password.update');
+});
+
+// ---------------------------------------------------------------------------
+// Site UI: language switch (ID | EN, rs_lang cookie, see SetLocale) and likes
+// without login (guests are identified by the rs_vid visitor cookie).
+// ---------------------------------------------------------------------------
+Route::get('/lang/{locale}', [\App\Http\Controllers\LocaleController::class, 'switch'])
+    ->whereIn('locale', \App\Http\Middleware\SetLocale::SUPPORTED)
+    ->name('lang.switch');
+Route::post('/routes/{route}/like', [RouteController::class, 'toggleLike'])
+    ->middleware('throttle:30,1')
+    ->name('routes.like.toggle');

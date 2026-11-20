@@ -76,6 +76,9 @@ function extractMountain(text, extraStrip = []) {
     'gunung', 'mount', 'mt', 'dari', 'di', 'untuk', 'yang', 'ke',
     'lihat', 'tampilkan', 'tunjukkan', 'cari', 'berapa', 'apa',
     'tolong', 'minta', 'kasih', 'info', 'informasi', 'tentang',
+    // English UI queries ("Weather on Mount Sumbing today")
+    'the', 'of', 'on', 'for', 'in', 'at', 'a', 'an', 'to', 'show', 'me', 'please',
+    'what', 'is', 'how', 'today', 'now', 'mountain',
     ...extraStrip,
   ];
   const cleanedText = text.replace(/[^a-zA-Z0-9\s]/g, ' ');
@@ -124,38 +127,42 @@ export async function smartRoute(message) {
   // ── 3. Biaya (needs mountain) ──
   if (/\b(biaya|budget|harga|cost|estimasi\s*biaya|berapa\s*biaya)\b/.test(msg)) {
     const nums = extractNumbers(msg) || { people: 1, days: 2 };
-    const mountain = extractMountain(msg, ['biaya', 'budget', 'harga', 'cost', 'estimasi', 'orang', 'org', 'hari', 'malam', 'pendakian']);
+    const mountain = extractMountain(msg, ['biaya', 'budget', 'harga', 'cost', 'estimasi', 'orang', 'org', 'hari', 'malam', 'pendakian', 'hiking', 'people', 'pax', 'days', 'day', 'nights', 'night', 'estimate']);
     const cleanMtn = mountain.replace(/\d+/g, '').trim() || 'merbabu';
     const data = await getBiaya(cleanMtn, nums.people, nums.days);
     return { type: 'biaya', mountain: cleanMtn, people: nums.people, days: nums.days, data, ms: Date.now() - t0 };
   }
 
   // ── 4. Logistik (needs numbers) ──
-  if (/\b(logistik|logistic|perlengkapan|persiapan\s*logistik)\b/.test(msg)) {
+  if (/\b(logistik|logistics?|perlengkapan|persiapan\s*logistik)\b/.test(msg)) {
     const nums = extractNumbers(msg) || { people: 3, days: 2 };
     const data = await getLogistik(nums.people, nums.days);
     return { type: 'logistik', people: nums.people, days: nums.days, data, ms: Date.now() - t0 };
   }
 
   // ── 5. Survival / P3K ──
-  if (/\b(survival|first\s*aid|p3k|darurat|hipotermia|hipotermi|ams|altitude|tersesat|gigitan|patah|dehidrasi|kecelakaan|pertolongan)\b/.test(msg)) {
-    const topic = extractMountain(msg, ['survival', 'first', 'aid', 'p3k', 'panduan', 'guide', 'tips', 'cara', 'mengatasi', 'pertolongan', 'pertama']);
+  if (/\b(survival|first\s*aid|p3k|darurat|hipotermia|hipotermi|hypothermia|ams|altitude|tersesat|gigitan|patah|dehidrasi|dehydration|kecelakaan|pertolongan)\b/.test(msg)) {
+    // English topic words map to the Indonesian topics the API knows
+    const enTopics = { hypothermia: 'hipotermia', dehydration: 'dehidrasi', lost: 'tersesat', fracture: 'patah', bite: 'gigitan' };
+    const topic = extractMountain(msg, ['survival', 'first', 'aid', 'p3k', 'panduan', 'guide', 'tips', 'cara', 'mengatasi', 'pertolongan', 'pertama', 'when', 'lost', 'hiking'])
+      .split(' ').map((w) => enTopics[w] || w).join(' ').trim()
+      || Object.entries(enTopics).find(([en]) => msg.includes(en))?.[1];
     const data = await getSurvival(topic || 'hipotermia');
     return { type: 'survival', topic: topic || 'hipotermia', data, ms: Date.now() - t0 };
   }
 
   // ── 6. Porter / Basecamp ──
   if (/\b(porter|basecamp|ojek|kontak\s*porter|guide\s*lokal|pemandu)\b/.test(msg)) {
-    const rawMtn = extractMountain(msg, ['porter', 'basecamp', 'ojek', 'kontak', 'guide', 'lokal', 'pemandu', 'contact']);
+    const rawMtn = extractMountain(msg, ['porter', 'porters', 'basecamp', 'ojek', 'kontak', 'guide', 'lokal', 'pemandu', 'contact', 'contacts', 'local']);
     const mountain = rawMtn || 'merbabu';
     const data = await getPorter(mountain);
     return { type: 'porter', mountain, data, ms: Date.now() - t0 };
   }
 
   // ── 7. Peta Satelit / Topografi ──
-  if (/\b(peta|foto\s*satelit|map|satelit|satellite|topografi|topo)\b/.test(msg)) {
-    const mapType = /\b(topo|topografi)\b/.test(msg) ? 'topografi' : 'satelit';
-    const rawMtn = extractMountain(msg, ['peta', 'foto', 'map', 'satelit', 'satellite', 'topografi', 'topo', 'gambar', 'image']);
+  if (/\b(peta|foto\s*satelit|map|satelit|satellite|topografi|topo|topographic)\b/.test(msg)) {
+    const mapType = /\b(topo|topografi|topographic)\b/.test(msg) ? 'topografi' : 'satelit';
+    const rawMtn = extractMountain(msg, ['peta', 'foto', 'map', 'satelit', 'satellite', 'topografi', 'topo', 'gambar', 'image', 'photo', 'topographic']);
     const mountain = rawMtn || 'merbabu';
     const url = getMapUrl(mountain, mapType);
     return { type: 'map', mountain, mapType, mapUrl: url, data: { map_url: url, mountain, map_type: mapType }, ms: Date.now() - t0 };

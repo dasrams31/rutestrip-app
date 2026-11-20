@@ -1,32 +1,30 @@
 {
+  "id": "/",
   "name": "RuteStrip AI – Asisten Pendakian Gunung",
   "short_name": "RuteStrip AI",
-  "description": "Asisten Pintar Berbasis AI Khusus Pendakian Gunung & Kegiatan Outdoor Indonesia",
-  "start_url": "/",
+  "description": "Asisten pintar berbasis AI khusus pendakian gunung & kegiatan outdoor Indonesia",
+  "start_url": "/chat?source=pwa",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f172a",
+  "background_color": "#f8fafc",
   "theme_color": "#059669",
   "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
     {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "name": "Chat baru",
+      "short_name": "Chat",
+      "url": "/chat?source=pwa-shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "categories": ["navigation", "travel", "productivity", "utilities"],
-  "lang": "id"
+  "lang": "id",
+  "dir": "ltr"
 }
