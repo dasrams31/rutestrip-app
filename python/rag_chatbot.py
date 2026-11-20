@@ -144,19 +144,23 @@ def retrieve_relevant_routes(query: str, routes_data: list, top_k: int = 5) -> l
     Returns:
         List of retrieved routes with similarity scores
     """
-    # Preprocess query
-    processed_query = preprocess_text(query, remove_stopwords=True)
-    
-    # Generate query embedding
-    query_embedding = generate_embedding(processed_query)
-    
-    # Calculate similarity with all routes
+    # Preprocess query (same preprocessing as processor.py) and embed it once
+    import search_scoring
+    query_embedding = generate_embedding(search_scoring.query_text(query))
+
+    # Hybrid score (SBERT document + aspect cosine, attribute and name match)
+    # when aspect embeddings are available; plain cosine otherwise.
     scored_routes = []
     for route in routes_data:
         if not route.get('embedding'):
             continue
-        
-        similarity = cosine_similarity_single(query_embedding, route['embedding'])
+
+        if route.get('aspect_embeddings'):
+            similarity = search_scoring.hybrid_score(
+                query, query_embedding, route['embedding'], route['aspect_embeddings'], route, routes_data
+            )['score']
+        else:
+            similarity = cosine_similarity_single(query_embedding, route['embedding'])
         scored_routes.append({
             'id': route.get('id'),
             'name': route.get('name', 'Unknown'),
@@ -359,25 +363,47 @@ def generate_response_gemini(prompt: str, api_key: str, model_name: str = 'gemin
     if not api_key:
         return generate_response_without_gemini(prompt)
 
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
-        
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.7,
-                top_p=0.9,
-                top_k=40,
-                max_output_tokens=1024,
+    # Try the configured model first, then fallbacks (GEMINI_FALLBACK_MODELS).
+    # Each call has a hard timeout and thinking disabled to keep latency low.
+    import requests
+
+    fallbacks = os.environ.get('GEMINI_FALLBACK_MODELS', 'gemini-3.5-flash,gemini-3.1-flash-lite')
+    models = []
+    for m in [model_name] + [x.strip() for x in fallbacks.split(',')]:
+        if m and m not in models:
+            models.append(m)
+    timeout = float(os.environ.get('GEMINI_TIMEOUT_SECONDS', '25'))
+
+    last_error = ''
+    for m in models:
+        try:
+            res = requests.post(
+                f'https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent',
+                headers={'x-goog-api-key': api_key, 'Content-Type': 'application/json'},
+                json={
+                    'contents': [{'role': 'user', 'parts': [{'text': prompt}]}],
+                    'generationConfig': {
+                        'temperature': 0.7,
+                        'topP': 0.9,
+                        'maxOutputTokens': 1024,
+                        'thinkingConfig': {'thinkingBudget': 0},
+                    },
+                },
+                timeout=timeout,
             )
-        )
-        
-        return response.text
-        
-    except Exception as e:
-        return generate_response_without_gemini(prompt, str(e))
+            data = res.json()
+            if res.status_code == 200:
+                parts = data.get('candidates', [{}])[0].get('content', {}).get('parts', [])
+                text = ''.join(p.get('text', '') for p in parts).strip()
+                if text:
+                    return text
+                last_error = f'{m}: empty response'
+            else:
+                last_error = f"{m}: HTTP {res.status_code} {data.get('error', {}).get('message', '')[:120]}"
+        except Exception as e:
+            last_error = f'{m}: {e}'
+
+    return generate_response_without_gemini(prompt, last_error)
 
 
 def generate_response_without_gemini(prompt: str, error: str = "") -> str:

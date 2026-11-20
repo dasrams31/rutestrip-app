@@ -165,6 +165,68 @@ class PythonProcessorService
     }
 
     /**
+     * Build search embeddings for routes (document + aspect sentences).
+     *
+     * @param  array  $routes  Each item: id, name, narrative_text, description
+     * @return array  Items: id, embedding_text, embedding, aspect_embeddings
+     */
+    public function indexRoutes(array $routes): array
+    {
+        if ($this->usesRemoteProcessor()) {
+            $response = Http::timeout(300)->post($this->remoteUrl('/index'), ['routes' => $routes]);
+
+            if ($response->failed()) {
+                throw new \Exception('Remote Python index failed: HTTP ' . $response->status());
+            }
+
+            return $this->validateRemoteResponse($response->json() ?? [])['routes'] ?? [];
+        }
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'rutestrip_index_');
+        file_put_contents($tempFile, json_encode($routes));
+
+        try {
+            $process = $this->createProcess(['--mode', 'index', '--data-file', $tempFile]);
+            $process->setTimeout(300);
+            $process->mustRun();
+            $result = json_decode($process->getOutput(), true);
+
+            if (! is_array($result) || ! ($result['success'] ?? false)) {
+                throw new \Exception($result['error'] ?? 'Invalid JSON response from Python index');
+            }
+
+            return $result['routes'] ?? [];
+        } catch (ProcessFailedException $exception) {
+            Log::error('Python index failed: ' . $exception->getMessage());
+            throw new \Exception('Failed to index routes: ' . $process->getErrorOutput());
+        } finally {
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+
+    /**
+     * Run the RAG chatbot through the persistent processor (model already in memory).
+     * Returns null when no processor URL is configured, so callers can fall back
+     * to the CLI script.
+     */
+    public function ragChat(array $payload): ?array
+    {
+        if (! $this->usesRemoteProcessor()) {
+            return null;
+        }
+
+        $response = Http::timeout(90)->post($this->remoteUrl('/rag'), $payload);
+
+        if ($response->failed()) {
+            throw new \Exception('Remote RAG failed: HTTP ' . $response->status());
+        }
+
+        return $response->json() ?? [];
+    }
+
+    /**
      * Get SBERT embedding for a query text only (FAST - single embedding)
      */
     public function getQueryEmbedding(string $query): array

@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
 use App\Models\HikingRoute;
+use App\Services\PythonProcessorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -12,6 +13,10 @@ use Symfony\Component\Process\Process;
 
 class ChatController extends Controller
 {
+    public function __construct(private PythonProcessorService $pythonService)
+    {
+    }
+
     /**
      * Show the chatbot page
      */
@@ -105,6 +110,7 @@ class ChatController extends Controller
                     'best_season'            => $route->best_season,
                     'tips'                   => $route->tips,
                     'embedding'              => $route->sbert_embedding,
+                    'aspect_embeddings'      => $route->sbert_aspect_embeddings,
                 ];
             })->values()->toArray();
 
@@ -118,58 +124,25 @@ class ChatController extends Controller
                 ->values()
                 ->toArray();
 
-            // Write temp files
-            $dataFile    = tempnam(sys_get_temp_dir(), 'rutestrip_chat_data_');
-            $historyFile = tempnam(sys_get_temp_dir(), 'rutestrip_chat_hist_');
-            file_put_contents($dataFile, json_encode($routesData));
-            file_put_contents($historyFile, json_encode($chatHistory));
+            $apiKey      = env('GEMINI_API_KEY', '');
+            $geminiModel = env('GEMINI_MODEL', 'gemini-2.0-flash');
 
-            // Get API key, model, and Python path
-            $apiKey           = env('GEMINI_API_KEY', '');
-            $geminiModel      = env('GEMINI_MODEL', 'gemini-2.0-flash');
-            $pythonExecutable = env('PYTHON_PATH', 'python');
-            $scriptPath       = base_path('python/rag_chatbot.py');
-
-            // Build command
-            $command = [
-                $pythonExecutable,
-                $scriptPath,
-                '--query', $userMessage,
-                '--data-file', $dataFile,
-                '--api-key', $apiKey,
-                '--model', $geminiModel,
-                '--top-k', '3',
-                '--history-file', $historyFile,
-            ];
-
-            $process = new Process($command);
-            $process->setEnv([
-                'PATH'             => getenv('PATH'),
-                'PYTHONIOENCODING' => 'utf-8',
-                'HF_HOME'          => storage_path('app/huggingface'),
-                'SENTENCE_TRANSFORMERS_HOME' => storage_path('app/huggingface/sentence-transformers'),
-                'TRANSFORMERS_CACHE' => storage_path('app/huggingface/transformers'),
-                'USERPROFILE'      => getenv('USERPROFILE'),
-                'USERNAME'         => getenv('USERNAME') ?: 'default',
-                'LOCALAPPDATA'     => getenv('LOCALAPPDATA'),
-                'APPDATA'          => getenv('APPDATA'),
-                'HOME'             => getenv('USERPROFILE'),
-                'SYSTEMROOT'       => getenv('SYSTEMROOT') ?: 'C:\\Windows',
-                'TEMP'             => getenv('TEMP') ?: sys_get_temp_dir(),
-                'TMP'              => getenv('TMP') ?: sys_get_temp_dir(),
+            // Fast path: persistent processor keeps SBERT in memory.
+            $result = $this->pythonService->ragChat([
+                'query'   => $userMessage,
+                'routes'  => $routesData,
+                'history' => $chatHistory,
+                'api_key' => $apiKey,
+                'model'   => $geminiModel,
+                'top_k'   => 3,
             ]);
-            $process->setWorkingDirectory(base_path('python'));
-            $process->setTimeout(120);
 
-            $process->mustRun();
-            $output = $process->getOutput();
-            $result = json_decode($output, true);
+            // Fallback: run the CLI script (loads the model per request).
+            if ($result === null) {
+                $result = $this->runRagScript($userMessage, $routesData, $chatHistory, $apiKey, $geminiModel);
+            }
 
-            // Clean up temp files
-            @unlink($dataFile);
-            @unlink($historyFile);
-
-            if (json_last_error() !== JSON_ERROR_NONE || !isset($result['success'])) {
+            if (! isset($result['success'])) {
                 throw new \Exception('Invalid response from RAG pipeline');
             }
 
@@ -245,5 +218,62 @@ class ChatController extends Controller
             ]);
 
         return response()->json(['messages' => $messages]);
+    }
+
+    /**
+     * Run python/rag_chatbot.py as a one-off process (used when no persistent
+     * processor URL is configured).
+     */
+    private function runRagScript(string $userMessage, array $routesData, array $chatHistory, string $apiKey, string $geminiModel): array
+    {
+        // Write temp files
+        $dataFile    = tempnam(sys_get_temp_dir(), 'rutestrip_chat_data_');
+        $historyFile = tempnam(sys_get_temp_dir(), 'rutestrip_chat_hist_');
+        file_put_contents($dataFile, json_encode($routesData));
+        file_put_contents($historyFile, json_encode($chatHistory));
+
+        $pythonExecutable = env('PYTHON_PATH', 'python');
+        $scriptPath       = base_path('python/rag_chatbot.py');
+
+        // Build command
+        $command = [
+            $pythonExecutable,
+            $scriptPath,
+            '--query', $userMessage,
+            '--data-file', $dataFile,
+            '--api-key', $apiKey,
+            '--model', $geminiModel,
+            '--top-k', '3',
+            '--history-file', $historyFile,
+        ];
+
+        $process = new Process($command);
+        $process->setEnv([
+            'PATH'             => getenv('PATH'),
+            'PYTHONIOENCODING' => 'utf-8',
+            'HF_HOME'          => storage_path('app/huggingface'),
+            'SENTENCE_TRANSFORMERS_HOME' => storage_path('app/huggingface/sentence-transformers'),
+            'TRANSFORMERS_CACHE' => storage_path('app/huggingface/transformers'),
+            'USERPROFILE'      => getenv('USERPROFILE'),
+            'USERNAME'         => getenv('USERNAME') ?: 'default',
+            'LOCALAPPDATA'     => getenv('LOCALAPPDATA'),
+            'APPDATA'          => getenv('APPDATA'),
+            'HOME'             => getenv('USERPROFILE'),
+            'SYSTEMROOT'       => getenv('SYSTEMROOT') ?: 'C:\\Windows',
+            'TEMP'             => getenv('TEMP') ?: sys_get_temp_dir(),
+            'TMP'              => getenv('TMP') ?: sys_get_temp_dir(),
+        ]);
+        $process->setWorkingDirectory(base_path('python'));
+        $process->setTimeout(120);
+
+        $process->mustRun();
+        $output = $process->getOutput();
+        $result = json_decode($output, true);
+
+        // Clean up temp files
+        @unlink($dataFile);
+        @unlink($historyFile);
+
+        return is_array($result) ? $result : [];
     }
 }

@@ -9,7 +9,18 @@ const BASE = (process.env.RUTESTRIP_API_BASE && !process.env.RUTESTRIP_API_BASE.
   ? process.env.RUTESTRIP_API_BASE
   : 'http://127.0.0.1:8010';
 const GEMINI_KEY   = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+// Ordered model fallback list (de-duplicated). GEMINI_MODELS overrides the default.
+const GEMINI_MODELS = [...new Set(
+  (process.env.GEMINI_MODELS
+    ? process.env.GEMINI_MODELS.split(',')
+    : [process.env.GEMINI_MODEL, 'gemini-3.5-flash', 'gemini-3.1-flash-lite']
+  ).map(m => (m || '').trim()).filter(Boolean)
+)];
+const GEMINI_FIRST_TOKEN_TIMEOUT_MS = Number(process.env.GEMINI_FIRST_TOKEN_TIMEOUT_MS) || 12000;
+const GEMINI_TOTAL_TIMEOUT_MS       = Number(process.env.GEMINI_TOTAL_TIMEOUT_MS) || 45000;
+const GEMINI_MAX_OUTPUT_TOKENS      = 1024;
+// Models that answered 400 to thinkingConfig (thinking cannot be disabled); remembered per process.
+const MODELS_WITHOUT_THINKING_CONFIG = new Set();
 const HERMES_BASE  = process.env.HERMES_API_BASE || process.env.OLLAMA_API_BASE || '';
 const HERMES_MODEL = process.env.HERMES_MODEL || process.env.OLLAMA_MODEL || 'ag/gemini-3.6-flash-medium';
 const HERMES_KEY   = process.env.HERMES_API_KEY || '';
@@ -318,12 +329,260 @@ Saya bisa menjawab berbagai pertanyaan seputar pendakian gunung!
 > "Porter Gunung Semeru"`;
 
 /* ─────────────────────────────────────────────
+   HERMES / 9router (OpenAI-compatible) — optional primary
+───────────────────────────────────────────── */
+async function callHermes(prompt) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s max timeout
+    const headers = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    };
+    if (HERMES_KEY) {
+      headers['Authorization'] = `Bearer ${HERMES_KEY}`;
+    }
+
+    const hermesRes = await fetch(`${HERMES_BASE.replace(/\/$/, '')}/v1/chat/completions`, {
+      method: 'POST',
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: HERMES_MODEL,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+        stream: false,
+      }),
+    });
+    clearTimeout(timeout);
+
+    if (!hermesRes.ok) {
+      const errBody = await hermesRes.text();
+      console.error(`Hermes VPS returned status ${hermesRes.status}`);
+      return { text: '', error: `HTTP ${hermesRes.status}: ${errBody.substring(0, 150)}` };
+    }
+
+    const rawText = await hermesRes.text();
+    try {
+      const hermesData = JSON.parse(rawText);
+      return { text: hermesData.choices?.[0]?.message?.content || '' };
+    } catch {
+      // Parser untuk format SSE (Server-Sent Events) jika 9router mengembalikan "data: {...}"
+      let extractedContent = '';
+      for (const line of rawText.split('\n')) {
+        if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+          try {
+            const chunk = JSON.parse(line.substring(6));
+            extractedContent += chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.message?.content || '';
+          } catch {}
+        }
+      }
+      if (extractedContent) return { text: extractedContent };
+      return { text: '', error: `Failed to parse Hermes response: ${rawText.substring(0, 100)}` };
+    }
+  } catch (hermesErr) {
+    const msg = hermesErr?.message || String(hermesErr);
+    console.error('Hermes VPS API error:', msg);
+    return { text: '', error: msg };
+  }
+}
+
+/* ─────────────────────────────────────────────
+   GEMINI — streaming with first-token timeout + model fallback
+───────────────────────────────────────────── */
+async function tryGeminiModel(genAI, modelName, generationConfig, history, prompt, onDelta, remainingMs) {
+  const controller = new AbortController();
+  const started = Date.now();
+  let text = '';
+  let firstTokenMs = null;
+  let abortReason = '';
+
+  const firstTokenWait = Math.min(GEMINI_FIRST_TOKEN_TIMEOUT_MS, remainingMs);
+  const firstTimer = setTimeout(() => {
+    abortReason = `no first token within ${firstTokenWait}ms`;
+    controller.abort();
+  }, firstTokenWait);
+  const totalTimer = setTimeout(() => {
+    abortReason = 'total generation timeout';
+    controller.abort();
+  }, remainingMs);
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: SYSTEM_PROMPT,
+      generationConfig,
+    });
+    const chat = model.startChat({ history: buildGeminiHistory(history) });
+    const result = await chat.sendMessageStream(prompt, { signal: controller.signal });
+    result.response.catch(() => {}); // avoid unhandled rejection when aborted
+
+    for await (const chunk of result.stream) {
+      let piece = '';
+      try { piece = chunk.text(); } catch {}
+      if (!piece) continue;
+      if (firstTokenMs === null) {
+        firstTokenMs = Date.now() - started;
+        clearTimeout(firstTimer);
+      }
+      text += piece;
+      onDelta(piece);
+    }
+    return { text, firstTokenMs };
+  } catch (err) {
+    return { text, firstTokenMs, status: err?.status, error: abortReason || err?.message || String(err) };
+  } finally {
+    clearTimeout(firstTimer);
+    clearTimeout(totalTimer);
+  }
+}
+
+async function generateWithGemini(history, prompt, onDelta) {
+  if (!GEMINI_KEY) return { text: '', model: null, error: 'GEMINI_API_KEY not set' };
+
+  const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+  const deadline = Date.now() + GEMINI_TOTAL_TIMEOUT_MS;
+  const errors = [];
+
+  for (const modelName of GEMINI_MODELS) {
+    // Retry the same model once without thinkingConfig if it rejects thinkingBudget=0.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const remainingMs = deadline - Date.now();
+      if (remainingMs < 1000) {
+        errors.push('generation deadline reached');
+        return { text: '', model: null, error: errors.join(' | ') };
+      }
+
+      const withThinkingConfig = !MODELS_WITHOUT_THINKING_CONFIG.has(modelName);
+      const generationConfig = withThinkingConfig
+        ? { maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS, thinkingConfig: { thinkingBudget: 0 } }
+        : { maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS };
+
+      const r = await tryGeminiModel(genAI, modelName, generationConfig, history, prompt, onDelta, remainingMs);
+      // Once text has been streamed we cannot switch models; keep what we have.
+      if (r.text) {
+        if (r.error) console.error(`Gemini ${modelName} stopped mid-stream:`, r.error);
+        return { text: r.text, model: modelName, first_token_ms: r.firstTokenMs };
+      }
+
+      console.error(`Gemini ${modelName} failed:`, r.error || 'empty response');
+      errors.push(`${modelName}: ${r.error || 'empty response'}`);
+
+      if (withThinkingConfig && r.status === 400 && /thinking/i.test(r.error || '')) {
+        MODELS_WITHOUT_THINKING_CONFIG.add(modelName);
+        continue;
+      }
+      break;
+    }
+  }
+  return { text: '', model: null, error: errors.join(' | ') };
+}
+
+/* ─────────────────────────────────────────────
+   GENERATE ANSWER: Hermes → Gemini fallback chain → friendly fallback
+   onDelta(text) is called for every piece of text produced.
+───────────────────────────────────────────── */
+async function generateAnswer({ message, history, contextText, onDelta = () => {} }) {
+  const augmentedMessage = contextText
+    ? `${message}\n\n---\n${contextText}\n---\n\nJawab pertanyaan pengguna di atas dengan ramah, natural, dan informatif.`
+    : message;
+
+  // ── 1. PRIMARY: Coba Hermes / 9router API (HERMES_API_BASE) ──
+  if (HERMES_BASE) {
+    const h = await callHermes(augmentedMessage);
+    if (h.text) {
+      onDelta(h.text);
+      return { text: h.text, model: `hermes:${HERMES_MODEL}` };
+    }
+  }
+
+  // ── 2. Gemini with streaming, timeouts and model fallback ──
+  const g = await generateWithGemini(history, augmentedMessage, onDelta);
+  if (g.text) return g;
+
+  // ── 3. Fallback Ramah ──
+  const fallback = contextText
+    ? `Berikut informasi pendakian yang saya temukan:\n\n${contextText}`
+    : 'Halo! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Mohon maaf, server AI sedang mengalami antrean padat. Silakan coba tanyakan kembali beberapa saat lagi. 🏔️';
+  onDelta(fallback);
+  return { text: fallback, model: 'fallback', error: g.error };
+}
+
+/* ─────────────────────────────────────────────
+   SYNC HISTORY to VPS backend (only when Authorization present)
+   Resolves to the session id to return; never rejects.
+───────────────────────────────────────────── */
+function syncChatHistory(authHeader, message, session_id) {
+  if (!authHeader) return Promise.resolve(session_id);
+  return fetch(`${process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010'}/api/chat/query`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': authHeader,
+    },
+    body: JSON.stringify({ prompt: message, session_id }),
+    signal: AbortSignal.timeout(15000),
+  })
+    .then(async (vpsRes) => {
+      if (!vpsRes.ok) return session_id;
+      const vpsData = await vpsRes.json();
+      return vpsData?.session_id || session_id;
+    })
+    .catch((syncErr) => {
+      console.error('VPS chat history sync error:', syncErr);
+      return session_id;
+    });
+}
+
+/* ─────────────────────────────────────────────
+   NDJSON STREAM RESPONSE
+───────────────────────────────────────────── */
+function ndjsonResponse(run) {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream({
+    async start(controller) {
+      let open = true;
+      const send = (obj) => {
+        if (!open) return;
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'));
+        } catch {
+          open = false; // client went away
+        }
+      };
+      try {
+        await run(send);
+      } catch (err) {
+        console.error('Chat stream fatal error:', err);
+        send({ type: 'delta', text: `Maaf, terjadi kesalahan teknis. Silakan coba lagi.\n\n*Error: ${err.message}*` });
+        send({ type: 'done', session_id: null, timing: null });
+      } finally {
+        if (open) {
+          try { controller.close(); } catch {}
+        }
+      }
+    },
+  });
+  return new Response(body, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no', // disable nginx proxy buffering so chunks flush immediately
+    },
+  });
+}
+
+/* ─────────────────────────────────────────────
    MAIN POST HANDLER
 ───────────────────────────────────────────── */
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { message, history = [], session_id = null } = body;
+    const { message, history = [], session_id = null, stream = false } = body;
 
     if (!message?.trim()) {
       return NextResponse.json({ error: 'Pesan tidak boleh kosong' }, { status: 400 });
@@ -373,165 +632,79 @@ export async function POST(request) {
       });
     }
 
-    // ── HIKING / GENERAL QUERIES: Always run Smart Router + Gemini ──
+    // ── HIKING / GENERAL QUERIES: Always run Smart Router + LLM ──
     const t1 = Date.now();
     const { contextText, routes, type: apiType, map_url, gpx_url, mountain: mapMountain, mapType, format } = await retrieveContext(message);
     const retrieval_ms = Date.now() - t1;
 
+    // ── Map / GPX: answered directly from the API, no LLM call ──
+    let directResponse = null;
     if (apiType === 'map' && map_url) {
       const cap = mapMountain ? mapMountain.charAt(0).toUpperCase() + mapMountain.slice(1) : '';
-      return NextResponse.json({
+      directResponse = {
         response: `Berikut peta **${mapType}** Gunung ${cap} 🗺️\n\nKlik gambar untuk memperbesar.`,
         map_url,
         retrieved_routes: [],
         timing: { retrieval_ms, generation_ms: 0, total_ms: Date.now() - t0, type: 'map' },
-      });
-    }
-
-    if (apiType === 'gpx' && gpx_url) {
+      };
+    } else if (apiType === 'gpx' && gpx_url) {
       const cap = mapMountain ? mapMountain.charAt(0).toUpperCase() + mapMountain.slice(1) : '';
-      return NextResponse.json({
+      directResponse = {
         response: `File **${format?.toUpperCase()}** Gunung ${cap} siap didownload 📥`,
         gpx_url,
         retrieved_routes: [],
         timing: { retrieval_ms, generation_ms: 0, total_ms: Date.now() - t0, type: 'gpx' },
+      };
+    }
+
+    if (directResponse) {
+      if (!stream) return NextResponse.json(directResponse);
+      const { response, timing, ...rest } = directResponse;
+      return ndjsonResponse(async (send) => {
+        send({ type: 'meta', ...rest, timing: { retrieval_ms, type: timing.type } });
+        send({ type: 'delta', text: response });
+        send({ type: 'done', session_id, timing });
       });
     }
 
-    const augmentedMessage = contextText
-      ? `${message}\n\n---\n${contextText}\n---\n\nJawab pertanyaan pengguna di atas dengan ramah, natural, dan informatif.`
-      : message;
+    // ── Start chat-history sync now so it runs in parallel with generation ──
+    const syncPromise = syncChatHistory(request.headers.get('authorization'), message, session_id);
 
-    let responseText = '';
-    let geminiErrorMsg = '';
-    let hermesErrorMsg = '';
+    const buildTiming = (gen, t2) => ({
+      retrieval_ms,
+      generation_ms: Date.now() - t2,
+      total_ms: Date.now() - t0,
+      type: apiType,
+      model: gen.model,
+      ...(gen.first_token_ms != null ? { first_token_ms: gen.first_token_ms } : {}),
+    });
 
-    // ── 1. PRIMARY: Coba Hermes / 9router API (HERMES_API_BASE) ──
-    if (HERMES_BASE) {
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000); // 15s max timeout
-        const headers = {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        };
-        if (HERMES_KEY) {
-          headers['Authorization'] = `Bearer ${HERMES_KEY}`;
-        }
-
-        const hermesRes = await fetch(`${HERMES_BASE.replace(/\/$/, '')}/v1/chat/completions`, {
-          method: 'POST',
-          headers,
-          signal: controller.signal,
-          body: JSON.stringify({
-            model: HERMES_MODEL,
-            messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
-              { role: 'user', content: augmentedMessage }
-            ],
-            temperature: 0.7,
-            max_tokens: 800,
-            stream: false,
-          }),
+    if (stream) {
+      return ndjsonResponse(async (send) => {
+        send({ type: 'meta', retrieved_routes: routes, timing: { retrieval_ms, type: apiType } });
+        const t2 = Date.now();
+        const gen = await generateAnswer({
+          message,
+          history,
+          contextText,
+          onDelta: (text) => send({ type: 'delta', text }),
         });
-        clearTimeout(timeout);
-
-        if (hermesRes.ok) {
-          const rawText = await hermesRes.text();
-          try {
-            const hermesData = JSON.parse(rawText);
-            responseText = hermesData.choices?.[0]?.message?.content || '';
-          } catch (jsonErr) {
-            // Parser untuk format SSE (Server-Sent Events) jika 9router mengembalikan "data: {...}"
-            let extractedContent = '';
-            const lines = rawText.split('\n');
-            for (const line of lines) {
-              if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-                try {
-                  const chunk = JSON.parse(line.substring(6));
-                  const delta = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.message?.content || '';
-                  extractedContent += delta;
-                } catch (e) {}
-              }
-            }
-            if (extractedContent) {
-              responseText = extractedContent;
-            } else {
-              hermesErrorMsg = `Failed to parse Hermes response: ${rawText.substring(0, 100)}`;
-            }
-          }
-        } else {
-          const errBody = await hermesRes.text();
-          hermesErrorMsg = `HTTP ${hermesRes.status}: ${errBody.substring(0, 150)}`;
-          console.error(`Hermes VPS returned status ${hermesRes.status}`);
-        }
-      } catch (hermesErr) {
-        hermesErrorMsg = hermesErr?.message || String(hermesErr);
-        console.error('Hermes VPS API error:', hermesErrorMsg);
-      }
+        const timing = buildTiming(gen, t2);
+        const returnedSessionId = await syncPromise;
+        send({ type: 'done', session_id: returnedSessionId, timing });
+      });
     }
 
-    // ── 2. FALLBACK: Coba Gemini API jika Hermes VPS offline / timeout ──
-    if (!responseText && GEMINI_KEY) {
-      try {
-        const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-        const model = genAI.getGenerativeModel({
-          model: GEMINI_MODEL,
-          systemInstruction: SYSTEM_PROMPT,
-        });
-
-        const chat = model.startChat({ history: buildGeminiHistory(history) });
-        const genResult = await chat.sendMessage(augmentedMessage);
-        responseText = genResult.response.text();
-      } catch (geminiErr) {
-        geminiErrorMsg = geminiErr?.message || String(geminiErr);
-        console.error('Gemini API error:', geminiErrorMsg);
-      }
-    }
-
-    // ── 3. Fallback Ramah ──
-    if (!responseText) {
-      if (contextText) {
-        responseText = `Berikut informasi pendakian yang saya temukan:\n\n${contextText}`;
-      } else {
-        responseText = 'Halo! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Mohon maaf, server AI sedang mengalami antrean padat. Silakan coba tanyakan kembali beberapa saat lagi. 🏔️';
-      }
-    }
-
-    // ── 4. Sync history to VPS backend if Authorization token present ──
-    let returnedSessionId = session_id;
-    const authHeader = request.headers.get('authorization');
-    if (authHeader) {
-      try {
-        const vpsRes = await fetch(`${process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010'}/api/chat/query`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': authHeader,
-          },
-          body: JSON.stringify({ prompt: message, session_id }),
-        });
-        if (vpsRes.ok) {
-          const vpsData = await vpsRes.json();
-          if (vpsData?.session_id) {
-            returnedSessionId = vpsData.session_id;
-          }
-        }
-      } catch (syncErr) {
-        console.error('VPS chat history sync error:', syncErr);
-      }
-    }
+    const t2 = Date.now();
+    const gen = await generateAnswer({ message, history, contextText });
+    const timing = buildTiming(gen, t2);
+    const returnedSessionId = await syncPromise;
 
     return NextResponse.json({
-      response: responseText,
+      response: gen.text,
       retrieved_routes: routes,
       session_id: returnedSessionId,
-      timing: {
-        retrieval_ms,
-        generation_ms: Date.now() - t0 - retrieval_ms,
-        total_ms: Date.now() - t0,
-        type: apiType,
-      },
+      timing,
     });
 
   } catch (err) {

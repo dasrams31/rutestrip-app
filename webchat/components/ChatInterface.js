@@ -150,6 +150,7 @@ export default function ChatInterface() {
   const [messages, setMessages]         = useState([]);
   const [input, setInput]               = useState('');
   const [isLoading, setIsLoading]       = useState(false);
+  const [streamStarted, setStreamStarted] = useState(false);
   const [loadingText, setLoadingText]   = useState(STAGES[0]);
   const [showPipeline, setShowPipeline] = useState(false);
   const [isListening, setIsListening]   = useState(false);
@@ -394,15 +395,98 @@ export default function ChatInterface() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ message, history: historyToSend, session_id: activeSessionId }),
+        body: JSON.stringify({ message, history: historyToSend, session_id: activeSessionId, stream: true }),
       });
+
+      const replyTime = new Date();
+      const replyTimeStr = replyTime.getHours().toString().padStart(2, '0') + ':'
+                         + replyTime.getMinutes().toString().padStart(2, '0');
+
+      // ── Streaming (NDJSON) response ──
+      if ((res.headers.get('content-type') || '').includes('application/x-ndjson') && res.body) {
+        const streamId = `s-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const updateStreamMsg = (fn) =>
+          setMessages(prev => prev.map(m => (m.streamId === streamId ? fn(m) : m)));
+        let created = false;
+        const ensureMessage = (fields = {}) => {
+          if (created) return;
+          created = true;
+          setMessages(prev => [
+            ...prev,
+            {
+              streamId,
+              role: 'assistant',
+              content: '',
+              retrieved_routes: [],
+              timing: null,
+              time: replyTimeStr,
+              map_url: null,
+              gpx_url: null,
+              ...fields,
+            },
+          ]);
+        };
+
+        const handleEvent = (evt) => {
+          if (evt.type === 'meta') {
+            ensureMessage({
+              retrieved_routes: evt.retrieved_routes || [],
+              timing: evt.timing || null,
+              map_url: evt.map_url || null,
+              gpx_url: evt.gpx_url || null,
+            });
+          } else if (evt.type === 'delta' && evt.text) {
+            ensureMessage();
+            setStreamStarted(true);
+            updateStreamMsg(m => ({ ...m, content: m.content + evt.text }));
+          } else if (evt.type === 'done') {
+            ensureMessage();
+            if (evt.session_id) setActiveSessionId(evt.session_id);
+            if (evt.timing) updateStreamMsg(m => ({ ...m, timing: evt.timing }));
+          }
+        };
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              try { handleEvent(JSON.parse(line)); } catch {}
+            }
+          }
+          buffer += decoder.decode();
+          if (buffer.trim()) {
+            try { handleEvent(JSON.parse(buffer)); } catch {}
+          }
+        } catch {
+          // Connection dropped mid-stream: keep partial text, add a note.
+          ensureMessage();
+          updateStreamMsg(m => ({
+            ...m,
+            content: m.content
+              ? `${m.content}\n\n*(Koneksi terputus, jawaban mungkin tidak lengkap.)*`
+              : 'Maaf, terjadi kesalahan koneksi. Pastikan koneksi internet Anda stabil.',
+          }));
+          return;
+        }
+
+        ensureMessage();
+        updateStreamMsg(m => (m.content ? m : { ...m, content: 'Maaf, terjadi kesalahan.' }));
+        return;
+      }
+
+      // ── Plain JSON response (non-streaming intents / older server) ──
       const data = await res.json();
       if (data?.session_id) {
         setActiveSessionId(data.session_id);
       }
-      const replyTime = new Date();
-      const replyTimeStr = replyTime.getHours().toString().padStart(2, '0') + ':'
-                         + replyTime.getMinutes().toString().padStart(2, '0');
 
       setMessages(prev => [
         ...prev,
@@ -429,9 +513,10 @@ export default function ChatInterface() {
     } finally {
       clearInterval(stageTimer.current);
       setIsLoading(false);
+      setStreamStarted(false);
       setLoadingText(STAGES[0]);
     }
-  }, [input, isLoading]);
+  }, [input, isLoading, messages, activeSessionId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -790,7 +875,8 @@ export default function ChatInterface() {
                 )}
 
                 <div className="message-content-wrap">
-                  {/* Bubble */}
+                  {/* Bubble (skipped while a streamed reply has no text yet) */}
+                  {(msg.content || msg.map_url || msg.gpx_url) && (
                   <div className={`bubble ${msg.role}`}>
                     <div
                       className="bubble-content"
@@ -829,6 +915,7 @@ export default function ChatInterface() {
                       </a>
                     )}
                   </div>
+                  )}
 
                   {/* Route chips */}
                   {msg.role === 'assistant' &&
@@ -897,8 +984,8 @@ export default function ChatInterface() {
             </div>
           ))}
 
-          {/* Typing indicator */}
-          {isLoading && (
+          {/* Typing indicator (hidden once streamed text starts arriving) */}
+          {isLoading && !streamStarted && (
             <div className="message-row assistant msg-appear">
               <div className="typing-row">
                 <Image

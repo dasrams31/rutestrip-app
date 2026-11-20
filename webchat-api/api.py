@@ -15,7 +15,10 @@ from pydantic import BaseModel, EmailStr
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Shared SBERT scoring + Laravel processor modules live in ../python
+PYTHON_DIR = os.path.join(os.path.dirname(BASE_DIR), 'python')
+if os.path.isdir(PYTHON_DIR) and PYTHON_DIR not in sys.path:
+    sys.path.append(PYTHON_DIR)
 from rekomendasi_pendakian import RecommendationSystem
 import satellite_map
 import gpx_exporter
@@ -59,6 +62,24 @@ async def security_headers_middleware(request, call_next):
 rec_system = RecommendationSystem()
 gpx_dir = os.path.join(BASE_DIR, 'gpx_db') if os.path.exists(os.path.join(BASE_DIR, 'gpx_db')) else os.path.join(os.path.dirname(os.path.abspath(__file__)), "gpx_db")
 rec_system.index_directory(gpx_dir, use_cache=True)
+
+
+def _mount_laravel_processor():
+    """Serve the Laravel SBERT processor (python/api.py) from this process at
+    /processor, reusing the already loaded model so the VPS keeps a single copy."""
+    import importlib.util
+    path = os.path.join(PYTHON_DIR, 'api.py')
+    if not os.path.exists(path):
+        return
+    spec = importlib.util.spec_from_file_location('rutestrip_processor_api', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    rec_system._load_model()
+    module.use_shared_model(rec_system.model)
+    app.mount('/processor', module.app)
+
+
+_mount_laravel_processor()
 
 # Schema Models
 class UserRegisterModel(BaseModel):

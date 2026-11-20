@@ -45,6 +45,22 @@ Base URL: nilai `RUTESTRIP_API_BASE` (default `http://127.0.0.1:8010`, lihat `..
 | `/api/survival` | Panduan Survival | "survival hipotermia" |
 | `/api/porter` | Kontak Porter | "porter merbabu" |
 
+## ⚡ Streaming & Fallback Model Gemini
+
+`POST /api/chat` dengan body `stream: true` membalas NDJSON (`application/x-ndjson`):
+`{"type":"meta",...}` langsung setelah retrieval, lalu `{"type":"delta","text":"..."}`
+per potongan teks, dan terakhir `{"type":"done","session_id":...,"timing":{...}}`.
+Tanpa `stream: true` respons tetap JSON seperti sebelumnya.
+
+| Env | Default | Fungsi |
+|---|---|---|
+| `GEMINI_MODELS` | `GEMINI_MODEL`, `gemini-3.5-flash`, `gemini-3.1-flash-lite` | Urutan model yang dicoba (dipisah koma) |
+| `GEMINI_FIRST_TOKEN_TIMEOUT_MS` | `12000` | Pindah ke model berikutnya bila token pertama tidak datang |
+| `GEMINI_TOTAL_TIMEOUT_MS` | `45000` | Batas total generasi untuk semua model |
+
+Thinking dimatikan (`thinkingBudget: 0`) dan output dibatasi 1024 token. Model yang menolak
+`thinkingBudget: 0` otomatis dicoba ulang tanpa `thinkingConfig`.
+
 ## 🗂️ Struktur Project
 
 ```

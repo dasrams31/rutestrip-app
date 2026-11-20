@@ -1,5 +1,5 @@
 [Unit]
-Description=RuteStrip webchat API (FastAPI)
+Description=RuteStrip ML service: webchat API + Laravel SBERT processor (/processor)
 After=network.target postgresql.service
 
 [Service]
@@ -10,12 +10,16 @@ EnvironmentFile=/var/www/rutestrip-final/webchat-api/.env
 Environment=HOME=/var/lib/rutestrip
 Environment=HF_HOME=/var/lib/rutestrip/huggingface
 Environment=TOKENIZERS_PARALLELISM=false
-Environment=OMP_NUM_THREADS=1
+# Model is cached locally; never call huggingface.co at runtime
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+# 2 vCPU VPS: let torch use both cores for SBERT encoding
+Environment=OMP_NUM_THREADS=2
 Environment=MPLBACKEND=Agg
 ExecStart=/opt/rutestrip-venv/bin/uvicorn api:app --host 127.0.0.1 --port 8010 --workers 1
 Restart=always
 RestartSec=5
-MemoryMax=900M
+MemoryMax=1100M
 
 [Install]
 WantedBy=multi-user.target

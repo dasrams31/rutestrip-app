@@ -4,17 +4,17 @@ namespace App\Http\Controllers;
 use App\Models\HikingRoute;
 use App\Models\SearchHistory;
 use App\Services\PythonProcessorService;
+use App\Services\RouteSearchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 
 class SearchController extends Controller
 {
-    private PythonProcessorService $pythonService;
-
-    public function __construct(PythonProcessorService $pythonService)
-    {
-        $this->pythonService = $pythonService;
+    public function __construct(
+        private PythonProcessorService $pythonService,
+        private RouteSearchService $routeSearch
+    ) {
     }
 
     /**
@@ -26,7 +26,7 @@ class SearchController extends Controller
     }
 
     /**
-     * Process search and show results - OPTIMIZED with PHP-based cosine similarity
+     * Process search and show results: SBERT query embedding + hybrid scoring in PHP
      */
     public function search(Request $request)
     {
@@ -58,17 +58,8 @@ class SearchController extends Controller
                 throw new \RuntimeException('Embedding query kosong atau tidak valid.');
             }
 
-            // Calculate cosine similarity in PHP (FAST!)
-            $results = $routes->filter(fn($route) => is_array($route->sbert_embedding) && ! empty($route->sbert_embedding))
-                ->map(function ($route) use ($queryEmbedding) {
-                $similarity              = $this->cosineSimilarity($queryEmbedding, $route->sbert_embedding);
-                $route->similarity_score = round($similarity * 100, 1);
-                $route->cosine_value     = round($similarity, 4);
-                return $route;
-            })
-                ->filter(fn($r) => $r->similarity_score > 0) // Filter positif saja
-                ->sortByDesc('similarity_score')
-                ->take(10);
+            // Hybrid relevance (SBERT cosine on document + aspects, intent and name match)
+            $results = $this->routeSearch->rank($query, $queryEmbedding, $routes->map(fn($r) => clone $r), 10);
 
             $searchTime = round((microtime(true) - $startTime) * 1000, 2);
 
@@ -91,32 +82,5 @@ class SearchController extends Controller
             return back()->withErrors(['query' => 'Gagal melakukan pencarian: ' . $e->getMessage()])
                 ->withInput();
         }
-    }
-
-    /**
-     * Calculate cosine similarity between two vectors (PHP implementation - FAST)
-     */
-    private function cosineSimilarity(array $a, array $b): float
-    {
-        $dotProduct = 0.0;
-        $normA      = 0.0;
-        $normB      = 0.0;
-
-        $length = min(count($a), count($b));
-
-        for ($i = 0; $i < $length; $i++) {
-            $dotProduct += $a[$i] * $b[$i];
-            $normA += $a[$i] * $a[$i];
-            $normB += $b[$i] * $b[$i];
-        }
-
-        $normA = sqrt($normA);
-        $normB = sqrt($normB);
-
-        if ($normA * $normB == 0) {
-            return 0.0;
-        }
-
-        return $dotProduct / ($normA * $normB);
     }
 }

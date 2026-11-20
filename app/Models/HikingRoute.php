@@ -28,7 +28,9 @@ class HikingRoute extends Model
         'naismith_duration_hour',
         'average_grade_pct',
         'narrative_text',
+        'embedding_text',
         'sbert_embedding',
+        'sbert_aspect_embeddings',
     ];
 
     protected $casts = [
@@ -37,8 +39,23 @@ class HikingRoute extends Model
         'naismith_duration_hour' => 'float',
         'average_grade_pct'      => 'float',
         'sbert_embedding'        => 'array',
+        'sbert_aspect_embeddings' => 'array',
         'route_coordinates'      => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        // Keep search embeddings (name + narrative + aspects) in sync whenever the
+        // text that feeds them changes. Skipped in unit tests (no Python there).
+        static::saved(function (HikingRoute $route) {
+            if (app()->runningUnitTests() || ! config('services.python.auto_index', true)) {
+                return;
+            }
+            if ($route->wasRecentlyCreated || $route->wasChanged(['name', 'narrative_text', 'description'])) {
+                app(\App\Services\RouteSearchIndexer::class)->index($route);
+            }
+        });
+    }
 
     /**
      * Get formatted distance

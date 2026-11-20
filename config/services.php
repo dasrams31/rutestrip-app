@@ -38,6 +38,7 @@ return [
     'python'   => [
         'path'          => env('PYTHON_PATH', 'python'),
         'processor_url' => env('PYTHON_PROCESSOR_URL'),
+        'auto_index'    => env('ROUTE_SEARCH_AUTO_INDEX', true),
     ],
 
     'webchat'  => [

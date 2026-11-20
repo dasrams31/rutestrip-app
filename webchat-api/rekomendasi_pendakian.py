@@ -8,6 +8,8 @@ import gpxpy
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+import search_scoring
+
 CACHE_FILE = "/tmp/routes_cache.json"
 
 STOPWORDS_ID = {
@@ -132,8 +134,11 @@ class RecommendationSystem:
         if use_cache and os.path.exists(CACHE_FILE):
             try:
                 with open(CACHE_FILE, "r") as f:
-                    self.db = json.load(f)
-                return
+                    cached = json.load(f)
+                # Rebuild caches created before aspect embeddings existed
+                if cached and all('aspect_embeddings' in item for item in cached):
+                    self.db = cached
+                    return
             except Exception:
                 pass
 
@@ -151,13 +156,16 @@ class RecommendationSystem:
                 narrative = generate_narrative(stats, clean_name, wpts)
                 proc_narrative = preprocess_text(narrative, remove_stopwords=False)
                 emb = self.model.encode(proc_narrative).tolist()
+                aspects = [f"Jalur pendakian {search_scoring.clean_route_name(clean_name)}."] + search_scoring.split_sentences(narrative)
+                aspect_embs = self.model.encode(aspects).tolist()
 
                 self.db.append({
                     'name': clean_name,
                     'path': path,
                     'stats': stats,
                     'narrative': narrative,
-                    'embedding': emb
+                    'embedding': emb,
+                    'aspect_embeddings': aspect_embs
                 })
             except Exception as e:
                 print(f"Error indexing {path}: {e}")
@@ -173,8 +181,15 @@ class RecommendationSystem:
         if not self.db:
             return []
         self._load_model()
-        proc_q = preprocess_text(query, remove_stopwords=True)
-        q_emb = self.model.encode(proc_q)
+        q_emb = self.model.encode(search_scoring.query_text(query)).tolist()
+        flat = [
+            {
+                'name': it['name'],
+                'average_grade_pct': it['stats'].get('average_grade_pct'),
+                'naismith_duration_hour': it['stats'].get('naismith_duration_hour'),
+            }
+            for it in self.db
+        ]
 
         # Extraction for numerical hard constraints (e.g. "dibawah 15km", "dibawah 6 jam")
         max_dist = None
@@ -183,10 +198,13 @@ class RecommendationSystem:
             max_dist = float(m_dist.group(1))
 
         results = []
-        for item in self.db:
+        for item, flat_item in zip(self.db, flat):
             if max_dist and item['stats']['distance_km'] > max_dist:
                 continue
-            sim = cosine_similarity([q_emb], [item['embedding']])[0][0]
+            # Hybrid relevance: SBERT document + aspect cosine, attribute and name match
+            sim = search_scoring.hybrid_score(
+                query, q_emb, item['embedding'], item.get('aspect_embeddings') or [], flat_item, flat
+            )['score']
             results.append({
                 'item': item,
                 'similarity': float(sim)

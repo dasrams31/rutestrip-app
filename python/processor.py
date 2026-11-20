@@ -396,9 +396,31 @@ def mode_embed(query_text: str) -> dict:
         return {'success': False, 'error': str(e)}
 
 
+def mode_index(routes_data):
+    """Build search embeddings (whole document + aspect sentences) for routes."""
+    try:
+        import search_scoring
+        if isinstance(routes_data, str):
+            routes_data = json.loads(routes_data)
+        model = get_model()
+        items = []
+        for route in routes_data:
+            doc = search_scoring.build_document(route)
+            vectors = model.encode([doc['text']] + doc['aspects']).tolist()
+            items.append({
+                'id': route.get('id'),
+                'embedding_text': doc['text'],
+                'embedding': vectors[0],
+                'aspect_embeddings': vectors[1:],
+            })
+        return {'success': True, 'routes': items}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
 def main():
     parser = argparse.ArgumentParser(description='RuteStrip GPX Processor')
-    parser.add_argument('--mode', required=True, choices=['ingest', 'search', 'embed'],
+    parser.add_argument('--mode', required=True, choices=['ingest', 'search', 'embed', 'index'],
                         help='Processing mode: ingest, search, or embed')
     parser.add_argument('--gpx', help='Path to GPX file (for ingest mode)')
     parser.add_argument('--query', help='Search query text (for search/embed mode)')
@@ -432,6 +454,13 @@ def main():
             print(json.dumps({'success': False, 'error': 'Query required for embed mode'}))
             sys.exit(1)
         result = mode_embed(args.query)
+
+    elif args.mode == 'index':
+        if not args.data_file:
+            print(json.dumps({'success': False, 'error': 'data-file required for index mode'}))
+            sys.exit(1)
+        with open(args.data_file, 'r', encoding='utf-8') as f:
+            result = mode_index(f.read())
     
     print(json.dumps(result, ensure_ascii=False))
 
