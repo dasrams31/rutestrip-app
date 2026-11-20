@@ -73,7 +73,8 @@ class RouteSearchService
             }
 
             if ($names) {
-                $hit   = array_intersect($names, $this->nameTokens($route->name)) ? 1.0 : 0.0;
+                // Share of mentioned names matched ("sumbing via butuh": Butuh route 1.0, other Sumbing 0.5)
+                $hit   = count(array_intersect($names, $this->nameTokens($route->name))) / count($names);
                 $score = (1 - self::W_NAME) * $score + self::W_NAME * $hit;
             }
 

@@ -68,6 +68,22 @@ class RouteSearchTest extends TestCase
         $this->assertSame('Gunung Slamet via Dipajaya', $ranked->last()->name);
     }
 
+    public function test_more_specific_name_match_ranks_higher(): void
+    {
+        $emb = [1.0, 0.0, 0.0];
+        $routes = collect(['Mt. Sumbing via Garung', 'Mt. Sumbing via Butuh Kaliangkrik', 'Mt. Merbabu via Selo'])
+            ->map(fn($n) => new HikingRoute([
+                'name' => $n, 'distance_km' => 10, 'elevation_gain_m' => 1500,
+                'naismith_duration_hour' => 5, 'average_grade_pct' => 12,
+                'sbert_embedding' => $emb, 'sbert_aspect_embeddings' => [$emb],
+            ]));
+
+        $ranked = app(RouteSearchService::class)->rank('sumbing via butuh', $emb, $routes, 3);
+
+        $this->assertSame('Mt. Sumbing via Butuh Kaliangkrik', $ranked->first()->name);
+        $this->assertSame('Mt. Merbabu via Selo', $ranked->last()->name);
+    }
+
     public function test_negated_steepness_is_read_as_gentle(): void
     {
         $search = app(RouteSearchService::class);

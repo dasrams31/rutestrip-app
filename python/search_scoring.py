@@ -187,7 +187,9 @@ def hybrid_score(query, q_vec, doc_vec, aspect_vecs, route, all_routes) -> dict:
 
     names = mentioned_names(query, all_routes)
     if names:
-        hit = 1.0 if names & name_tokens(route.get("name")) else 0.0
+        # Share of the mentioned names this route matches ("sumbing via butuh":
+        # Sumbing via Butuh = 1.0, other Sumbing routes = 0.5).
+        hit = len(names & name_tokens(route.get("name"))) / len(names)
         score = (1 - W_NAME) * score + W_NAME * hit
 
     return {
