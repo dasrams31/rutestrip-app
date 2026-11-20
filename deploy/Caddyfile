@@ -1,0 +1,21 @@
+# Caddy site blocks for RuteStrip. Append to /etc/caddy/Caddyfile.
+# Assumes the repo is cloned to /var/www/rutestrip-final and PHP 8.4-FPM is installed.
+
+rutestrip.ai.id {
+	root * /var/www/rutestrip-final/public
+	encode zstd gzip
+	request_body {
+		max_size 32MB
+	}
+	php_fastcgi unix//run/php/php8.4-fpm.sock
+	file_server
+}
+
+www.rutestrip.ai.id {
+	redir https://rutestrip.ai.id{uri} permanent
+}
+
+chat.rutestrip.ai.id {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3010
+}

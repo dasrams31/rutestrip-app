@@ -1,0 +1,21 @@
+[Unit]
+Description=RuteStrip webchat API (FastAPI)
+After=network.target postgresql.service
+
+[Service]
+User=rutestrip
+Group=rutestrip
+WorkingDirectory=/var/www/rutestrip-final/webchat-api
+EnvironmentFile=/var/www/rutestrip-final/webchat-api/.env
+Environment=HOME=/var/lib/rutestrip
+Environment=HF_HOME=/var/lib/rutestrip/huggingface
+Environment=TOKENIZERS_PARALLELISM=false
+Environment=OMP_NUM_THREADS=1
+Environment=MPLBACKEND=Agg
+ExecStart=/opt/rutestrip-venv/bin/uvicorn api:app --host 127.0.0.1 --port 8010 --workers 1
+Restart=always
+RestartSec=5
+MemoryMax=900M
+
+[Install]
+WantedBy=multi-user.target

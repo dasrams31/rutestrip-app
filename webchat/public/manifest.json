@@ -1,0 +1,32 @@
+{
+  "name": "RuteStrip AI – Asisten Pendakian Gunung",
+  "short_name": "RuteStrip AI",
+  "description": "Asisten Pintar Berbasis AI Khusus Pendakian Gunung & Kegiatan Outdoor Indonesia",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["navigation", "travel", "productivity", "utilities"],
+  "lang": "id"
+}

@@ -1,0 +1,17 @@
+[Unit]
+Description=RuteStrip webchat frontend (Next.js)
+After=network.target rutestrip-webchat-api.service
+
+[Service]
+User=rutestrip
+Group=rutestrip
+WorkingDirectory=/var/www/rutestrip-final/webchat
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3010
+Restart=always
+RestartSec=5
+MemoryMax=400M
+
+[Install]
+WantedBy=multi-user.target
