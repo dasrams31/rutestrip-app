@@ -165,7 +165,7 @@ class ImportGpxDirectory extends Command
     private function nameKey(?string $name): string
     {
         $name = Str::lower((string) $name);
-        $name = preg_replace('/\b(mt|mount|gunung|via|jalur|to)\b/', ' ', $name);
+        $name = preg_replace('/\b(mt|mount|gunung|gurung|via|jalur|to|bc|basecamp|puncak)\b/', ' ', $name);
 
         // Word order ignored: "Argopuro Bremi Baderan" == "Argopuro Baderan to Bremi"
         $words = array_unique(preg_split('/[^a-z]+/', $name, -1, PREG_SPLIT_NO_EMPTY));

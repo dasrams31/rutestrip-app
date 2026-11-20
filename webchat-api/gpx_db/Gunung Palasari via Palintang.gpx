@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gunung Palasari via Palintang</name>
+    <desc>Track: OpenStreetMap relation 19362091, (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/relation/19362091"><text>OpenStreetMap relation 19362091</text></link>
+  </metadata>
+  <trk>
+    <name>Gunung Palasari via Palintang</name>
+    <trkseg>
+      <trkpt lat="-6.848455" lon="107.730547"><ele>1557.0</ele></trkpt>
+      <trkpt lat="-6.848640" lon="107.730355"><ele>1564.0</ele></trkpt>
+      <trkpt lat="-6.848777" lon="107.730120"><ele>1572.0</ele></trkpt>
+      <trkpt lat="-6.848828" lon="107.729853"><ele>1580.0</ele></trkpt>
+      <trkpt lat="-6.848843" lon="107.729583"><ele>1588.0</ele></trkpt>
+      <trkpt lat="-6.848922" lon="107.729324"><ele>1597.0</ele></trkpt>
+      <trkpt lat="-6.849002" lon="107.729064"><ele>1608.0</ele></trkpt>
+      <trkpt lat="-6.849068" lon="107.728832"><ele>1618.0</ele></trkpt>
+      <trkpt lat="-6.849241" lon="107.728656"><ele>1627.0</ele></trkpt>
+      <trkpt lat="-6.849338" lon="107.728461"><ele>1628.0</ele></trkpt>
+      <trkpt lat="-6.849214" lon="107.728226"><ele>1633.0</ele></trkpt>
+      <trkpt lat="-6.849190" lon="107.727955"><ele>1634.0</ele></trkpt>
+      <trkpt lat="-6.849144" lon="107.727689"><ele>1630.0</ele></trkpt>
+      <trkpt lat="-6.849057" lon="107.727432"><ele>1629.0</ele></trkpt>
+      <trkpt lat="-6.848967" lon="107.727176"><ele>1638.0</ele></trkpt>
+      <trkpt lat="-6.848947" lon="107.726909"><ele>1644.0</ele></trkpt>
+      <trkpt lat="-6.848837" lon="107.726661"><ele>1651.0</ele></trkpt>
+      <trkpt lat="-6.848744" lon="107.726406"><ele>1658.0</ele></trkpt>
+      <trkpt lat="-6.848674" lon="107.726145"><ele>1667.0</ele></trkpt>
+      <trkpt lat="-6.848638" lon="107.725875"><ele>1680.0</ele></trkpt>
+      <trkpt lat="-6.848605" lon="107.725609"><ele>1689.0</ele></trkpt>
+      <trkpt lat="-6.848619" lon="107.725339"><ele>1702.0</ele></trkpt>
+      <trkpt lat="-6.848612" lon="107.725073"><ele>1719.0</ele></trkpt>
+      <trkpt lat="-6.848714" lon="107.724822"><ele>1737.0</ele></trkpt>
+      <trkpt lat="-6.848817" lon="107.724586"><ele>1759.0</ele></trkpt>
+      <trkpt lat="-6.848981" lon="107.724427"><ele>1774.0</ele></trkpt>
+      <trkpt lat="-6.849113" lon="107.724208"><ele>1786.0</ele></trkpt>
+      <trkpt lat="-6.849195" lon="107.723959"><ele>1792.0</ele></trkpt>
+      <trkpt lat="-6.849051" lon="107.723729"><ele>1802.0</ele></trkpt>
+      <trkpt lat="-6.849036" lon="107.723473"><ele>1816.0</ele></trkpt>
+      <trkpt lat="-6.849008" lon="107.723220"><ele>1830.0</ele></trkpt>
+      <trkpt lat="-6.848896" lon="107.723014"><ele>1841.0</ele></trkpt>
+      <trkpt lat="-6.848818" lon="107.722761"><ele>1848.0</ele></trkpt>
+      <trkpt lat="-6.848872" lon="107.722503"><ele>1854.0</ele></trkpt>
+      <trkpt lat="-6.848815" lon="107.722237"><ele>1857.0</ele></trkpt>
+      <trkpt lat="-6.848671" lon="107.722014"><ele>1861.0</ele></trkpt>
+      <trkpt lat="-6.848441" lon="107.721942"><ele>1863.0</ele></trkpt>
+      <trkpt lat="-6.848426" lon="107.721884"><ele>1862.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

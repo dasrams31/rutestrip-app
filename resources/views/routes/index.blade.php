@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Semua Rute Pendakian')
+@section('title', 'Semua Jalur Pendakian Gunung di Jawa')
+@section('meta_description', 'Daftar jalur pendakian gunung di Pulau Jawa lengkap dengan peta GPX, jarak, total tanjakan, estimasi waktu Naismith, dan tingkat kemiringan.')
+@if(request('page') > 1 || request()->filled('provenance_filter'))
+@section('robots', 'noindex, follow')
+@endif
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

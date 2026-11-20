@@ -34,6 +34,25 @@ RuteStrip adalah aplikasi Laravel untuk manajemen, pencarian, dan rekomendasi ja
 
 Link "AI Chat" di navbar Laravel memakai `WEBCHAT_URL` (default `https://chat.rutestrip.ai.id`).
 
+## Data Jalur (GPX)
+
+- `webchat-api/gpx_db/` berisi file GPX yang dipakai webchat dan bisa diimpor ke Laravel:
+  `php artisan routes:import-gpx-dir webchat-api/gpx_db` (pakai `--dry-run` dulu). Command ini
+  melewati duplikat, file gabungan banyak jalur, dan GPX dengan elevasi rusak.
+- Sebagian GPX dibuat dari relasi jalur pendakian OpenStreetMap dengan
+  `python/tools/osm_hiking_to_gpx.py` (elevasi SRTM 30 m via OpenTopoData). Data tersebut
+  &copy; OpenStreetMap contributors, lisensi ODbL; daftar sumber ada di `webchat-api/gpx_db/OSM_SOURCES.md`.
+
+## SEO
+
+- `/robots.txt` dan `/sitemap.xml` dibuat dinamis (semua halaman rute ikut masuk sitemap).
+- URL rute memakai slug, misalnya `/routes/21-mt-sumbing-via-butuh-kaliangkrik` (link lama `/routes/21` tetap jalan).
+- Setiap halaman punya title, meta description, canonical, Open Graph/Twitter card, dan JSON-LD
+  (`WebSite`, `TouristAttraction`, `BreadcrumbList`). Halaman akun/admin/upload diberi `noindex`.
+- Verifikasi Google Search Console / Bing: isi `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION`
+  di `.env` (Laravel) dan `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION`
+  di `webchat/.env.local` (lalu build ulang webchat).
+
 ## Arsitektur Deploy
 
 ```txt

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gunung Geulis Manggahang via Arjasari</name>
+    <desc>Track: OpenStreetMap relation 18158692, (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/relation/18158692"><text>OpenStreetMap relation 18158692</text></link>
+  </metadata>
+  <trk>
+    <name>Gunung Geulis Manggahang via Arjasari</name>
+    <trkseg>
+      <trkpt lat="-7.041760" lon="107.644640"><ele>936.0</ele></trkpt>
+      <trkpt lat="-7.041682" lon="107.644380"><ele>939.0</ele></trkpt>
+      <trkpt lat="-7.041632" lon="107.644113"><ele>948.0</ele></trkpt>
+      <trkpt lat="-7.041585" lon="107.643845"><ele>952.0</ele></trkpt>
+      <trkpt lat="-7.041536" lon="107.643578"><ele>957.0</ele></trkpt>
+      <trkpt lat="-7.041469" lon="107.643315"><ele>966.0</ele></trkpt>
+      <trkpt lat="-7.041425" lon="107.643048"><ele>971.0</ele></trkpt>
+      <trkpt lat="-7.041290" lon="107.642815"><ele>983.0</ele></trkpt>
+      <trkpt lat="-7.041263" lon="107.642545"><ele>989.0</ele></trkpt>
+      <trkpt lat="-7.041239" lon="107.642274"><ele>997.0</ele></trkpt>
+      <trkpt lat="-7.041240" lon="107.642003"><ele>1002.0</ele></trkpt>
+      <trkpt lat="-7.041206" lon="107.641733"><ele>1007.0</ele></trkpt>
+      <trkpt lat="-7.041209" lon="107.641466"><ele>1012.0</ele></trkpt>
+      <trkpt lat="-7.041441" lon="107.641345"><ele>1011.0</ele></trkpt>
+      <trkpt lat="-7.041391" lon="107.641143"><ele>1018.0</ele></trkpt>
+      <trkpt lat="-7.041136" lon="107.641054"><ele>1027.0</ele></trkpt>
+      <trkpt lat="-7.040880" lon="107.640969"><ele>1035.0</ele></trkpt>
+      <trkpt lat="-7.040624" lon="107.640884"><ele>1039.0</ele></trkpt>
+      <trkpt lat="-7.040371" lon="107.640788"><ele>1042.0</ele></trkpt>
+      <trkpt lat="-7.040118" lon="107.640695"><ele>1045.0</ele></trkpt>
+      <trkpt lat="-7.039852" lon="107.640673"><ele>1042.0</ele></trkpt>
+      <trkpt lat="-7.039594" lon="107.640744"><ele>1044.0</ele></trkpt>
+      <trkpt lat="-7.039370" lon="107.640893"><ele>1050.0</ele></trkpt>
+      <trkpt lat="-7.039150" lon="107.641050"><ele>1057.0</ele></trkpt>
+      <trkpt lat="-7.038907" lon="107.641167"><ele>1062.0</ele></trkpt>
+      <trkpt lat="-7.038679" lon="107.641312"><ele>1061.0</ele></trkpt>
+      <trkpt lat="-7.038445" lon="107.641444"><ele>1059.0</ele></trkpt>
+      <trkpt lat="-7.038207" lon="107.641572"><ele>1057.0</ele></trkpt>
+      <trkpt lat="-7.037978" lon="107.641715"><ele>1053.0</ele></trkpt>
+      <trkpt lat="-7.037751" lon="107.641862"><ele>1047.0</ele></trkpt>
+      <trkpt lat="-7.037515" lon="107.641994"><ele>1044.0</ele></trkpt>
+      <trkpt lat="-7.037382" lon="107.642116"><ele>1049.0</ele></trkpt>
+      <trkpt lat="-7.037441" lon="107.642381"><ele>1054.0</ele></trkpt>
+      <trkpt lat="-7.037354" lon="107.642631"><ele>1062.0</ele></trkpt>
+      <trkpt lat="-7.037156" lon="107.642797"><ele>1071.0</ele></trkpt>
+      <trkpt lat="-7.036906" lon="107.642709"><ele>1079.0</ele></trkpt>
+      <trkpt lat="-7.036654" lon="107.642780"><ele>1091.0</ele></trkpt>
+      <trkpt lat="-7.036500" lon="107.643003"><ele>1103.0</ele></trkpt>
+      <trkpt lat="-7.036356" lon="107.643233"><ele>1115.0</ele></trkpt>
+      <trkpt lat="-7.036211" lon="107.643462"><ele>1122.0</ele></trkpt>
+      <trkpt lat="-7.036060" lon="107.643681"><ele>1128.0</ele></trkpt>
+      <trkpt lat="-7.036038" lon="107.643840"><ele>1127.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'RuteStrip') - Sistem Rekomendasi Rute Pendakian</title>
+    @php
+        $seoTitle = trim($__env->yieldContent('title', 'RuteStrip')) . ' - RuteStrip';
+        $seoDescription = trim($__env->yieldContent('meta_description'))
+            ?: 'RuteStrip: cari dan bandingkan jalur pendakian gunung di Pulau Jawa berdasarkan data GPX — jarak, total tanjakan, estimasi waktu Naismith, kemiringan, dan peta jalur. Rekomendasi rute dengan AI (SBERT).';
+        $seoCanonical = trim($__env->yieldContent('canonical')) ?: url()->current();
+        $seoImage = trim($__env->yieldContent('og_image')) ?: asset('images/mountains/default.png');
+        // Account/admin/upload pages and POSTed search results stay out of search engines.
+        $seoPrivate = request()->isMethod('post') || request()->is(
+            'admin*', 'dashboard*', 'profile*', 'favorites*', 'history*', 'login', 'register',
+            'routes/create', 'routes-batch', 'evaluation*', 'routes/*/versions/*'
+        );
+        $seoRobots = trim($__env->yieldContent('robots')) ?: ($seoPrivate ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
+    @endphp
+    <meta name="description" content="{{ \Illuminate\Support\Str::limit($seoDescription, 300, '') }}">
+    <meta name="robots" content="{{ $seoRobots }}">
+    <link rel="canonical" href="{{ $seoCanonical }}">
+    <meta property="og:site_name" content="RuteStrip">
+    <meta property="og:locale" content="id_ID">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ \Illuminate\Support\Str::limit($seoDescription, 300, '') }}">
+    <meta property="og:url" content="{{ $seoCanonical }}">
+    <meta property="og:image" content="{{ $seoImage }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ \Illuminate\Support\Str::limit($seoDescription, 200, '') }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
+    @if(config('services.seo.google_verification'))
+    <meta name="google-site-verification" content="{{ config('services.seo.google_verification') }}">
+    @endif
+    @if(config('services.seo.bing_verification'))
+    <meta name="msvalidate.01" content="{{ config('services.seo.bing_verification') }}">
+    @endif
+    <script type="application/ld+json">{!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => 'RuteStrip',
+        'url' => url('/'),
+        'inLanguage' => 'id',
+        'description' => 'Sistem rekomendasi jalur pendakian gunung di Pulau Jawa berbasis data GPX dan AI.',
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    @stack('head')
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 
     <!-- Tailwind CSS via CDN -->
@@ -454,6 +496,9 @@
                 </div>
                 <p class="text-center text-slate-500 text-sm mt-6">
                     &copy; {{ date('Y') }} RuteStrip - Sistem Rekomendasi Rute Pendakian dengan AI. All rights reserved.
+                </p>
+                <p class="text-center text-slate-500 text-xs mt-2">
+                    Sebagian data jalur &copy; <a href="https://www.openstreetmap.org/copyright" class="underline hover:text-slate-300" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL); elevasi: NASA SRTM.
                 </p>
             </div>
         </div>

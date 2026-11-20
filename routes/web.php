@@ -7,14 +7,17 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ProvenanceController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SusResponseController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Home - Redirect to search
-Route::get('/', function () {
-    return redirect()->route('search.index');
-});
+// Home - search page (served directly so the homepage itself is indexable)
+Route::get('/', [SearchController::class, 'index'])->name('home');
+
+// Search engines
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 
 // Public Routes - GPX Upload & View
 Route::get('/routes', [RouteController::class, 'index'])->name('routes.index');

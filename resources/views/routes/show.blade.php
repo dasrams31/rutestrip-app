@@ -1,6 +1,40 @@
 @extends('layouts.app')
 
-@section('title', $route->name)
+@section('title', 'Jalur Pendakian ' . $route->name)
+@section('og_type', 'article')
+@section('canonical', route('routes.show', $route))
+@php
+    $seoParts = array_filter([
+        $route->distance_km ? number_format($route->distance_km, 1, ',', '.') . ' km' : null,
+        $route->elevation_gain_m ? 'total tanjakan ' . number_format($route->elevation_gain_m, 0, ',', '.') . ' m' : null,
+        $route->naismith_duration_hour ? 'estimasi ' . number_format($route->naismith_duration_hour, 1, ',', '.') . ' jam (Naismith)' : null,
+        $route->average_grade_pct ? 'kemiringan rata-rata ' . number_format($route->average_grade_pct, 1, ',', '.') . '%' : null,
+    ]);
+    $seoStart = is_array($route->route_coordinates) && count($route->route_coordinates) ? $route->route_coordinates[0] : null;
+@endphp
+@section('meta_description', 'Jalur pendakian ' . $route->name . ': ' . implode(', ', $seoParts) . '. Lihat peta jalur, profil, dan unduh file GPX di RuteStrip.')
+@push('head')
+<script type="application/ld+json">{!! json_encode(array_filter([
+    '@context' => 'https://schema.org',
+    '@type' => 'TouristAttraction',
+    'name' => 'Jalur Pendakian ' . $route->name,
+    'description' => $route->description ?: $route->narrative_text,
+    'url' => route('routes.show', $route),
+    'touristType' => 'Pendaki gunung',
+    'isAccessibleForFree' => true,
+    'geo' => $seoStart ? ['@type' => 'GeoCoordinates', 'latitude' => $seoStart[0], 'longitude' => $seoStart[1]] : null,
+    'containedInPlace' => ['@type' => 'Place', 'name' => 'Pulau Jawa, Indonesia'],
+]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/ld+json">{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'BreadcrumbList',
+    'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'RuteStrip', 'item' => url('/')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Jalur Pendakian', 'item' => route('routes.index')],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $route->name, 'item' => route('routes.show', $route)],
+    ],
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+@endpush
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

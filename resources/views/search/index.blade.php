@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Cari Rute Pendakian')
+@section('title', 'Cari Jalur Pendakian Gunung di Jawa')
+@section('canonical', url('/'))
+@section('meta_description', 'Cari jalur pendakian gunung di Pulau Jawa dengan bahasa sehari-hari, misalnya "jalur landai untuk pemula" atau "pendakian singkat tektok". RuteStrip membandingkan jarak, total tanjakan, estimasi waktu, dan kemiringan dari data GPX.')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

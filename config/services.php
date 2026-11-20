@@ -41,6 +41,12 @@ return [
         'auto_index'    => env('ROUTE_SEARCH_AUTO_INDEX', true),
     ],
 
+    'seo'      => [
+        // Ownership verification codes from Google Search Console / Bing Webmaster Tools
+        'google_verification' => env('GOOGLE_SITE_VERIFICATION'),
+        'bing_verification'   => env('BING_SITE_VERIFICATION'),
+    ],
+
     'webchat'  => [
         'url' => env('WEBCHAT_URL', 'https://chat.rutestrip.ai.id'),
     ],

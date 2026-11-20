@@ -14,6 +14,15 @@ export const metadata = {
   description:
     'Asisten pintar berbasis AI untuk pendakian gunung Indonesia. Dapatkan rekomendasi jalur, cuaca realtime, itinerary, estimasi biaya, dan panduan survival.',
   keywords: 'pendakian gunung, RuteStrip AI, chat.rutestrip.ai.id, AI chatbot, jalur pendakian, SBERT, rekomendasi gunung Indonesia',
+  alternates: { canonical: '/chat' },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
+  // Ownership codes from Google Search Console / Bing Webmaster Tools (set at build time)
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gunung Patuha via Kawah Putih</name>
+    <desc>Track: OpenStreetMap relation 19011967, (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/relation/19011967"><text>OpenStreetMap relation 19011967</text></link>
+  </metadata>
+  <trk>
+    <name>Gunung Patuha via Kawah Putih</name>
+    <trkseg>
+      <trkpt lat="-7.169944" lon="107.401612"><ele>2251.0</ele></trkpt>
+      <trkpt lat="-7.169889" lon="107.401356"><ele>2256.0</ele></trkpt>
+      <trkpt lat="-7.169671" lon="107.401235"><ele>2263.0</ele></trkpt>
+      <trkpt lat="-7.169416" lon="107.401281"><ele>2269.0</ele></trkpt>
+      <trkpt lat="-7.169297" lon="107.401516"><ele>2272.0</ele></trkpt>
+      <trkpt lat="-7.169076" lon="107.401379"><ele>2278.0</ele></trkpt>
+      <trkpt lat="-7.168839" lon="107.401317"><ele>2282.0</ele></trkpt>
+      <trkpt lat="-7.168713" lon="107.401082"><ele>2288.0</ele></trkpt>
+      <trkpt lat="-7.168624" lon="107.400825"><ele>2298.0</ele></trkpt>
+      <trkpt lat="-7.168537" lon="107.400569"><ele>2305.0</ele></trkpt>
+      <trkpt lat="-7.168360" lon="107.400369"><ele>2309.0</ele></trkpt>
+      <trkpt lat="-7.168299" lon="107.400111"><ele>2304.0</ele></trkpt>
+      <trkpt lat="-7.168217" lon="107.399878"><ele>2296.0</ele></trkpt>
+      <trkpt lat="-7.168096" lon="107.399637"><ele>2293.0</ele></trkpt>
+      <trkpt lat="-7.168066" lon="107.399372"><ele>2290.0</ele></trkpt>
+      <trkpt lat="-7.168046" lon="107.399103"><ele>2284.0</ele></trkpt>
+      <trkpt lat="-7.167944" lon="107.398855"><ele>2273.0</ele></trkpt>
+      <trkpt lat="-7.167812" lon="107.398621"><ele>2265.0</ele></trkpt>
+      <trkpt lat="-7.167621" lon="107.398438"><ele>2255.0</ele></trkpt>
+      <trkpt lat="-7.167416" lon="107.398263"><ele>2246.0</ele></trkpt>
+      <trkpt lat="-7.167191" lon="107.398119"><ele>2241.0</ele></trkpt>
+      <trkpt lat="-7.166933" lon="107.398041"><ele>2236.0</ele></trkpt>
+      <trkpt lat="-7.166786" lon="107.398251"><ele>2238.0</ele></trkpt>
+      <trkpt lat="-7.166699" lon="107.398509"><ele>2239.0</ele></trkpt>
+      <trkpt lat="-7.166536" lon="107.398668"><ele>2242.0</ele></trkpt>
+      <trkpt lat="-7.166286" lon="107.398767"><ele>2247.0</ele></trkpt>
+      <trkpt lat="-7.166038" lon="107.398866"><ele>2255.0</ele></trkpt>
+      <trkpt lat="-7.165769" lon="107.398866"><ele>2264.0</ele></trkpt>
+      <trkpt lat="-7.165500" lon="107.398866"><ele>2277.0</ele></trkpt>
+      <trkpt lat="-7.165248" lon="107.398952"><ele>2291.0</ele></trkpt>
+      <trkpt lat="-7.165056" lon="107.399141"><ele>2307.0</ele></trkpt>
+      <trkpt lat="-7.164936" lon="107.399374"><ele>2313.0</ele></trkpt>
+      <trkpt lat="-7.164680" lon="107.399366"><ele>2328.0</ele></trkpt>
+      <trkpt lat="-7.164421" lon="107.399394"><ele>2345.0</ele></trkpt>
+      <trkpt lat="-7.164176" lon="107.399489"><ele>2367.0</ele></trkpt>
+      <trkpt lat="-7.163927" lon="107.399569"><ele>2379.0</ele></trkpt>
+      <trkpt lat="-7.163677" lon="107.399658"><ele>2391.0</ele></trkpt>
+      <trkpt lat="-7.163424" lon="107.399731"><ele>2402.0</ele></trkpt>
+      <trkpt lat="-7.163165" lon="107.399724"><ele>2411.0</ele></trkpt>
+      <trkpt lat="-7.162922" lon="107.399835"><ele>2420.0</ele></trkpt>
+      <trkpt lat="-7.162661" lon="107.399897"><ele>2425.0</ele></trkpt>
+      <trkpt lat="-7.162570" lon="107.399997"><ele>2425.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

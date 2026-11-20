@@ -3,10 +3,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class HikingRoute extends Model
 {
     use HasFactory;
+
+    /**
+     * SEO-friendly URLs: /routes/21-gunung-sumbing-via-butuh-kaliangkrik.
+     * Only the leading id is used to resolve, so old /routes/21 links keep working.
+     */
+    public function getRouteKey(): mixed
+    {
+        $slug = Str::slug((string) $this->name);
+
+        return $slug !== '' ? $this->getKey() . '-' . $slug : (string) $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field !== null) {
+            return parent::resolveRouteBinding($value, $field);
+        }
+
+        return preg_match('/^(\d+)/', (string) $value, $m) ? $this->whereKey((int) $m[1])->first() : null;
+    }
 
     protected $fillable = [
         'name',
