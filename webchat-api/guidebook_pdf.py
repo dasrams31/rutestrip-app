@@ -78,13 +78,26 @@ def parse_gpx_data(gpx_path):
         "summit_ele": max(eles)
     }
 
-def get_difficulty_label(gain, dist):
-    if gain > 1600 or dist > 13:
-        return "TINGGI (Hard / Ekstrem)", colors.HexColor("#c0392b")
-    elif gain > 900 or dist > 7:
-        return "SEDANG (Moderate)", colors.HexColor("#d35400")
-    else:
-        return "RAMAH PEMULA (Easy)", colors.HexColor("#27ae60")
+def _classify_difficulty(dist_km, gain_m, max_ele):
+    """Shared RuteStrip difficulty (python/processor.py classify_difficulty)."""
+    import os as _os
+    import sys as _sys
+    _py = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'python')
+    if _py not in _sys.path:
+        _sys.path.append(_py)
+    from processor import classify_difficulty
+    grade = (gain_m / (dist_km * 1000.0) * 100.0) if dist_km > 0 else 0.0
+    return classify_difficulty(dist_km, gain_m, grade, max_ele)
+
+
+def get_difficulty_label(gain, dist, max_ele=None):
+    level = _classify_difficulty(dist, gain, max_ele)
+    return {
+        "mudah": ("MUDAH (Ramah Pemula)", colors.HexColor("#27ae60")),
+        "sedang": ("SEDANG (Moderate)", colors.HexColor("#d35400")),
+        "sulit": ("SULIT (Hard)", colors.HexColor("#c0392b")),
+        "sangat sulit": ("SANGAT SULIT (Ekstrem)", colors.HexColor("#7b241c")),
+    }[level]
 
 def draw_elevation_chart(distances, elevations, width=480, height=100):
     d = Drawing(width, height)
@@ -228,7 +241,7 @@ def generate_guidebook_pdf(mountain_query: str, output_path: str = None) -> str:
 
     # 2. KEY METRICS TABLE (Naismith Time, Distance, Gain, Elevation)
     naismith_hours = (data["total_dist"] / 4.0) + (data["total_gain"] / 600.0)
-    diff_label, diff_color = get_difficulty_label(data["total_gain"], data["total_dist"])
+    diff_label, diff_color = get_difficulty_label(data["total_gain"], data["total_dist"], data.get("summit_ele"))
     
     metrics_data = [
         [

@@ -9,6 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 import search_scoring
+from processor import classify_difficulty as processor_difficulty
 
 CACHE_FILE = "/tmp/routes_cache.json"
 
@@ -74,15 +75,6 @@ def calculate_statistics(gpx, points):
     round_trip_hrs = round(ascent_hrs * 1.6, 2)
     grade = (gain_m / (dist_km * 1000.0) * 100.0) if dist_km > 0 else 0.0
 
-    if grade < 5:
-        diff_str = "mudah"
-    elif grade < 10:
-        diff_str = "sedang"
-    elif grade < 15:
-        diff_str = "sulit"
-    else:
-        diff_str = "sangat sulit"
-
     eles = [p['ele'] for p in points if p['ele'] > 0]
     min_ele = min(eles) if eles else 0
     max_ele = max(eles) if eles else 0
@@ -94,7 +86,7 @@ def calculate_statistics(gpx, points):
         'average_grade_pct': round(grade, 2),
         'min_elevation': int(min_ele),
         'max_elevation': int(max_ele),
-        'difficulty': diff_str
+        'difficulty': processor_difficulty(dist_km, gain_m, grade, max_ele)
     }
 
 def generate_narrative(stats, route_name, waypoints=None):

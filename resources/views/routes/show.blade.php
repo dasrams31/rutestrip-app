@@ -67,8 +67,10 @@
                                 @elseif($route->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-800
                                 @elseif($route->difficulty_level === 'Sulit') bg-orange-100 text-orange-800
                                 @else bg-red-100 text-red-800
-                                @endif shadow-sm">
+                                @endif shadow-sm"
+                                title="Skor kesulitan {{ number_format($route->difficulty_score, 0) }}: dihitung dari total tanjakan dan jarak (Shenandoah difficulty rating), ditambah faktor kecuraman (rata-rata ≥25%) dan ketinggian puncak (≥3.000 m). Mudah &lt;75, Sedang &lt;200, Sulit &lt;460, Sangat Sulit ≥460; tanjakan ≥1.200 m minimal Sulit.">
                                 {{ $route->difficulty_level }}
+                                <span class="ml-1 font-medium opacity-70">· skor {{ number_format($route->difficulty_score, 0) }}</span>
                             </span>
                             @if($route->activeGpxVersion)
                             <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold mb-4 ml-2 shadow-sm

@@ -84,6 +84,20 @@ class RouteSearchTest extends TestCase
         $this->assertSame('Mt. Merbabu via Selo', $ranked->last()->name);
     }
 
+    public function test_difficulty_uses_climb_distance_steepness_and_altitude(): void
+    {
+        $route = fn(float $km, int $gain, float $grade, int $maxEle) => new HikingRoute([
+            'distance_km' => $km, 'elevation_gain_m' => $gain, 'average_grade_pct' => $grade,
+            'narrative_text' => "Total kenaikan elevasi {$gain} meter dengan ketinggian dari 1000m hingga {$maxEle}m.",
+        ]);
+
+        $this->assertSame('Mudah', $route(1.2, 255, 20.6, 1889)->difficulty_level);          // Bukit Sikendil
+        $this->assertSame('Sedang', $route(3.2, 866, 27.4, 1745)->difficulty_level);         // Andong: short but steep
+        $this->assertSame('Sulit', $route(3.5, 1233, 34.9, 2804)->difficulty_level);         // Cikuray: >= 1,200 m climb
+        $this->assertSame('Sulit', $route(11.1, 1424, 12.8, 3128)->difficulty_level);        // Merbabu via Selo
+        $this->assertSame('Sangat Sulit', $route(39.8, 2356, 5.9, 3623)->difficulty_level);  // Semeru: low grade, long
+    }
+
     public function test_negated_steepness_is_read_as_gentle(): void
     {
         $search = app(RouteSearchService::class);

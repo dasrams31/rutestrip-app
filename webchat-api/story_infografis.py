@@ -73,13 +73,26 @@ def parse_gpx(gpx_path):
         "max_ele": max(eles)
     }
 
-def get_difficulty(gain, dist):
-    if gain > 1600 or dist > 14:
-        return "HARD / SANGAT MENANTANG", "#e74c3c"
-    elif gain > 900 or dist > 8:
-        return "MODERATE / SEDANG", "#f39c12"
-    else:
-        return "EASY / RAMAH PEMULA", "#2ecc71"
+def _classify_difficulty(dist_km, gain_m, max_ele):
+    """Shared RuteStrip difficulty (python/processor.py classify_difficulty)."""
+    import os as _os
+    import sys as _sys
+    _py = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), 'python')
+    if _py not in _sys.path:
+        _sys.path.append(_py)
+    from processor import classify_difficulty
+    grade = (gain_m / (dist_km * 1000.0) * 100.0) if dist_km > 0 else 0.0
+    return classify_difficulty(dist_km, gain_m, grade, max_ele)
+
+
+def get_difficulty(gain, dist, max_ele=None):
+    level = _classify_difficulty(dist, gain, max_ele)
+    return {
+        "mudah": ("MUDAH / RAMAH PEMULA", "#2ecc71"),
+        "sedang": ("SEDANG / MODERATE", "#f39c12"),
+        "sulit": ("SULIT / HARD", "#e74c3c"),
+        "sangat sulit": ("SANGAT SULIT / EKSTREM", "#922b21"),
+    }[level]
 
 def generate_story_card(mountain_query: str, output_path: str = "/tmp/story_card.png") -> str:
     gpx_file = find_gpx(mountain_query)
@@ -92,7 +105,7 @@ def generate_story_card(mountain_query: str, output_path: str = "/tmp/story_card
         raise ValueError("Data elevasi GPX kosong atau tidak valid.")
         
     naismith_hours = (data["total_dist"] / 4.0) + (data["total_gain"] / 600.0)
-    diff_text, diff_color = get_difficulty(data["total_gain"], data["total_dist"])
+    diff_text, diff_color = get_difficulty(data["total_gain"], data["total_dist"], data.get("max_ele"))
     
     # 9:16 vertical ratio (1080 x 1920)
     fig = plt.figure(figsize=(9, 16), dpi=120)

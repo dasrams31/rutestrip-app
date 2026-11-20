@@ -111,23 +111,55 @@ class HikingRoute extends Model
     }
 
     /**
-     * Get difficulty level based on grade
+     * Highest point of the route in metres, taken from the narrative
+     * ("... ketinggian dari 1800m hingga 3142m").
+     */
+    public function getMaxElevationMAttribute(): ?int
+    {
+        return preg_match('/hingga (\d+)m/', (string) $this->narrative_text, $m) ? (int) $m[1] : null;
+    }
+
+    /**
+     * Difficulty score from the whole route profile (mirrors
+     * python/processor.py difficulty_score()):
+     * Shenandoah hiking difficulty rating sqrt(gain_ft × 2 × distance_mi),
+     * ×1.15 for an average grade >= 25%, ×1.15 for a summit >= 3,000 m.
+     */
+    public function getDifficultyScoreAttribute(): float
+    {
+        $gainFt = max((float) $this->elevation_gain_m, 0) * 3.28084;
+        $distMi = max((float) $this->distance_km, 0) * 0.621371;
+        $score  = sqrt($gainFt * 2 * $distMi);
+
+        if ((float) $this->average_grade_pct >= 25) {
+            $score *= 1.15;
+        }
+        if (($this->max_elevation_m ?? 0) >= 3000) {
+            $score *= 1.15;
+        }
+
+        return $score;
+    }
+
+    /**
+     * Mudah < 75 <= Sedang < 200 <= Sulit < 460 <= Sangat Sulit.
+     * A climb of 1,200 m or more is at least "Sulit" whatever the distance.
      */
     public function getDifficultyLevelAttribute(): string
     {
-        if ($this->average_grade_pct < 5) {
-            return 'Mudah';
-        }
+        $score = $this->difficulty_score;
 
-        if ($this->average_grade_pct < 10) {
+        if ($score >= 460) {
+            return 'Sangat Sulit';
+        }
+        if ($score >= 200 || (float) $this->elevation_gain_m >= 1200) {
+            return 'Sulit';
+        }
+        if ($score >= 75) {
             return 'Sedang';
         }
 
-        if ($this->average_grade_pct < 15) {
-            return 'Sulit';
-        }
-
-        return 'Sangat Sulit';
+        return 'Mudah';
     }
 
     /**

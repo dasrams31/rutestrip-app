@@ -191,6 +191,39 @@ def parse_gpx(file_path):
     return gpx, points
 
 
+def difficulty_score(distance_km, elevation_gain_m, average_grade_pct, max_elevation_m=None):
+    """Route difficulty from the whole route profile, not only the slope.
+
+    Base: Shenandoah National Park hiking difficulty rating,
+    sqrt(elevation gain [ft] x 2 x distance [mi]), which combines how much
+    you climb with how far you walk. Adjusted for Java volcanoes:
+    x1.15 when the average grade is >= 25% (very steep), and
+    x1.15 when the summit is >= 3,000 m (cold, thinner air, AMS risk).
+    Keep in sync with HikingRoute::difficultyScore() in Laravel.
+    """
+    gain_ft = max(float(elevation_gain_m or 0), 0.0) * 3.28084
+    dist_mi = max(float(distance_km or 0), 0.0) * 0.621371
+    score = (gain_ft * 2 * dist_mi) ** 0.5
+    if float(average_grade_pct or 0) >= 25:
+        score *= 1.15
+    if max_elevation_m and float(max_elevation_m) >= 3000:
+        score *= 1.15
+    return score
+
+
+def classify_difficulty(distance_km, elevation_gain_m, average_grade_pct, max_elevation_m=None):
+    """mudah < 75 <= sedang < 200 <= sulit < 460 <= sangat sulit.
+    A climb of 1,200 m or more is at least "sulit" whatever the distance."""
+    score = difficulty_score(distance_km, elevation_gain_m, average_grade_pct, max_elevation_m)
+    if score >= 460:
+        return "sangat sulit"
+    if score >= 200 or float(elevation_gain_m or 0) >= 1200:
+        return "sulit"
+    if score >= 75:
+        return "sedang"
+    return "mudah"
+
+
 def calculate_statistics(gpx, points):
     """Calculate hiking statistics from GPX data"""
     
@@ -220,21 +253,13 @@ def calculate_statistics(gpx, points):
     else:
         average_grade = 0
     
-    # Determine difficulty level
-    if average_grade < 5:
-        difficulty = "mudah"
-    elif average_grade < 10:
-        difficulty = "sedang"
-    elif average_grade < 15:
-        difficulty = "sulit"
-    else:
-        difficulty = "sangat sulit"
-    
     # Elevation range
     elevations = [p['ele'] for p in points if p['ele'] > 0]
     min_elevation = min(elevations) if elevations else 0
     max_elevation = max(elevations) if elevations else 0
-    
+
+    difficulty = classify_difficulty(distance_km, elevation_gain, average_grade, max_elevation)
+
     return {
         'distance_km': round(distance_km, 2),
         'elevation_gain_m': int(elevation_gain),
@@ -244,6 +269,14 @@ def calculate_statistics(gpx, points):
         'max_elevation': int(max_elevation),
         'difficulty': difficulty
     }
+
+
+SUITABILITY = {
+    "mudah": "pemula",
+    "sedang": "pemula yang bugar atau dengan pengalaman menengah",
+    "sulit": "berpengalaman dengan fisik prima",
+    "sangat sulit": "sangat berpengalaman; umumnya perlu bermalam dan persiapan logistik matang",
+}
 
 
 def generate_narrative(stats):
@@ -282,7 +315,7 @@ def generate_narrative(stats):
         f"Total kenaikan elevasi {stats['elevation_gain_m']} meter dengan ketinggian dari {stats['min_elevation']}m "
         f"hingga {stats['max_elevation']}m. "
         f"Tingkat kesulitan: {stats['difficulty']}. "
-        f"Cocok untuk pendaki {'pemula' if stats['difficulty'] == 'mudah' else 'berpengalaman' if stats['difficulty'] in ['sulit', 'sangat sulit'] else 'dengan pengalaman menengah'}."
+        f"Cocok untuk pendaki {SUITABILITY[stats['difficulty']]}."
     )
     
     return narrative
