@@ -3,6 +3,11 @@
 
 rutestrip.ai.id {
 	root * /var/www/rutestrip-final/public
+	# Uploaded GPX files are always downloaded, never rendered (XSS hardening)
+	@gpxfiles path /storage/gpx_files/*
+	header @gpxfiles Content-Type application/gpx+xml
+	header @gpxfiles Content-Disposition attachment
+	header @gpxfiles X-Content-Type-Options nosniff
 	encode zstd gzip
 	request_body {
 		max_size 32MB
