@@ -100,6 +100,15 @@ def _percentile(value: float, values: list) -> float:
 
 
 STEEP_GRADE_PCT = 15.0   # narrative: >= 15% is "sangat curam", never "landai"/"pemula"
+MAX_HIKE_KM = 60.0       # longer tracks almost always include road/vehicle segments
+
+
+def stats_reliable(route: dict) -> bool:
+    """GPX without elevation (gain 0) or with vehicle segments (> 60 km) gives
+    meaningless grade/duration, so such routes get no attribute boost."""
+    gain = float(route.get("elevation_gain_m") or 0)
+    dist = float(route.get("distance_km") or 0)
+    return gain > 0 and 0 < dist <= MAX_HIKE_KM
 
 
 def attribute_score(intents: set, route: dict, all_routes: list) -> float:
@@ -111,6 +120,8 @@ def attribute_score(intents: set, route: dict, all_routes: list) -> float:
     >= 15% are halved. "hard" weights grade 60%, gain 20%, duration 20%.
     """
     if not intents:
+        return 0.0
+    if not stats_reliable(route):
         return 0.0
     grades = [float(r.get("average_grade_pct") or 0) for r in all_routes]
     durations = [float(r.get("naismith_duration_hour") or 0) for r in all_routes]

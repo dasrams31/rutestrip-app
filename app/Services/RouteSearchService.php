@@ -21,6 +21,7 @@ class RouteSearchService
     public const W_ASPECT = 0.6;
     public const W_ATTR = 0.45;
     public const STEEP_GRADE_PCT = 15.0;
+    public const MAX_HIKE_KM = 60.0;
     public const W_NAME = 0.35;
 
     private const INTENT_WORDS = [
@@ -139,6 +140,11 @@ class RouteSearchService
      */
     private function attributeScore(array $intents, HikingRoute $route, array $grades, array $durations, array $gains): float
     {
+        // GPX without elevation or with vehicle segments: grade/duration are meaningless.
+        if ((float) $route->elevation_gain_m <= 0 || (float) $route->distance_km <= 0 || (float) $route->distance_km > self::MAX_HIKE_KM) {
+            return 0.0;
+        }
+
         $grade = (float) $route->average_grade_pct;
         $g     = $this->percentile($grade, $grades);
         $d     = $this->percentile((float) $route->naismith_duration_hour, $durations);
