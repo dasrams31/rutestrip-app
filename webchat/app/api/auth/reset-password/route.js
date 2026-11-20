@@ -12,7 +12,7 @@ export async function POST(request) {
     const data = await res.json();
     if (!res.ok) {
       return NextResponse.json(
-        { error: data.detail?.[0]?.msg || data.message || 'Reset password gagal' },
+        { error: (typeof data.detail === 'string' ? data.detail : data.detail?.[0]?.msg) || data.message || 'Reset password gagal' },
         { status: res.status }
       );
     }

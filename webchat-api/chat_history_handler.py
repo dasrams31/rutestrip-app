@@ -33,7 +33,7 @@ def save_session_message(user_id: str, session_id: str, sender: str, text: str, 
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT title, messages FROM chat_sessions WHERE session_id = %s;", (session_id,))
+        cur.execute("SELECT title, messages FROM chat_sessions WHERE session_id = %s AND username = %s;", (session_id, user_id))
         row = cur.fetchone()
         title = text[:35] + ("..." if len(text) > 35 else "")
         if row:
@@ -45,13 +45,14 @@ def save_session_message(user_id: str, session_id: str, sender: str, text: str, 
             cur.execute("""
             UPDATE chat_sessions
             SET title = %s, messages = %s, updated_at = CURRENT_TIMESTAMP
-            WHERE session_id = %s;
-            """, (existing_title, json.dumps(messages), session_id))
+            WHERE session_id = %s AND username = %s;
+            """, (existing_title, json.dumps(messages), session_id, user_id))
         else:
             messages = [msg_obj]
             cur.execute("""
             INSERT INTO chat_sessions (session_id, username, title, messages)
-            VALUES (%s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (session_id) DO NOTHING;
             """, (session_id, user_id, title, json.dumps(messages)))
         conn.commit()
         cur.close()
@@ -118,7 +119,7 @@ def get_session_messages(user_id: str, session_id: str):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT messages FROM chat_sessions WHERE session_id = %s;", (session_id,))
+        cur.execute("SELECT messages FROM chat_sessions WHERE session_id = %s AND username = %s;", (session_id, user_id))
         row = cur.fetchone()
         cur.close()
         conn.close()
@@ -136,7 +137,7 @@ def delete_session(user_id: str, session_id: str):
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("DELETE FROM chat_sessions WHERE session_id = %s;", (session_id,))
+        cur.execute("DELETE FROM chat_sessions WHERE session_id = %s AND username = %s;", (session_id, user_id))
         conn.commit()
         cur.close()
         conn.close()

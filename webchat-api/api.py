@@ -73,6 +73,7 @@ class UserLoginModel(BaseModel):
 
 class ResetPasswordModel(BaseModel):
     username_or_email: str
+    old_password: str
     new_password: str
 
 class ChatPromptModel(BaseModel):
@@ -116,6 +117,7 @@ def login_account(body: UserLoginModel):
 def reset_user_password(body: ResetPasswordModel):
     res = auth_handler.reset_password(
         username_or_email=body.username_or_email,
+        old_password=body.old_password,
         new_password=body.new_password
     )
     if res.get('status') == 'error':
