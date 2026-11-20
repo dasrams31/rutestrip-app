@@ -301,7 +301,7 @@
             @endif
 
             <!-- 4. REVIEWS SECTION -->
-            <div id="ulasan" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 scroll-mt-24">
+            <div id="ulasan" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
                 <div class="p-4 sm:p-6 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
                     <h3 class="font-bold text-slate-800 flex items-center">
                         <x-icon name="star" class="w-6 h-6 text-amber-400 mr-2" /> {{ __('Ulasan Pengguna') }}

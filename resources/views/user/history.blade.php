@@ -4,39 +4,39 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="search" class="w-7 h-7 text-emerald-600" /> {{ __('Riwayat Pencarian') }}</h1>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-8">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="search" class="w-7 h-7 text-emerald-600 shrink-0" /> {{ __('Riwayat Pencarian') }}</h1>
             <p class="text-slate-600">{{ __('Semua pencarian yang pernah Anda lakukan') }}</p>
         </div>
-        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
+        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1 py-2"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
     </div>
 
     @if($histories->count() > 0)
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
+    <div class="bg-white rounded-2xl shadow-lg overflow-x-auto border border-slate-100">
         <table class="w-full">
             <thead class="bg-slate-50">
                 <tr>
-                    <th class="px-6 py-4 text-left text-sm font-semibold text-slate-600">{{ __('Query') }}</th>
-                    <th class="px-6 py-4 text-center text-sm font-semibold text-slate-600">{{ __('Hasil') }}</th>
-                    <th class="px-6 py-4 text-right text-sm font-semibold text-slate-600">{{ __('Waktu') }}</th>
+                    <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-slate-600">{{ __('Query') }}</th>
+                    <th class="px-3 sm:px-6 py-4 text-center text-sm font-semibold text-slate-600">{{ __('Hasil') }}</th>
+                    <th class="px-4 sm:px-6 py-4 text-right text-sm font-semibold text-slate-600">{{ __('Waktu') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @foreach($histories as $history)
                 <tr class="hover:bg-slate-50">
-                    <td class="px-6 py-4">
+                    <td class="px-4 sm:px-6 py-4 min-w-[8rem]">
                         <a href="{{ route('search.index') }}?q={{ urlencode($history->query) }}"
-                           class="text-emerald-600 hover:underline font-medium">
+                           class="text-emerald-600 hover:underline font-medium [overflow-wrap:anywhere]">
                             {{ $history->query }}
                         </a>
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                    <td class="px-3 sm:px-6 py-4 text-center">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
                             {{ __(':count rute', ['count' => $history->results_count]) }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-right text-sm text-slate-500">
+                    <td class="px-4 sm:px-6 py-4 text-right text-sm text-slate-500">
                         {{ $history->created_at->diffForHumans() }}
                     </td>
                 </tr>

@@ -69,4 +69,20 @@ return [
         'cookie_secure'   => (bool) env('SSO_COOKIE_SECURE', false),
     ],
 
+    // Gemini (Google AI) for the "Asisten RuteStrip" widget (AssistantController).
+    // Model order like webchat/app/api/chat/route.js: GEMINI_MODELS (comma list) wins,
+    // otherwise GEMINI_MODEL followed by GEMINI_FALLBACK_MODELS. Tried in order;
+    // the next model is used on 429/5xx/timeout.
+    'gemini'   => [
+        'key'                    => env('GEMINI_API_KEY'),
+        'models'                 => array_values(array_unique(array_filter(array_map('trim', explode(',',
+            env('GEMINI_MODELS') ?: implode(',', [
+                (string) env('GEMINI_MODEL', ''),
+                (string) (env('GEMINI_FALLBACK_MODELS') ?: 'gemini-3.5-flash,gemini-3.1-flash-lite'),
+            ])
+        ))))),
+        'first_token_timeout_ms' => (int) (env('GEMINI_FIRST_TOKEN_TIMEOUT_MS') ?: 12000),
+        'total_timeout_ms'       => (int) (env('GEMINI_TOTAL_TIMEOUT_MS') ?: 30000),
+    ],
+
 ];

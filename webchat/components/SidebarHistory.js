@@ -17,6 +17,7 @@ export default function SidebarHistory({
   onLogout,
   onInstall,
   onUnauthorized,
+  embed = false, // framed by rutestrip.ai.id: no extra links, no sign-out
 }) {
   const { t, tag } = useI18n();
   const [sessionsList, setSessionsList] = useState([]);
@@ -222,12 +223,14 @@ export default function SidebarHistory({
               </div>
               <a
                 href={SETTINGS_URL}
+                target={embed ? '_top' : undefined}
                 className="sidebar-icon-btn"
                 aria-label={t('account.settings')}
                 title={t('account.settings')}
               >
                 <Icon name="cog" size={18} />
               </a>
+              {!embed && (
               <button
                 type="button"
                 onClick={onLogout}
@@ -237,9 +240,11 @@ export default function SidebarHistory({
               >
                 <Icon name="logout" size={18} />
               </button>
+              )}
             </div>
           )}
 
+          {!embed && (
           <nav className="sidebar-links-row" aria-label={t('sidebar.more')}>
             <a href={MAIN_SITE_URL} className="sidebar-link-chip" title={t('header.mainSiteTitle')}>
               <Icon name="home" size={15} />
@@ -254,6 +259,7 @@ export default function SidebarHistory({
               <span>{t('sidebar.install')}</span>
             </button>
           </nav>
+          )}
         </div>
       </aside>
     </>

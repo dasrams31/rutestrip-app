@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MAIN_SITE_URL } from '@/lib/i18n';
+import { MAIN_SITE_URL, LOGIN_URL } from '@/lib/i18n';
 import AuthForm from './AuthForm';
 import SidebarHistory from './SidebarHistory';
 import Icon from './Icon';
@@ -96,7 +96,13 @@ function formatMessage(content) {
 const hhmm = (d = new Date()) =>
   `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 
-export default function ChatInterface() {
+/*
+ * embed: /chat?embed=1, framed by rutestrip.ai.id in a small panel or a
+ * full-screen phone sheet. Only the chat itself, history and new chat stay;
+ * site navigation, account actions and install/Telegram prompts are left out,
+ * and anything that leaves the chat opens in the top window or a new tab.
+ */
+export default function ChatInterface({ embed = false }) {
   const { t, lang, tag, applyUserLocale } = useI18n();
   const STAGES = t('stages');
 
@@ -480,6 +486,24 @@ export default function ChatInterface() {
     );
   }
 
+  if (!currentUser && embed) {
+    // No sign-up form inside the panel: send the visitor to the main site
+    return (
+      <div className="auth-overlay embed-signin">
+        <div className="auth-card" role="status">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={44} height={44} className="auth-logo embed-signin-logo" />
+          <h2 className="embed-signin-title">{t('embed.signInTitle')}</h2>
+          {authNotice && <p className="embed-signin-note">{authNotice}</p>}
+          <a href={LOGIN_URL} target="_top" className="btn-primary embed-signin-btn">
+            <Icon name="key" size={16} />
+            <span>{t('embed.signIn')}</span>
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return (
       <AuthForm
@@ -490,12 +514,13 @@ export default function ChatInterface() {
     );
   }
 
-  const suggestions = t('suggestions');
+  // The panel shows four starters so the welcome screen fits without scrolling
+  const suggestions = embed ? t('suggestions').slice(0, 4) : t('suggestions');
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${embed ? ' embed' : ''}`}>
       {/* ── PWA Install Notification Banner ── */}
-      {showPwaBanner && (
+      {showPwaBanner && !embed && (
         <div className="pwa-banner-bar msg-appear">
           <div className="pwa-banner-left">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -534,9 +559,10 @@ export default function ChatInterface() {
         onLogout={handleLogout}
         onInstall={handleInstallPwa}
         onUnauthorized={handleUnauthorized}
+        embed={embed}
       />
 
-      <AccountSheet open={isAccountOpen} user={currentUser} onLogout={handleLogout} onClose={closeAccount} />
+      {!embed && <AccountSheet open={isAccountOpen} user={currentUser} onLogout={handleLogout} onClose={closeAccount} />}
 
       {/* ── Header ── */}
       <header className="header">
@@ -565,6 +591,7 @@ export default function ChatInterface() {
           </div>
         </div>
 
+        {!embed && (
         <nav className="header-nav" aria-label={t('header.navAria')}>
           <a href={MAIN_SITE_URL} className="nav-link" title={t('header.mainSiteTitle')} aria-label={t('header.mainSite')}>
             <Icon name="home" size={16} />
@@ -575,8 +602,10 @@ export default function ChatInterface() {
             <span>{t('header.system')}</span>
           </Link>
         </nav>
+        )}
 
         <div className="header-right">
+          {!embed && (
           <div className="header-tools">
             <button
               type="button"
@@ -601,6 +630,7 @@ export default function ChatInterface() {
             </button>
             <span className="divider-v" aria-hidden="true" />
           </div>
+          )}
 
           <button
             type="button"
@@ -614,11 +644,25 @@ export default function ChatInterface() {
             <span>{t('header.newChat')}</span>
           </button>
 
-          <UserMenu user={currentUser} onLogout={handleLogout} />
+          {embed ? (
+            <a
+              href="/chat"
+              target="_blank"
+              rel="noopener"
+              className="icon-btn"
+              aria-label={t('embed.openFull')}
+              title={t('embed.openFull')}
+            >
+              <Icon name="external" size={18} />
+            </a>
+          ) : (
+            <UserMenu user={currentUser} onLogout={handleLogout} />
+          )}
         </div>
       </header>
 
       {/* ── Pipeline Bar ── */}
+      {!embed && (
       <div
         className={`pipeline-bar${showPipeline ? '' : ' hidden'}`}
         role="complementary"
@@ -636,6 +680,7 @@ export default function ChatInterface() {
           <span className="pipeline-step sky">SBERT + Gemini</span>
         </div>
       </div>
+      )}
 
       {/* ── Chat Messages ── */}
       <main className="chat-main chat-scroll" ref={chatRef} aria-live="polite">
@@ -825,7 +870,7 @@ export default function ChatInterface() {
 
       {/* ── Input Footer ── */}
       <footer className="input-footer print-hide">
-        <TelegramFab />
+        {!embed && <TelegramFab />}
 
         <form className="input-form" onSubmit={handleSubmit} aria-label={t('chat.formAria')}>
           <div className="input-wrap">
@@ -868,15 +913,17 @@ export default function ChatInterface() {
           </button>
         </form>
 
+        {!embed && (
         <div className="input-footer-meta">
           <p className="powered-by">
             Powered by <span className="sbert">SBERT</span> + <span className="gemini">Gemini</span> / <span className="qwen">Qwen</span>
           </p>
           <p className="input-hint">{t('chat.newLine')}</p>
         </div>
+        )}
       </footer>
 
-      <BottomTabBar active={activeTab} onChat={goChat} onHistory={toggleHistory} onAccount={toggleAccount} />
+      {!embed && <BottomTabBar active={activeTab} onChat={goChat} onHistory={toggleHistory} onAccount={toggleAccount} />}
 
       <ImageLightbox key={lightbox?.id || 'none'} image={lightbox} onClose={closeLightbox} />
     </div>

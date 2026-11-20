@@ -48,7 +48,7 @@
 <div class="-mt-4 overflow-x-clip">
 
     {{-- ================= HERO + SEARCH ================= --}}
-    <section id="cari" class="px-3 sm:px-6 lg:px-8 scroll-mt-24">
+    <section id="cari" class="px-3 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto relative overflow-hidden rounded-3xl bg-[#053b30] text-white shadow-2xl">
             {{-- Topographic contour lines (inline SVG, no image request) --}}
             <svg class="absolute inset-0 w-full h-full opacity-[0.13] pointer-events-none" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -180,7 +180,7 @@
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach($featured as $item)
                 <a href="{{ $item['url'] }}" class="group rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all overflow-hidden flex flex-col">
-                    <div class="relative h-40 bg-gradient-to-br from-emerald-50 to-teal-50">
+                    <div class="relative isolate h-40 bg-gradient-to-br from-emerald-50 to-teal-50">
                         <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" class="absolute inset-0 w-full h-full" aria-hidden="true">
                             <path d="{{ $trackPath($item['track']) }}" fill="none" stroke="#059669" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
                         </svg>

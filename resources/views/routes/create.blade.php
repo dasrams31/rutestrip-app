@@ -118,13 +118,13 @@
                            name="gpx_file"
                            id="gpx_file"
                            accept=".gpx,.xml"
-                           class="hidden"
+                           class="sr-only"
                            required>
 
                     <label for="gpx_file"
                            class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all @error('gpx_file') border-red-500 @enderror"
                            id="dropzone">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6" id="dropzone-content">
+                        <div class="flex flex-col items-center justify-center px-4 pt-5 pb-6 text-center" id="dropzone-content">
                             <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
                                 <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
@@ -135,13 +135,13 @@
                             </p>
                             <p class="text-xs text-slate-500">{{ __('File GPX atau XML (Maks. 10MB)') }}</p>
                         </div>
-                        <div class="hidden flex-col items-center justify-center pt-5 pb-6" id="file-selected">
+                        <div class="hidden flex-col items-center justify-center w-full max-w-full px-4 pt-5 pb-6" id="file-selected">
                             <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
                                 <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                             </div>
-                            <p class="mb-2 text-sm font-semibold text-green-600" id="file-name">{{ __('File terpilih') }}</p>
+                            <p class="mb-2 max-w-full text-center text-sm font-semibold text-green-600 break-all line-clamp-2" id="file-name">{{ __('File terpilih') }}</p>
                             <p class="text-xs text-slate-500">{{ __('Klik untuk mengganti file') }}</p>
                         </div>
                     </label>

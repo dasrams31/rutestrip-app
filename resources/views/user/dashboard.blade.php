@@ -5,13 +5,13 @@
 @section('content')
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Welcome Header -->
-    <div class="mb-8 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">{{ __('Halo, :name!', ['name' => $user->name]) }}</h1>
+    <div class="mb-8 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 break-words">{{ __('Halo, :name!', ['name' => $user->name]) }}</h1>
             <p class="text-slate-600 mt-1">{{ __('Kelola rute favorit dan riwayat pencarian Anda') }}</p>
         </div>
         <!-- Realtime Indicator -->
-        <div class="flex items-center gap-2 text-sm text-slate-500">
+        <div class="flex items-center gap-2 text-sm text-slate-500 sm:pt-2">
             <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             <span>{{ __('Live') }}</span>
             <span id="last-update" class="text-xs text-slate-400"></span>
@@ -61,19 +61,19 @@
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Recent Favorites -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><x-icon name="star" class="w-5 h-5 text-amber-500" /> {{ __('Rute Favorit Terakhir') }}</h2>
-                <a href="{{ route('user.favorites') }}" class="text-emerald-600 hover:underline text-sm">{{ __('Lihat Semua') }}</a>
+        <div class="lg:col-span-2 min-w-0 bg-white rounded-2xl shadow-lg p-5 sm:p-6 border border-slate-100">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 min-w-0"><x-icon name="star" class="w-5 h-5 text-amber-500 shrink-0" /> {{ __('Rute Favorit Terakhir') }}</h2>
+                <a href="{{ route('user.favorites') }}" class="text-emerald-600 hover:underline text-sm shrink-0">{{ __('Lihat Semua') }}</a>
             </div>
 
             @if($recentFavorites->count() > 0)
-            <div class="grid sm:grid-cols-2 gap-4" id="favorites-container">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="favorites-container">
                 @foreach($recentFavorites as $route)
                 <a href="{{ route('routes.show', $route) }}"
-                   class="block p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 transition-colors">
+                   class="block min-w-0 p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 transition-colors">
                     <h3 class="font-semibold text-slate-800 truncate">{{ $route->name }}</h3>
                     <div class="flex items-center gap-3 mt-2 text-sm text-slate-500">
                         <span>{{ $route->formatted_distance }}</span>
@@ -89,18 +89,18 @@
         </div>
 
         <!-- Recent Searches -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><x-icon name="search" class="w-5 h-5 text-emerald-600" /> {{ __('Pencarian Terakhir') }}</h2>
-                <a href="{{ route('user.history') }}" class="text-emerald-600 hover:underline text-sm">{{ __('Semua') }}</a>
+        <div class="min-w-0 bg-white rounded-2xl shadow-lg p-5 sm:p-6 border border-slate-100">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 min-w-0"><x-icon name="search" class="w-5 h-5 text-emerald-600 shrink-0" /> {{ __('Pencarian Terakhir') }}</h2>
+                <a href="{{ route('user.history') }}" class="text-emerald-600 hover:underline text-sm shrink-0">{{ __('Semua') }}</a>
             </div>
 
             @if($recentSearches->count() > 0)
             <div class="space-y-3" id="searches-container">
                 @foreach($recentSearches as $search)
-                <div class="p-3 bg-slate-50 rounded-lg">
-                    <p class="text-slate-800 font-medium truncate">{{ $search->query }}</p>
-                    <div class="flex items-center justify-between mt-1 text-xs text-slate-400">
+                <div class="p-3 bg-slate-50 rounded-lg min-w-0">
+                    <p class="text-slate-800 font-medium truncate" title="{{ $search->query }}">{{ $search->query }}</p>
+                    <div class="flex items-center justify-between gap-2 mt-1 text-xs text-slate-400">
                         <span>{{ __(':count hasil', ['count' => $search->results_count]) }}</span>
                         <span>{{ $search->created_at->diffForHumans() }}</span>
                     </div>
@@ -117,7 +117,7 @@
     <div class="mt-8 grid sm:grid-cols-3 gap-4">
         <a href="{{ route('search.index') }}"
            class="flex items-center p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors">
-            <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
             <div>
@@ -128,7 +128,7 @@
 
         <a href="{{ route('routes.index') }}"
            class="flex items-center p-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl border border-slate-200 transition-colors">
-            <svg class="w-8 h-8 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8 mr-3 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
             <div>
@@ -139,7 +139,7 @@
 
         <a href="{{ route('user.profile') }}"
            class="flex items-center p-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl border border-slate-200 transition-colors">
-            <svg class="w-8 h-8 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8 mr-3 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
             <div>

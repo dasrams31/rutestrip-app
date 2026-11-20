@@ -14,7 +14,7 @@
 
         <div class="bg-mountain-gradient rounded-3xl p-6 sm:p-8 text-white shadow-xl">
             <p class="text-emerald-100 text-sm font-semibold mb-2">{{ __('GPX Dataset Provenance') }}</p>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">{{ $route->name }}</h1>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 break-words">{{ $route->name }}</h1>
             <p class="text-emerald-50 max-w-3xl">
                 {{ __('Riwayat versi, hash SHA-256, uploader, dan status verifikasi file GPX. Data ini menjadi dasar audit trail perubahan file GPX.') }}
             </p>

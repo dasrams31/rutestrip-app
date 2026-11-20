@@ -13,7 +13,7 @@
             {{ __('Kembali ke :name', ['name' => $route->name]) }}
         </a>
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Rute Serupa dengan :name', ['name' => $route->name]) }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 break-words">{{ __('Rute Serupa dengan :name', ['name' => $route->name]) }}</h1>
         <p class="text-slate-600">
             {{ __('Ditemukan') }} <span class="font-semibold text-emerald-600">{{ $similarRoutes->count() }}</span> {{ __('rute dengan kemiripan > 30%') }}
         </p>
@@ -52,7 +52,7 @@
                 </div>
 
                 <!-- Route Name -->
-                <h3 class="font-bold text-lg text-slate-800 mb-2">{{ $similar->name }}</h3>
+                <h3 class="font-bold text-lg text-slate-800 mb-2 break-words">{{ $similar->name }}</h3>
 
                 <!-- Description -->
                 @if($similar->narrative_text || $similar->manual_description)

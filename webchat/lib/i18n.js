@@ -10,6 +10,7 @@ export const LANG_COOKIE = 'rs_lang';
 export const MAIN_SITE_URL = 'https://rutestrip.ai.id';
 export const SETTINGS_URL = 'https://rutestrip.ai.id/settings';
 export const ROUTES_URL = 'https://rutestrip.ai.id/routes';
+export const LOGIN_URL = 'https://rutestrip.ai.id/login';
 
 export function normalizeLang(value) {
   return value === 'en' ? 'en' : DEFAULT_LANG;
@@ -157,6 +158,10 @@ const DICT = {
     'tabs.history': 'Riwayat',
     'tabs.routes': 'Rute',
     'tabs.account': 'Akun',
+
+    'embed.signInTitle': 'Masuk di RuteStrip untuk memakai AI Chat',
+    'embed.signIn': 'Masuk ke RuteStrip',
+    'embed.openFull': 'Buka chat di tab baru',
 
     'tg.open': 'Telegram RuteStrip: channel dan bot',
     'tg.close': 'Tutup menu Telegram',
@@ -333,6 +338,10 @@ const DICT = {
     'tabs.history': 'History',
     'tabs.routes': 'Routes',
     'tabs.account': 'Account',
+
+    'embed.signInTitle': 'Sign in to RuteStrip to use AI Chat',
+    'embed.signIn': 'Sign in to RuteStrip',
+    'embed.openFull': 'Open the chat in a new tab',
 
     'tg.open': 'RuteStrip on Telegram: channel and bot',
     'tg.close': 'Close Telegram menu',

@@ -196,10 +196,21 @@
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
+        /* Leaflet panes/controls use z-index 400-1000; keep them inside the map so they
+           never paint over the fixed navbar (z-50) or the mobile tab bar (z-40). */
+        .leaflet-container { isolation: isolate; }
+
+        /* Anchors (#ulasan) and focused fields scroll into view below the fixed navbar. */
+        html { scroll-padding-top: 5rem; }
+
+        /* Notched phones in landscape (viewport-fit=cover): keep content out of the cutout. */
+        .safe-x { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+
         /* Mobile tab bar: keep page content and the footer clear of it. */
         .tabbar-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
         @media (max-width: 767.98px) {
             body.has-tabbar { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+            html { scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
         }
         @media print {
             body.has-tabbar { padding-bottom: 0; }
@@ -207,7 +218,7 @@
     </style>
     @stack('styles')
 </head>
-<body class="has-tabbar min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50">
+<body class="has-tabbar safe-x min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50">
     <!-- Navigation -->
     @php
         $webchatUrl = config('services.webchat.url');
@@ -232,7 +243,7 @@
         ])) : [];
     @endphp
     <nav x-data="{ mobileOpen: false }" @keydown.escape.window="mobileOpen = false" @click.outside="mobileOpen = false"
-         class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-emerald-100/60 shadow-sm print:static">
+         class="fixed top-0 left-0 right-0 z-50 safe-x bg-white/90 backdrop-blur-xl border-b border-emerald-100/60 shadow-sm print:static">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 gap-3">
                 <!-- Logo -->
@@ -338,7 +349,7 @@
 
         <!-- Mobile menu panel -->
         <div id="mobile-menu" x-show="mobileOpen" x-cloak x-transition.opacity
-             class="lg:hidden border-t border-slate-100 bg-white max-h-[calc(100vh-4rem)] overflow-y-auto shadow-lg">
+             class="lg:hidden border-t border-slate-100 bg-white max-h-[calc(100vh-4rem)] supports-[height:100dvh]:max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain shadow-lg">
             <div class="px-4 py-3 space-y-1">
                 <div class="flex items-center justify-between px-3 pb-2">
                     <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 inline-flex items-center gap-1.5"><x-icon name="translate" class="w-4 h-4" />{{ __('Bahasa') }}</span>
@@ -586,7 +597,7 @@
                 : ['href' => route('login'), 'label' => __('Masuk'), 'icon' => 'user-circle', 'active' => request()->routeIs('login', 'register')],
         ];
     @endphp
-    <nav class="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] tabbar-safe"
+    <nav class="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] tabbar-safe safe-x"
          aria-label="{{ __('Navigasi utama') }}">
         <ul class="grid grid-cols-5 h-16">
             @foreach($tabs as $tab)
@@ -609,6 +620,7 @@
         </ul>
     </nav>
 
+    @include('components.floating-assistants')
     @stack('scripts')
     <script>
         // Installable app (PWA). The worker never caches HTML, POSTs, auth or API responses.

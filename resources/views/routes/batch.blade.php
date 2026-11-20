@@ -65,14 +65,14 @@
                            name="gpx_files[]"
                            id="gpx_files"
                            accept=".gpx,.xml"
-                           class="hidden"
+                           class="sr-only"
                            multiple
                            required>
 
                     <label for="gpx_files"
                            class="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all @error('gpx_files') border-red-500 @enderror @error('gpx_files.*') border-red-500 @enderror"
                            id="dropzone">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6" id="dropzone-content">
+                        <div class="flex flex-col items-center justify-center px-4 pt-5 pb-6 text-center" id="dropzone-content">
                             <div class="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
                                 <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
@@ -151,13 +151,13 @@
         <h3 class="text-lg font-semibold text-red-700 mb-4">{{ __('File yang Gagal Diproses:') }}</h3>
         <div class="space-y-2">
             @foreach(session('batch_results')['failed'] as $failed)
-            <div class="flex items-start space-x-3 bg-white p-3 rounded-lg">
+            <div class="flex items-start gap-3 bg-white p-3 rounded-lg">
                 <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                 </svg>
-                <div>
-                    <p class="font-medium text-red-700">{{ $failed['file'] }}</p>
-                    <p class="text-sm text-red-600">{{ $failed['error'] }}</p>
+                <div class="min-w-0">
+                    <p class="font-medium text-red-700 break-all">{{ $failed['file'] }}</p>
+                    <p class="text-sm text-red-600 break-words">{{ $failed['error'] }}</p>
                 </div>
             </div>
             @endforeach
@@ -196,16 +196,19 @@
             Array.from(files).forEach((file, index) => {
                 const size = (file.size / 1024 / 1024).toFixed(2);
                 const item = document.createElement('div');
-                item.className = 'flex items-center justify-between py-2 px-3 bg-white rounded-lg mb-2 last:mb-0';
+                item.className = 'flex items-center justify-between gap-3 py-2 px-3 bg-white rounded-lg mb-2 last:mb-0';
                 item.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span class="text-sm text-slate-700 truncate max-w-xs">${file.name}</span>
+                        <span class="text-sm text-slate-700 truncate" data-file-name></span>
                     </div>
-                    <span class="text-xs text-slate-500">${size} MB</span>
+                    <span class="text-xs text-slate-500 shrink-0 whitespace-nowrap">${size} MB</span>
                 `;
+                const nameEl = item.querySelector('[data-file-name]');
+                nameEl.textContent = file.name;
+                nameEl.title = file.name;
                 filesList.appendChild(item);
             });
 

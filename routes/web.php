@@ -159,3 +159,12 @@ Route::get('/lang/{locale}', [\App\Http\Controllers\LocaleController::class, 'sw
 Route::post('/routes/{route}/like', [RouteController::class, 'toggleLike'])
     ->middleware('throttle:30,1')
     ->name('routes.like.toggle');
+
+// ---------------------------------------------------------------------------
+// Floating widgets (components/floating-assistants): "Asisten RuteStrip" Q&A
+// chatbot for everyone (POST JSON {message, history} -> {reply}; CSRF, rate
+// limited per IP in the controller) and the guest "Daftar / Masuk" link of the
+// embedded AI Chat panel, which brings the visitor back to the page afterwards.
+// ---------------------------------------------------------------------------
+Route::post('/assistant', [\App\Http\Controllers\AssistantController::class, 'ask'])->name('assistant.ask');
+Route::get('/assistant/chat/login', [\App\Http\Controllers\AssistantController::class, 'chatLogin'])->name('assistant.chat.login');

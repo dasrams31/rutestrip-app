@@ -13,7 +13,7 @@
         </a>
 
         <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Upload Versi GPX Baru') }}</h1>
-        <p class="text-slate-600">{{ __('Rute:') }} <span class="font-semibold text-emerald-700">{{ $route->name }}</span></p>
+        <p class="text-slate-600 break-words">{{ __('Rute:') }} <span class="font-semibold text-emerald-700">{{ $route->name }}</span></p>
     </div>
 
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">

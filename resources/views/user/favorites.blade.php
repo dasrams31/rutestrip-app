@@ -4,12 +4,12 @@
 
 @section('content')
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="star" class="w-7 h-7 text-amber-500" /> {{ __('Rute Favorit') }}</h1>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-8">
+        <div class="min-w-0">
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="star" class="w-7 h-7 text-amber-500 shrink-0" /> {{ __('Rute Favorit') }}</h1>
             <p class="text-slate-600">{{ __('Rute yang Anda simpan untuk dilihat nanti') }}</p>
         </div>
-        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
+        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1 py-2"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
     </div>
 
     @if($favorites->count() > 0)
@@ -17,7 +17,7 @@
         @foreach($favorites as $route)
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100">
             <div class="p-6">
-                <h3 class="text-lg font-bold text-slate-800 mb-2">{{ $route->name }}</h3>
+                <h3 class="text-lg font-bold text-slate-800 mb-2 break-words">{{ $route->name }}</h3>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                     @if($route->difficulty_level === 'Mudah') bg-green-100 text-green-800
                     @elseif($route->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-800
