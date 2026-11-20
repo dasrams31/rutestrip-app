@@ -159,7 +159,7 @@ class ImportGpxDirectory extends Command
         $name = preg_replace('/\s+-\s+/', ' via ', $name, 1);                     // "Agung - Besakih"
         $name = preg_replace('/\bvia\b/i', 'via', Str::title(Str::squish($name)));
 
-        return Str::startsWith($name, 'Gunung ') ? $name : 'Gunung ' . $name;
+        return Str::startsWith($name, ['Gunung ', 'Bukit ']) ? $name : 'Gunung ' . $name;
     }
 
     private function nameKey(?string $name): string
