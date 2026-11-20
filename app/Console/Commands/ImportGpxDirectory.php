@@ -17,8 +17,10 @@ use Illuminate\Support\Str;
  *    (name match, or distance within 3% and elevation gain within 5%);
  *  - compilations of several routes in one file ("semua jalur", "4 jalur");
  *  - GPX without elevation data or longer than 60 km (vehicle segments);
- *  - noisy elevation: total gain above 1.8x the (max - min) elevation range,
- *    or an average grade above 35%.
+ *  - noisy elevation: total gain above 2x the (max - min) elevation range, or
+ *    an average grade above 35%;
+ *  - wrong units (max elevation above 3,800 m, higher than any peak in Java)
+ *    or lowland travel recorded (min elevation below 25% of max on a > 1,000 m peak).
  */
 class ImportGpxDirectory extends Command
 {
@@ -29,7 +31,8 @@ class ImportGpxDirectory extends Command
     protected $description = 'Import a folder of GPX files into hiking_routes, skipping duplicates and unreliable tracks';
 
     private const MAX_HIKE_KM = 60.0;
-    private const MAX_GAIN_TO_RANGE = 1.8;
+    private const MAX_GAIN_TO_RANGE = 2.0;
+    private const MAX_ELEVATION_M = 3800;
     private const MAX_GRADE_PCT = 35.0;
 
     public function handle(PythonProcessorService $python, GpxVersionService $versions): int
@@ -91,7 +94,13 @@ class ImportGpxDirectory extends Command
             }
 
             $grade = (float) ($result['average_grade_pct'] ?? 0);
-            $range = preg_match('/dari (\d+)m\s+hingga (\d+)m/', $result['narrative_text'] ?? '', $m) ? max(0, (int) $m[2] - (int) $m[1]) : 0;
+            [$minEle, $maxEle] = preg_match('/dari (\d+)m\s+hingga (\d+)m/', $result['narrative_text'] ?? '', $m) ? [(int) $m[1], (int) $m[2]] : [0, 0];
+            $range = max(0, $maxEle - $minEle);
+            if ($maxEle > self::MAX_ELEVATION_M || ($maxEle > 1000 && $minEle < 0.25 * $maxEle)) {
+                $this->line(sprintf('skip  %s: implausible elevation %d-%d m (wrong units or travel to the trailhead recorded)', $filename, $minEle, $maxEle));
+                $skipped++;
+                continue;
+            }
             if ($grade > self::MAX_GRADE_PCT || ($range > 0 && $gain > self::MAX_GAIN_TO_RANGE * $range)) {
                 $this->line(sprintf('skip  %s: noisy elevation (%d m gain over a %d m range, %.1f%%)', $filename, $gain, $range, $grade));
                 $skipped++;
