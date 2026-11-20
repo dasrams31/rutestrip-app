@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gunung Bangkok via Sukamulya</name>
+    <desc>Track: OpenStreetMap ways named "Jalur Hiking Gunung Bangkok Trailhead Sukamulya" (1 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/1253611829"><text>OpenStreetMap ways named "Jalur Hiking Gunung Bangkok Trailhead Sukamulya" (1 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Gunung Bangkok via Sukamulya</name>
+    <trkseg>
+      <trkpt lat="-6.603595" lon="107.341993"><ele>611.0</ele></trkpt>
+      <trkpt lat="-6.603845" lon="107.341898"><ele>615.0</ele></trkpt>
+      <trkpt lat="-6.604106" lon="107.341876"><ele>621.0</ele></trkpt>
+      <trkpt lat="-6.604281" lon="107.341720"><ele>625.0</ele></trkpt>
+      <trkpt lat="-6.604291" lon="107.341484"><ele>628.0</ele></trkpt>
+      <trkpt lat="-6.604522" lon="107.341345"><ele>631.0</ele></trkpt>
+      <trkpt lat="-6.604759" lon="107.341215"><ele>635.0</ele></trkpt>
+      <trkpt lat="-6.604993" lon="107.341080"><ele>638.0</ele></trkpt>
+      <trkpt lat="-6.605231" lon="107.340952"><ele>639.0</ele></trkpt>
+      <trkpt lat="-6.605451" lon="107.340795"><ele>642.0</ele></trkpt>
+      <trkpt lat="-6.605686" lon="107.340670"><ele>645.0</ele></trkpt>
+      <trkpt lat="-6.605945" lon="107.340597"><ele>648.0</ele></trkpt>
+      <trkpt lat="-6.606151" lon="107.340434"><ele>651.0</ele></trkpt>
+      <trkpt lat="-6.606034" lon="107.340227"><ele>655.0</ele></trkpt>
+      <trkpt lat="-6.605812" lon="107.340079"><ele>662.0</ele></trkpt>
+      <trkpt lat="-6.605700" lon="107.339835"><ele>667.0</ele></trkpt>
+      <trkpt lat="-6.605617" lon="107.339581"><ele>670.0</ele></trkpt>
+      <trkpt lat="-6.605409" lon="107.339433"><ele>674.0</ele></trkpt>
+      <trkpt lat="-6.605158" lon="107.339339"><ele>678.0</ele></trkpt>
+      <trkpt lat="-6.604895" lon="107.339291"><ele>684.0</ele></trkpt>
+      <trkpt lat="-6.604626" lon="107.339297"><ele>691.0</ele></trkpt>
+      <trkpt lat="-6.604408" lon="107.339190"><ele>699.0</ele></trkpt>
+      <trkpt lat="-6.604159" lon="107.339155"><ele>711.0</ele></trkpt>
+      <trkpt lat="-6.604010" lon="107.338939"><ele>722.0</ele></trkpt>
+      <trkpt lat="-6.603822" lon="107.338770"><ele>740.0</ele></trkpt>
+      <trkpt lat="-6.603715" lon="107.338541"><ele>753.0</ele></trkpt>
+      <trkpt lat="-6.603647" lon="107.338291"><ele>762.0</ele></trkpt>
+      <trkpt lat="-6.603416" lon="107.338164"><ele>779.0</ele></trkpt>
+      <trkpt lat="-6.603179" lon="107.338131"><ele>799.0</ele></trkpt>
+      <trkpt lat="-6.602920" lon="107.338067"><ele>822.0</ele></trkpt>
+      <trkpt lat="-6.602699" lon="107.337912"><ele>843.0</ele></trkpt>
+      <trkpt lat="-6.602450" lon="107.337835"><ele>866.0</ele></trkpt>
+      <trkpt lat="-6.602196" lon="107.337781"><ele>887.0</ele></trkpt>
+      <trkpt lat="-6.601931" lon="107.337823"><ele>911.0</ele></trkpt>
+      <trkpt lat="-6.601661" lon="107.337814"><ele>941.0</ele></trkpt>
+      <trkpt lat="-6.601601" lon="107.337558"><ele>937.0</ele></trkpt>
+      <trkpt lat="-6.601568" lon="107.337467"><ele>935.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

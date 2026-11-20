@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gunung Panderman</name>
+    <desc>Track: OpenStreetMap ways named "Jalur pendakian Gunung Panderman" (1 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/229484471"><text>OpenStreetMap ways named "Jalur pendakian Gunung Panderman" (1 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Gunung Panderman</name>
+    <trkseg>
+      <trkpt lat="-7.895108" lon="112.492146"><ele>1600.0</ele></trkpt>
+      <trkpt lat="-7.895364" lon="112.492065"><ele>1604.0</ele></trkpt>
+      <trkpt lat="-7.895630" lon="112.492070"><ele>1613.0</ele></trkpt>
+      <trkpt lat="-7.895895" lon="112.492125"><ele>1625.0</ele></trkpt>
+      <trkpt lat="-7.896159" lon="112.492151"><ele>1639.0</ele></trkpt>
+      <trkpt lat="-7.896420" lon="112.492163"><ele>1651.0</ele></trkpt>
+      <trkpt lat="-7.896685" lon="112.492182"><ele>1669.0</ele></trkpt>
+      <trkpt lat="-7.896914" lon="112.492090"><ele>1679.0</ele></trkpt>
+      <trkpt lat="-7.897168" lon="112.492160"><ele>1692.0</ele></trkpt>
+      <trkpt lat="-7.897360" lon="112.492303"><ele>1698.0</ele></trkpt>
+      <trkpt lat="-7.897625" lon="112.492349"><ele>1702.0</ele></trkpt>
+      <trkpt lat="-7.897877" lon="112.492430"><ele>1711.0</ele></trkpt>
+      <trkpt lat="-7.898147" lon="112.492427"><ele>1727.0</ele></trkpt>
+      <trkpt lat="-7.898375" lon="112.492527"><ele>1736.0</ele></trkpt>
+      <trkpt lat="-7.898594" lon="112.492686"><ele>1743.0</ele></trkpt>
+      <trkpt lat="-7.898830" lon="112.492813"><ele>1750.0</ele></trkpt>
+      <trkpt lat="-7.899081" lon="112.492912"><ele>1754.0</ele></trkpt>
+      <trkpt lat="-7.899323" lon="112.493032"><ele>1760.0</ele></trkpt>
+      <trkpt lat="-7.899576" lon="112.493117"><ele>1764.0</ele></trkpt>
+      <trkpt lat="-7.899842" lon="112.493165"><ele>1770.0</ele></trkpt>
+      <trkpt lat="-7.900100" lon="112.493243"><ele>1778.0</ele></trkpt>
+      <trkpt lat="-7.900353" lon="112.493338"><ele>1787.0</ele></trkpt>
+      <trkpt lat="-7.900555" lon="112.493512"><ele>1803.0</ele></trkpt>
+      <trkpt lat="-7.900760" lon="112.493689"><ele>1817.0</ele></trkpt>
+      <trkpt lat="-7.900900" lon="112.493920"><ele>1829.0</ele></trkpt>
+      <trkpt lat="-7.901102" lon="112.494100"><ele>1839.0</ele></trkpt>
+      <trkpt lat="-7.901298" lon="112.494287"><ele>1858.0</ele></trkpt>
+      <trkpt lat="-7.901478" lon="112.494490"><ele>1880.0</ele></trkpt>
+      <trkpt lat="-7.901687" lon="112.494657"><ele>1895.0</ele></trkpt>
+      <trkpt lat="-7.901890" lon="112.494831"><ele>1909.0</ele></trkpt>
+      <trkpt lat="-7.902107" lon="112.494987"><ele>1921.0</ele></trkpt>
+      <trkpt lat="-7.902321" lon="112.495143"><ele>1939.0</ele></trkpt>
+      <trkpt lat="-7.902477" lon="112.495365"><ele>1954.0</ele></trkpt>
+      <trkpt lat="-7.902659" lon="112.495566"><ele>1971.0</ele></trkpt>
+      <trkpt lat="-7.902843" lon="112.495766"><ele>1987.0</ele></trkpt>
+      <trkpt lat="-7.903025" lon="112.495963"><ele>2001.0</ele></trkpt>
+      <trkpt lat="-7.903204" lon="112.496166"><ele>2018.0</ele></trkpt>
+      <trkpt lat="-7.903352" lon="112.496389"><ele>2031.0</ele></trkpt>
+      <trkpt lat="-7.903385" lon="112.496654"><ele>2042.0</ele></trkpt>
+      <trkpt lat="-7.903315" lon="112.496918"><ele>2040.0</ele></trkpt>
+      <trkpt lat="-7.903113" lon="112.497062"><ele>2032.0</ele></trkpt>
+      <trkpt lat="-7.902852" lon="112.497125"><ele>2025.0</ele></trkpt>
+      <trkpt lat="-7.902665" lon="112.497303"><ele>2020.0</ele></trkpt>
+      <trkpt lat="-7.902581" lon="112.497524"><ele>2026.0</ele></trkpt>
+      <trkpt lat="-7.902613" lon="112.497775"><ele>2029.0</ele></trkpt>
+      <trkpt lat="-7.902487" lon="112.498014"><ele>2028.0</ele></trkpt>
+      <trkpt lat="-7.902455" lon="112.498063"><ele>2026.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

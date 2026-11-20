@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Bukit Gegermenjangan</name>
+    <desc>Track: OpenStreetMap ways named "Jalur Pendakian Gunung Gegermenjangan" (13 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/1281063017"><text>OpenStreetMap ways named "Jalur Pendakian Gunung Gegermenjangan" (13 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Bukit Gegermenjangan</name>
+    <trkseg>
+      <trkpt lat="-7.701452" lon="110.027134"><ele>87.0</ele></trkpt>
+      <trkpt lat="-7.701582" lon="110.027348"><ele>95.0</ele></trkpt>
+      <trkpt lat="-7.701533" lon="110.027608"><ele>104.0</ele></trkpt>
+      <trkpt lat="-7.701667" lon="110.027770"><ele>111.0</ele></trkpt>
+      <trkpt lat="-7.701928" lon="110.027705"><ele>109.0</ele></trkpt>
+      <trkpt lat="-7.701901" lon="110.027895"><ele>116.0</ele></trkpt>
+      <trkpt lat="-7.701788" lon="110.028143"><ele>123.0</ele></trkpt>
+      <trkpt lat="-7.701676" lon="110.028390"><ele>132.0</ele></trkpt>
+      <trkpt lat="-7.701563" lon="110.028638"><ele>138.0</ele></trkpt>
+      <trkpt lat="-7.701538" lon="110.028694"><ele>138.0</ele></trkpt>
+      <trkpt lat="-7.701577" lon="110.028616"><ele>137.0</ele></trkpt>
+      <trkpt lat="-7.701713" lon="110.028545"><ele>135.0</ele></trkpt>
+      <trkpt lat="-7.701762" lon="110.028507"><ele>133.0</ele></trkpt>
+      <trkpt lat="-7.701795" lon="110.028331"><ele>129.0</ele></trkpt>
+      <trkpt lat="-7.701908" lon="110.028084"><ele>122.0</ele></trkpt>
+      <trkpt lat="-7.702021" lon="110.027837"><ele>114.0</ele></trkpt>
+      <trkpt lat="-7.701981" lon="110.027946"><ele>117.0</ele></trkpt>
+      <trkpt lat="-7.701941" lon="110.028214"><ele>125.0</ele></trkpt>
+      <trkpt lat="-7.701834" lon="110.028460"><ele>131.0</ele></trkpt>
+      <trkpt lat="-7.701669" lon="110.028675"><ele>138.0</ele></trkpt>
+      <trkpt lat="-7.701504" lon="110.028891"><ele>141.0</ele></trkpt>
+      <trkpt lat="-7.701339" lon="110.029106"><ele>145.0</ele></trkpt>
+      <trkpt lat="-7.701356" lon="110.029018"><ele>144.0</ele></trkpt>
+      <trkpt lat="-7.701364" lon="110.028976"><ele>143.0</ele></trkpt>
+      <trkpt lat="-7.701293" lon="110.029235"><ele>147.0</ele></trkpt>
+      <trkpt lat="-7.701211" lon="110.029491"><ele>153.0</ele></trkpt>
+      <trkpt lat="-7.701002" lon="110.029643"><ele>159.0</ele></trkpt>
+      <trkpt lat="-7.700739" lon="110.029603"><ele>161.0</ele></trkpt>
+      <trkpt lat="-7.700516" lon="110.029608"><ele>166.0</ele></trkpt>
+      <trkpt lat="-7.700353" lon="110.029815"><ele>173.0</ele></trkpt>
+      <trkpt lat="-7.700185" lon="110.030022"><ele>179.0</ele></trkpt>
+      <trkpt lat="-7.699960" lon="110.030154"><ele>186.0</ele></trkpt>
+      <trkpt lat="-7.699703" lon="110.030075"><ele>190.0</ele></trkpt>
+      <trkpt lat="-7.699520" lon="110.030114"><ele>195.0</ele></trkpt>
+      <trkpt lat="-7.699490" lon="110.030385"><ele>199.0</ele></trkpt>
+      <trkpt lat="-7.699461" lon="110.030655"><ele>206.0</ele></trkpt>
+      <trkpt lat="-7.699418" lon="110.030611"><ele>205.0</ele></trkpt>
+      <trkpt lat="-7.699460" lon="110.030342"><ele>199.0</ele></trkpt>
+      <trkpt lat="-7.699494" lon="110.030094"><ele>195.0</ele></trkpt>
+      <trkpt lat="-7.699391" lon="110.030345"><ele>200.0</ele></trkpt>
+      <trkpt lat="-7.699399" lon="110.030600"><ele>205.0</ele></trkpt>
+      <trkpt lat="-7.699401" lon="110.030603"><ele>205.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

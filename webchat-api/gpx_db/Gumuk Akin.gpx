@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gumuk Akin</name>
+    <desc>Track: OpenStreetMap ways named "Pendakian Gumuk Akin" (2 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/1368015979"><text>OpenStreetMap ways named "Pendakian Gumuk Akin" (2 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Gumuk Akin</name>
+    <trkseg>
+      <trkpt lat="-7.204555" lon="110.347097"><ele>1367.0</ele></trkpt>
+      <trkpt lat="-7.204544" lon="110.347096"><ele>1367.0</ele></trkpt>
+      <trkpt lat="-7.204277" lon="110.347057"><ele>1374.0</ele></trkpt>
+      <trkpt lat="-7.204010" lon="110.347016"><ele>1383.0</ele></trkpt>
+      <trkpt lat="-7.203742" lon="110.347004"><ele>1394.0</ele></trkpt>
+      <trkpt lat="-7.203476" lon="110.346957"><ele>1404.0</ele></trkpt>
+      <trkpt lat="-7.203211" lon="110.346904"><ele>1409.0</ele></trkpt>
+      <trkpt lat="-7.202944" lon="110.346865"><ele>1415.0</ele></trkpt>
+      <trkpt lat="-7.202677" lon="110.346831"><ele>1420.0</ele></trkpt>
+      <trkpt lat="-7.202409" lon="110.346800"><ele>1426.0</ele></trkpt>
+      <trkpt lat="-7.202142" lon="110.346762"><ele>1433.0</ele></trkpt>
+      <trkpt lat="-7.201876" lon="110.346717"><ele>1440.0</ele></trkpt>
+      <trkpt lat="-7.201610" lon="110.346672"><ele>1445.0</ele></trkpt>
+      <trkpt lat="-7.201344" lon="110.346626"><ele>1448.0</ele></trkpt>
+      <trkpt lat="-7.201076" lon="110.346593"><ele>1457.0</ele></trkpt>
+      <trkpt lat="-7.200807" lon="110.346570"><ele>1465.0</ele></trkpt>
+      <trkpt lat="-7.200545" lon="110.346508"><ele>1472.0</ele></trkpt>
+      <trkpt lat="-7.200327" lon="110.346358"><ele>1480.0</ele></trkpt>
+      <trkpt lat="-7.200126" lon="110.346177"><ele>1488.0</ele></trkpt>
+      <trkpt lat="-7.199914" lon="110.346009"><ele>1499.0</ele></trkpt>
+      <trkpt lat="-7.199709" lon="110.345832"><ele>1511.0</ele></trkpt>
+      <trkpt lat="-7.199473" lon="110.345703"><ele>1519.0</ele></trkpt>
+      <trkpt lat="-7.199243" lon="110.345560"><ele>1532.0</ele></trkpt>
+      <trkpt lat="-7.199014" lon="110.345417"><ele>1553.0</ele></trkpt>
+      <trkpt lat="-7.198777" lon="110.345294"><ele>1569.0</ele></trkpt>
+      <trkpt lat="-7.198556" lon="110.345152"><ele>1584.0</ele></trkpt>
+      <trkpt lat="-7.198432" lon="110.344913"><ele>1605.0</ele></trkpt>
+      <trkpt lat="-7.198332" lon="110.344660"><ele>1624.0</ele></trkpt>
+      <trkpt lat="-7.198190" lon="110.344472"><ele>1641.0</ele></trkpt>
+      <trkpt lat="-7.197920" lon="110.344475"><ele>1650.0</ele></trkpt>
+      <trkpt lat="-7.197652" lon="110.344504"><ele>1655.0</ele></trkpt>
+      <trkpt lat="-7.197384" lon="110.344521"><ele>1664.0</ele></trkpt>
+      <trkpt lat="-7.197115" lon="110.344491"><ele>1676.0</ele></trkpt>
+      <trkpt lat="-7.196868" lon="110.344396"><ele>1688.0</ele></trkpt>
+      <trkpt lat="-7.196628" lon="110.344279"><ele>1702.0</ele></trkpt>
+      <trkpt lat="-7.196360" lon="110.344247"><ele>1713.0</ele></trkpt>
+      <trkpt lat="-7.196103" lon="110.344166"><ele>1720.0</ele></trkpt>
+      <trkpt lat="-7.195855" lon="110.344061"><ele>1723.0</ele></trkpt>
+      <trkpt lat="-7.195613" lon="110.343940"><ele>1730.0</ele></trkpt>
+      <trkpt lat="-7.195352" lon="110.343883"><ele>1734.0</ele></trkpt>
+      <trkpt lat="-7.195532" lon="110.343798"><ele>1736.0</ele></trkpt>
+      <trkpt lat="-7.195788" lon="110.343711"><ele>1738.0</ele></trkpt>
+      <trkpt lat="-7.195633" lon="110.343641"><ele>1740.0</ele></trkpt>
+      <trkpt lat="-7.195383" lon="110.343639"><ele>1740.0</ele></trkpt>
+      <trkpt lat="-7.195314" lon="110.343873"><ele>1734.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

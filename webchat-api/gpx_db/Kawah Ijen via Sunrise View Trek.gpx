@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Kawah Ijen via Sunrise View Trek</name>
+    <desc>Track: OpenStreetMap ways named "Sunrise View Trek" (1 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/220191413"><text>OpenStreetMap ways named "Sunrise View Trek" (1 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Kawah Ijen via Sunrise View Trek</name>
+    <trkseg>
+      <trkpt lat="-8.063101" lon="114.246123"><ele>2299.0</ele></trkpt>
+      <trkpt lat="-8.063091" lon="114.246258"><ele>2303.0</ele></trkpt>
+      <trkpt lat="-8.063012" lon="114.246509"><ele>2309.0</ele></trkpt>
+      <trkpt lat="-8.062830" lon="114.246709"><ele>2313.0</ele></trkpt>
+      <trkpt lat="-8.062616" lon="114.246872"><ele>2322.0</ele></trkpt>
+      <trkpt lat="-8.062374" lon="114.246980"><ele>2326.0</ele></trkpt>
+      <trkpt lat="-8.062120" lon="114.247061"><ele>2326.0</ele></trkpt>
+      <trkpt lat="-8.061913" lon="114.247236"><ele>2332.0</ele></trkpt>
+      <trkpt lat="-8.061709" lon="114.247414"><ele>2336.0</ele></trkpt>
+      <trkpt lat="-8.061495" lon="114.247580"><ele>2337.0</ele></trkpt>
+      <trkpt lat="-8.061271" lon="114.247731"><ele>2341.0</ele></trkpt>
+      <trkpt lat="-8.061021" lon="114.247826"><ele>2344.0</ele></trkpt>
+      <trkpt lat="-8.060782" lon="114.247948"><ele>2354.0</ele></trkpt>
+      <trkpt lat="-8.060517" lon="114.247980"><ele>2362.0</ele></trkpt>
+      <trkpt lat="-8.060250" lon="114.248013"><ele>2369.0</ele></trkpt>
+      <trkpt lat="-8.059988" lon="114.248080"><ele>2372.0</ele></trkpt>
+      <trkpt lat="-8.059722" lon="114.248101"><ele>2375.0</ele></trkpt>
+      <trkpt lat="-8.059454" lon="114.248070"><ele>2377.0</ele></trkpt>
+      <trkpt lat="-8.059194" lon="114.247999"><ele>2375.0</ele></trkpt>
+      <trkpt lat="-8.058927" lon="114.247991"><ele>2375.0</ele></trkpt>
+      <trkpt lat="-8.058659" lon="114.247990"><ele>2377.0</ele></trkpt>
+      <trkpt lat="-8.058391" lon="114.248005"><ele>2380.0</ele></trkpt>
+      <trkpt lat="-8.058123" lon="114.248038"><ele>2380.0</ele></trkpt>
+      <trkpt lat="-8.057860" lon="114.248076"><ele>2378.0</ele></trkpt>
+      <trkpt lat="-8.057593" lon="114.248112"><ele>2374.0</ele></trkpt>
+      <trkpt lat="-8.057328" lon="114.248075"><ele>2374.0</ele></trkpt>
+      <trkpt lat="-8.057064" lon="114.248021"><ele>2375.0</ele></trkpt>
+      <trkpt lat="-8.056800" lon="114.247967"><ele>2372.0</ele></trkpt>
+      <trkpt lat="-8.056538" lon="114.247904"><ele>2370.0</ele></trkpt>
+      <trkpt lat="-8.056275" lon="114.247840"><ele>2374.0</ele></trkpt>
+      <trkpt lat="-8.056021" lon="114.247754"><ele>2376.0</ele></trkpt>
+      <trkpt lat="-8.055777" lon="114.247638"><ele>2375.0</ele></trkpt>
+      <trkpt lat="-8.055537" lon="114.247516"><ele>2383.0</ele></trkpt>
+      <trkpt lat="-8.055316" lon="114.247362"><ele>2381.0</ele></trkpt>
+      <trkpt lat="-8.055113" lon="114.247184"><ele>2376.0</ele></trkpt>
+      <trkpt lat="-8.054950" lon="114.246968"><ele>2375.0</ele></trkpt>
+      <trkpt lat="-8.054748" lon="114.246790"><ele>2371.0</ele></trkpt>
+      <trkpt lat="-8.054578" lon="114.246582"><ele>2369.0</ele></trkpt>
+      <trkpt lat="-8.054414" lon="114.246366"><ele>2369.0</ele></trkpt>
+      <trkpt lat="-8.054240" lon="114.246158"><ele>2365.0</ele></trkpt>
+      <trkpt lat="-8.054117" lon="114.245917"><ele>2359.0</ele></trkpt>
+      <trkpt lat="-8.054011" lon="114.245666"><ele>2352.0</ele></trkpt>
+      <trkpt lat="-8.053890" lon="114.245423"><ele>2352.0</ele></trkpt>
+      <trkpt lat="-8.053762" lon="114.245183"><ele>2349.0</ele></trkpt>
+      <trkpt lat="-8.053688" lon="114.244923"><ele>2345.0</ele></trkpt>
+      <trkpt lat="-8.053660" lon="114.244653"><ele>2340.0</ele></trkpt>
+      <trkpt lat="-8.053651" lon="114.244381"><ele>2332.0</ele></trkpt>
+      <trkpt lat="-8.053649" lon="114.244109"><ele>2331.0</ele></trkpt>
+      <trkpt lat="-8.053681" lon="114.243838"><ele>2343.0</ele></trkpt>
+      <trkpt lat="-8.053712" lon="114.243568"><ele>2342.0</ele></trkpt>
+      <trkpt lat="-8.053512" lon="114.243406"><ele>2342.0</ele></trkpt>
+      <trkpt lat="-8.053320" lon="114.243223"><ele>2334.0</ele></trkpt>
+      <trkpt lat="-8.053159" lon="114.243006"><ele>2327.0</ele></trkpt>
+      <trkpt lat="-8.052930" lon="114.242898"><ele>2323.0</ele></trkpt>
+      <trkpt lat="-8.052669" lon="114.242848"><ele>2325.0</ele></trkpt>
+      <trkpt lat="-8.052408" lon="114.242811"><ele>2329.0</ele></trkpt>
+      <trkpt lat="-8.052282" lon="114.242648"><ele>2330.0</ele></trkpt>
+      <trkpt lat="-8.052366" lon="114.242393"><ele>2327.0</ele></trkpt>
+      <trkpt lat="-8.052492" lon="114.242153"><ele>2326.0</ele></trkpt>
+      <trkpt lat="-8.052586" lon="114.241898"><ele>2322.0</ele></trkpt>
+      <trkpt lat="-8.052663" lon="114.241637"><ele>2319.0</ele></trkpt>
+      <trkpt lat="-8.052790" lon="114.241397"><ele>2321.0</ele></trkpt>
+      <trkpt lat="-8.052924" lon="114.241160"><ele>2322.0</ele></trkpt>
+      <trkpt lat="-8.053070" lon="114.240931"><ele>2316.0</ele></trkpt>
+      <trkpt lat="-8.053217" lon="114.240703"><ele>2304.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

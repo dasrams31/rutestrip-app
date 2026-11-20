@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Puncak Argojembangan Muria</name>
+    <desc>Track: OpenStreetMap ways named "Jalur ke Argojembangan" (2 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/857993010"><text>OpenStreetMap ways named "Jalur ke Argojembangan" (2 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Puncak Argojembangan Muria</name>
+    <trkseg>
+      <trkpt lat="-6.649400" lon="110.910651"><ele>1028.0</ele></trkpt>
+      <trkpt lat="-6.649316" lon="110.910607"><ele>1030.0</ele></trkpt>
+      <trkpt lat="-6.649076" lon="110.910484"><ele>1035.0</ele></trkpt>
+      <trkpt lat="-6.648819" lon="110.910416"><ele>1042.0</ele></trkpt>
+      <trkpt lat="-6.648558" lon="110.910360"><ele>1052.0</ele></trkpt>
+      <trkpt lat="-6.648320" lon="110.910233"><ele>1066.0</ele></trkpt>
+      <trkpt lat="-6.648216" lon="110.910001"><ele>1071.0</ele></trkpt>
+      <trkpt lat="-6.648058" lon="110.909810"><ele>1075.0</ele></trkpt>
+      <trkpt lat="-6.647819" lon="110.909683"><ele>1081.0</ele></trkpt>
+      <trkpt lat="-6.647572" lon="110.909574"><ele>1080.0</ele></trkpt>
+      <trkpt lat="-6.647456" lon="110.909338"><ele>1087.0</ele></trkpt>
+      <trkpt lat="-6.647362" lon="110.909084"><ele>1094.0</ele></trkpt>
+      <trkpt lat="-6.647289" lon="110.908823"><ele>1102.0</ele></trkpt>
+      <trkpt lat="-6.647215" lon="110.908561"><ele>1110.0</ele></trkpt>
+      <trkpt lat="-6.647010" lon="110.908386"><ele>1116.0</ele></trkpt>
+      <trkpt lat="-6.646803" lon="110.908212"><ele>1127.0</ele></trkpt>
+      <trkpt lat="-6.646596" lon="110.908038"><ele>1147.0</ele></trkpt>
+      <trkpt lat="-6.646352" lon="110.907923"><ele>1162.0</ele></trkpt>
+      <trkpt lat="-6.646106" lon="110.907812"><ele>1180.0</ele></trkpt>
+      <trkpt lat="-6.645860" lon="110.907700"><ele>1191.0</ele></trkpt>
+      <trkpt lat="-6.645616" lon="110.907584"><ele>1214.0</ele></trkpt>
+      <trkpt lat="-6.645394" lon="110.907430"><ele>1235.0</ele></trkpt>
+      <trkpt lat="-6.645201" lon="110.907243"><ele>1255.0</ele></trkpt>
+      <trkpt lat="-6.645021" lon="110.907040"><ele>1262.0</ele></trkpt>
+      <trkpt lat="-6.644874" lon="110.906813"><ele>1278.0</ele></trkpt>
+      <trkpt lat="-6.644770" lon="110.906562"><ele>1294.0</ele></trkpt>
+      <trkpt lat="-6.644634" lon="110.906343"><ele>1305.0</ele></trkpt>
+      <trkpt lat="-6.644388" lon="110.906231"><ele>1322.0</ele></trkpt>
+      <trkpt lat="-6.644152" lon="110.906101"><ele>1347.0</ele></trkpt>
+      <trkpt lat="-6.643953" lon="110.905922"><ele>1362.0</ele></trkpt>
+      <trkpt lat="-6.643799" lon="110.905701"><ele>1373.0</ele></trkpt>
+      <trkpt lat="-6.643736" lon="110.905444"><ele>1382.0</ele></trkpt>
+      <trkpt lat="-6.643798" lon="110.905186"><ele>1379.0</ele></trkpt>
+      <trkpt lat="-6.643724" lon="110.904957"><ele>1381.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

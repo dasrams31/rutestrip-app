@@ -160,12 +160,16 @@ class ImportGpxDirectory extends Command
         $name = preg_replace('/\s+\d{1,2}\s+[a-z]{3}\s+\d{4}$/i', '', $name);   // trailing date
         $name = preg_replace('/\s*\(\d+\)$/', '', $name);                         // "(1)" copies
         $name = preg_replace('/^\s*(mt\.?|mount)\s+/i', 'Gunung ', $name);
-        $name = preg_replace('/\s+-\s+/', ' via ', $name, 1);                     // "Agung - Besakih"
+        if (! preg_match('/\bvia\b/i', $name)) {
+            $name = preg_replace('/\s+-\s+/', ' via ', $name, 1);                 // "Agung - Besakih"
+        }
         // Capitalise each word but keep existing capitals (acronyms like "PGPI")
         $name = implode(' ', array_map(fn($w) => Str::ucfirst($w), explode(' ', Str::squish($name))));
-        $name = preg_replace('/\bvia\b/i', 'via', $name);
+        $name = preg_replace_callback('/\b(Via|Ke|Dan)\b/', fn($m) => Str::lower($m[1]), $name);
 
-        return Str::startsWith($name, ['Gunung ', 'Bukit ', 'Puncak ']) ? $name : 'Gunung ' . $name;
+        $prefixes = ['Gunung ', 'Bukit ', 'Puncak ', 'Kawah ', 'Jalur ', 'Puthuk ', 'Gumuk '];
+
+        return Str::startsWith($name, $prefixes) ? $name : 'Gunung ' . $name;
     }
 
     private function nameKey(?string $name): string

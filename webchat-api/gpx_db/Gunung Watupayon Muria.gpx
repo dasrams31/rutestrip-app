@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Gunung Watupayon Muria</name>
+    <desc>Track: OpenStreetMap ways named "Jalur Pendakian ke Watupayon / Tremulus" (1 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
+    <link href="https://www.openstreetmap.org/way/852279862"><text>OpenStreetMap ways named "Jalur Pendakian ke Watupayon / Tremulus" (1 ways)</text></link>
+  </metadata>
+  <trk>
+    <name>Gunung Watupayon Muria</name>
+    <trkseg>
+      <trkpt lat="-6.622015" lon="110.929048"><ele>1009.0</ele></trkpt>
+      <trkpt lat="-6.621922" lon="110.928889"><ele>1012.0</ele></trkpt>
+      <trkpt lat="-6.621786" lon="110.928655"><ele>1016.0</ele></trkpt>
+      <trkpt lat="-6.621649" lon="110.928420"><ele>1019.0</ele></trkpt>
+      <trkpt lat="-6.621484" lon="110.928206"><ele>1017.0</ele></trkpt>
+      <trkpt lat="-6.621311" lon="110.927998"><ele>1024.0</ele></trkpt>
+      <trkpt lat="-6.621124" lon="110.927806"><ele>1035.0</ele></trkpt>
+      <trkpt lat="-6.620924" lon="110.927629"><ele>1038.0</ele></trkpt>
+      <trkpt lat="-6.620769" lon="110.927408"><ele>1043.0</ele></trkpt>
+      <trkpt lat="-6.620624" lon="110.927179"><ele>1051.0</ele></trkpt>
+      <trkpt lat="-6.620469" lon="110.926957"><ele>1052.0</ele></trkpt>
+      <trkpt lat="-6.620314" lon="110.926734"><ele>1064.0</ele></trkpt>
+      <trkpt lat="-6.620161" lon="110.926510"><ele>1066.0</ele></trkpt>
+      <trkpt lat="-6.620014" lon="110.926282"><ele>1070.0</ele></trkpt>
+      <trkpt lat="-6.619867" lon="110.926054"><ele>1074.0</ele></trkpt>
+      <trkpt lat="-6.619706" lon="110.925837"><ele>1082.0</ele></trkpt>
+      <trkpt lat="-6.619543" lon="110.925621"><ele>1085.0</ele></trkpt>
+      <trkpt lat="-6.619393" lon="110.925395"><ele>1082.0</ele></trkpt>
+      <trkpt lat="-6.619267" lon="110.925157"><ele>1074.0</ele></trkpt>
+      <trkpt lat="-6.619170" lon="110.924904"><ele>1077.0</ele></trkpt>
+      <trkpt lat="-6.619155" lon="110.924633"><ele>1078.0</ele></trkpt>
+      <trkpt lat="-6.619158" lon="110.924361"><ele>1079.0</ele></trkpt>
+      <trkpt lat="-6.619107" lon="110.924106"><ele>1078.0</ele></trkpt>
+      <trkpt lat="-6.618959" lon="110.923880"><ele>1085.0</ele></trkpt>
+      <trkpt lat="-6.618861" lon="110.923627"><ele>1089.0</ele></trkpt>
+      <trkpt lat="-6.618763" lon="110.923374"><ele>1093.0</ele></trkpt>
+      <trkpt lat="-6.618687" lon="110.923115"><ele>1096.0</ele></trkpt>
+      <trkpt lat="-6.618632" lon="110.922849"><ele>1104.0</ele></trkpt>
+      <trkpt lat="-6.618542" lon="110.922594"><ele>1114.0</ele></trkpt>
+      <trkpt lat="-6.618511" lon="110.922325"><ele>1123.0</ele></trkpt>
+      <trkpt lat="-6.618504" lon="110.922054"><ele>1133.0</ele></trkpt>
+      <trkpt lat="-6.618424" lon="110.921801"><ele>1148.0</ele></trkpt>
+      <trkpt lat="-6.618275" lon="110.921576"><ele>1168.0</ele></trkpt>
+      <trkpt lat="-6.618154" lon="110.921334"><ele>1188.0</ele></trkpt>
+      <trkpt lat="-6.618027" lon="110.921094"><ele>1209.0</ele></trkpt>
+      <trkpt lat="-6.617966" lon="110.920831"><ele>1221.0</ele></trkpt>
+      <trkpt lat="-6.617902" lon="110.920569"><ele>1231.0</ele></trkpt>
+      <trkpt lat="-6.617793" lon="110.920321"><ele>1242.0</ele></trkpt>
+      <trkpt lat="-6.617660" lon="110.920085"><ele>1244.0</ele></trkpt>
+      <trkpt lat="-6.617532" lon="110.919847"><ele>1247.0</ele></trkpt>
+      <trkpt lat="-6.617422" lon="110.919600"><ele>1249.0</ele></trkpt>
+      <trkpt lat="-6.617239" lon="110.919401"><ele>1258.0</ele></trkpt>
+      <trkpt lat="-6.617043" lon="110.919214"><ele>1265.0</ele></trkpt>
+      <trkpt lat="-6.616847" lon="110.919028"><ele>1273.0</ele></trkpt>
+      <trkpt lat="-6.616702" lon="110.918799"><ele>1280.0</ele></trkpt>
+      <trkpt lat="-6.616557" lon="110.918570"><ele>1292.0</ele></trkpt>
+      <trkpt lat="-6.616419" lon="110.918337"><ele>1306.0</ele></trkpt>
+      <trkpt lat="-6.616290" lon="110.918098"><ele>1317.0</ele></trkpt>
+      <trkpt lat="-6.616244" lon="110.917834"><ele>1329.0</ele></trkpt>
+      <trkpt lat="-6.616179" lon="110.917570"><ele>1341.0</ele></trkpt>
+      <trkpt lat="-6.616169" lon="110.917323"><ele>1347.0</ele></trkpt>
+      <trkpt lat="-6.616279" lon="110.917082"><ele>1348.0</ele></trkpt>
+      <trkpt lat="-6.616277" lon="110.916811"><ele>1353.0</ele></trkpt>
+      <trkpt lat="-6.616261" lon="110.916540"><ele>1358.0</ele></trkpt>
+      <trkpt lat="-6.616214" lon="110.916273"><ele>1369.0</ele></trkpt>
+      <trkpt lat="-6.616168" lon="110.916005"><ele>1384.0</ele></trkpt>
+      <trkpt lat="-6.616230" lon="110.915744"><ele>1394.0</ele></trkpt>
+      <trkpt lat="-6.616232" lon="110.915474"><ele>1403.0</ele></trkpt>
+      <trkpt lat="-6.616053" lon="110.915271"><ele>1414.0</ele></trkpt>
+      <trkpt lat="-6.615919" lon="110.915036"><ele>1426.0</ele></trkpt>
+      <trkpt lat="-6.615823" lon="110.914784"><ele>1433.0</ele></trkpt>
+      <trkpt lat="-6.615762" lon="110.914521"><ele>1438.0</ele></trkpt>
+      <trkpt lat="-6.615763" lon="110.914249"><ele>1446.0</ele></trkpt>
+      <trkpt lat="-6.615733" lon="110.913980"><ele>1454.0</ele></trkpt>
+      <trkpt lat="-6.615625" lon="110.913735"><ele>1465.0</ele></trkpt>
+      <trkpt lat="-6.615573" lon="110.913470"><ele>1471.0</ele></trkpt>
+      <trkpt lat="-6.615514" lon="110.913207"><ele>1471.0</ele></trkpt>
+      <trkpt lat="-6.615437" lon="110.912946"><ele>1476.0</ele></trkpt>
+      <trkpt lat="-6.615347" lon="110.912690"><ele>1487.0</ele></trkpt>
+      <trkpt lat="-6.615222" lon="110.912451"><ele>1490.0</ele></trkpt>
+      <trkpt lat="-6.615082" lon="110.912221"><ele>1489.0</ele></trkpt>
+      <trkpt lat="-6.614964" lon="110.911976"><ele>1480.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
