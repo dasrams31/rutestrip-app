@@ -10,8 +10,10 @@ Usage:
 
 Relevance labels are derived from the route statistics, so the evaluation is
 reproducible without manual annotation:
-    easy queries   -> average grade < 15% and total elevation gain in the
-                      lowest third (what hikers call a beginner route)
+    gentle queries -> average grade < 15% and total elevation gain in the
+                      lowest third ("landai")
+    easy queries   -> total elevation gain in the lowest third and average
+                      grade < 30% (beginner: little climbing, short)
     hard queries   -> average grade in the highest third
     short queries  -> Naismith duration in the lowest third
     long queries   -> Naismith duration in the highest third
@@ -28,10 +30,10 @@ import search_scoring as ss
 from processor import get_model, preprocess_text
 
 QUERIES = [
-    ("jalur landai", "easy"),
+    ("jalur landai", "gentle"),
     ("jalur untuk pemula", "easy"),
     ("pendakian santai dan mudah", "easy"),
-    ("jalur ramah pemula tidak terlalu curam", "easy"),
+    ("jalur ramah pemula tidak terlalu curam", "gentle"),
     ("jalur curam dan menantang", "hard"),
     ("jalur sulit untuk pendaki berpengalaman", "hard"),
     ("pendakian ekstrem", "hard"),
@@ -68,11 +70,12 @@ def relevant_ids(routes, label):
     if label.startswith("name:"):
         key = label.split(":", 1)[1]
         return {r["id"] for r in routes if key in (r["name"] or "").lower()}
-    if label == "easy":
+    if label in ("gentle", "easy"):
         gains = sorted(float(r["elevation_gain_m"] or 0) for r in routes)
         gain_cut = gains[len(gains) // 3]
+        max_grade = 15 if label == "gentle" else 30
         return {r["id"] for r in routes
-                if float(r["average_grade_pct"] or 0) < 15 and float(r["elevation_gain_m"] or 0) <= gain_cut}
+                if float(r["average_grade_pct"] or 0) < max_grade and float(r["elevation_gain_m"] or 0) <= gain_cut}
     field = "average_grade_pct" if label in ("easy", "hard") else "naismith_duration_hour"
     values = sorted(float(r[field] or 0) for r in routes)
     low_cut = values[len(values) // 3]
@@ -126,7 +129,7 @@ def main():
             scored.append((r["id"], s["score"]))
         hyb_ranked = sorted(scored, key=lambda x: -x[1])
 
-        if label == "easy":
+        if label in ("gentle", "easy"):
             names = {r["id"]: r["name"] for r in routes}
             print(f"  {query!r}: top3 = {[names[rid] for rid, _ in hyb_ranked[:3]]}")
 
