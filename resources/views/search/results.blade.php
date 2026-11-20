@@ -57,7 +57,7 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <h3 class="text-lg font-bold text-indigo-800 mb-2">Metode: Cosine Similarity</h3>
+                <h3 class="text-lg font-bold text-indigo-800 mb-2">Metode: SBERT + Cosine Similarity (Hybrid)</h3>
                 <p class="text-sm text-slate-600 mb-3">
                     Tingkat kemiripan dihitung menggunakan rumus Cosine Similarity antara vektor query
                     <span class="font-mono bg-white px-1 rounded">Q</span> dan vektor jalur
@@ -84,6 +84,11 @@
                 </div>
                 <p class="text-xs text-slate-500 mt-3">
                     <strong>Model:</strong> SBERT (paraphrase-multilingual-MiniLM-L12-v2) menghasilkan vektor 384 dimensi
+                </p>
+                <p class="text-xs text-slate-500 mt-1">
+                    <strong>Skor kecocokan:</strong> gabungan cosine query dengan seluruh deskripsi jalur (40%) dan dengan aspek paling cocok
+                    seperti kemiringan, durasi, atau nama gunung (60%), lalu disesuaikan dengan statistik GPX bila query menyebut
+                    tingkat kesulitan/durasi, dan dengan nama gunung bila disebut.
                 </p>
             </div>
         </div>
@@ -201,13 +206,16 @@
                             <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                             </svg>
-                            <span class="text-sm font-medium text-emerald-700">Cosine Similarity</span>
+                            <span class="text-sm font-medium text-emerald-700">Skor Kecocokan</span>
                         </div>
                         <div class="text-right">
                             <span class="text-lg font-bold text-emerald-600">{{ number_format($route->similarity_score / 100, 4) }}</span>
                             <span class="text-xs text-emerald-500 ml-1">({{ $route->similarity_score }}%)</span>
                         </div>
                     </div>
+                    @isset($route->cosine_value)
+                    <p class="mt-1 text-xs text-emerald-600">Cosine dokumen {{ number_format($route->cosine_value, 4) }} · aspek {{ number_format($route->aspect_cosine ?? $route->cosine_value, 4) }}</p>
+                    @endisset
                     <!-- Similarity Bar -->
                     <div class="mt-2 h-2 bg-emerald-100 rounded-full overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500"

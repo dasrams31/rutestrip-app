@@ -180,7 +180,12 @@ export async function smartRoute(message) {
     'saran', 'solusi', 'cara mendaki', 'tips mendaki', 'tips pendakian',
     'halo', 'hallo', 'halloo', 'hai', 'hay', 'hi', 'hello', 'ping', 'p', 'tes', 'test'
   ];
-  if (generalQuestions.some(q => msg.includes(q)) || msg.split(' ').length < 2) {
+  // Match whole words/phrases only: a plain substring check made short entries
+  // like 'p', 'hi' or 'tes' match almost every message ("pemula", "hiking", ...),
+  // so SBERT recommendations were almost never used.
+  const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const isGeneral = generalQuestions.some(q => new RegExp(`(^|[^a-z0-9])${escapeRe(q)}([^a-z0-9]|$)`).test(msg));
+  if (isGeneral || msg.split(/\s+/).length < 2) {
     return { type: 'general', data: null, ms: Date.now() - t0 };
   }
 
