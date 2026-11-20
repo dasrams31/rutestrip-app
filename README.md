@@ -2,7 +2,7 @@
 
 Live: https://rutestrip.ai.id (web utama) dan https://chat.rutestrip.ai.id (AI webchat).
 
-Notebook Google Colab (metode & evaluasi): https://s.peka.ai.id/rutestrip-colab
+Notebook Google Colab (metode & evaluasi): https://s.peka.ai.id/rutestripcolab
 — sumbernya `python/RuteStrip_Colab.ipynb`, dibuat ulang dengan `python python/tools/build_colab_notebook.py python/RuteStrip_Colab.ipynb`.
 
 RuteStrip adalah aplikasi Laravel untuk manajemen, pencarian, dan rekomendasi jalur pendakian berbasis file GPX. Aplikasi memakai SBERT untuk embedding/search semantic, Google Gemini untuk chatbot RAG, serta modul provenance GPX (versioning dan verifikasi hash SHA-256).

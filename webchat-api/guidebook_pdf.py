@@ -235,7 +235,7 @@ def generate_guidebook_pdf(mountain_query: str, output_path: str = None) -> str:
     elements = []
 
     # 1. HEADER BANNER
-    elements.append(Paragraph(f"🏔️ <b>OFFLINE GUIDEBOOK & EXPEDITION BRIEFING</b>", subtitle_style))
+    elements.append(Paragraph(f"<b>OFFLINE GUIDEBOOK & EXPEDITION BRIEFING</b>", subtitle_style))
     elements.append(Paragraph(f"<b>{raw_name.upper()}</b>", title_style))
     elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#166534"), spaceBefore=2, spaceAfter=8))
 
@@ -282,7 +282,7 @@ def generate_guidebook_pdf(mountain_query: str, output_path: str = None) -> str:
     elements.append(Spacer(1, 6))
 
     # 4. ITINERARY & ESTIMASI WAKTU POS KE POS
-    elements.append(Paragraph("⏱️ <b>ESTIMASI RUTE & RENCANA PERJALANAN (ITINERARY 2D1N)</b>", sec_header_style))
+    elements.append(Paragraph("<b>ESTIMASI RUTE & RENCANA PERJALANAN (ITINERARY 2D1N)</b>", sec_header_style))
     
     # Generate generic or specific checkpoints
     total_km = data["total_dist"]
@@ -310,7 +310,7 @@ def generate_guidebook_pdf(mountain_query: str, output_path: str = None) -> str:
     elements.append(Spacer(1, 6))
 
     # 5. DUA KOLOM: PERLENGKAPAN WAJIB & FIRST AID EMERGENCY
-    elements.append(Paragraph("🎒 <b>CHECKLIST PERLENGKAPAN & PROTOKOL KESELAMATAN LAPANGAN</b>", sec_header_style))
+    elements.append(Paragraph("<b>CHECKLIST PERLENGKAPAN & PROTOKOL KESELAMATAN LAPANGAN</b>", sec_header_style))
 
     col_gear = [
         Paragraph("<b>PERLENGKAPAN WAJIB (TIM & PRIBADI):</b>", body_bold),
@@ -327,7 +327,7 @@ def generate_guidebook_pdf(mountain_query: str, output_path: str = None) -> str:
     col_safety = [
         Paragraph("<b>FIRST AID & PROTOKOL DARURAT:</b>", body_bold),
         Paragraph("• <b>Hipotermia:</b> Lindungi dari angin, ganti baju basah, bungkus thermal blanket, beri minuman manis hangat.", body_style),
-        Paragraph("• <b>AMS (Pusing/Mual):</b> Istirahat, minum air, jika tidak membaik dalam 2 jam ➔ <i>TURUN ELEVASI SEGERA!</i>", body_style),
+        Paragraph("• <b>AMS (Pusing/Mual):</b> Istirahat, minum air, jika tidak membaik dalam 2 jam, <i>TURUN ELEVASI SEGERA!</i>", body_style),
         Paragraph("• <b>STOP Rule Tersesat:</b> Stop, Think, Observe, Plan. Jangan turun ke jurang/lembah buta tanpa jejak.", body_style),
         Paragraph("• <b>NOAA Wind Chill:</b> Suhu puncak malam hari terasa 4-8°C lebih dingin saat angin kencang berhembus.", body_style),
         Paragraph("• <b>Kontak Darurat:</b> Basarnas (115) | Polsek terdekat | Basecamp", alert_style)

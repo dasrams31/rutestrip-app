@@ -13,7 +13,7 @@
             Kembali ke Daftar Rute
         </a>
 
-        <h1 class="text-3xl font-bold text-slate-800 mb-2">Upload File GPX</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Upload File GPX</h1>
         <p class="text-slate-600">Upload file GPX dari perangkat GPS atau aplikasi tracking Anda.</p>
     </div>
 
@@ -52,7 +52,7 @@
             </div>
         </div>
 
-        <form action="{{ route('routes.store') }}" method="POST" enctype="multipart/form-data" class="p-8">
+        <form action="{{ route('routes.store') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8">
             @csrf
 
             <!-- Route Name -->

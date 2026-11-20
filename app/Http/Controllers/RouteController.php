@@ -353,7 +353,7 @@ class RouteController extends Controller
             'hiking_route_id' => $route->id,
         ]);
 
-        return back()->with('success', 'Rute disukai! ❤️');
+        return back()->with('success', 'Rute disukai!');
     }
 
     /**

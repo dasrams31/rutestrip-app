@@ -6,9 +6,9 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
         <a href="{{ route('admin.dashboard') }}" class="inline-flex text-emerald-700 font-semibold hover:text-emerald-800 mb-4">Kembali ke Dashboard</a>
-        <div class="bg-gradient-to-r from-indigo-800 to-emerald-800 rounded-3xl p-8 text-white shadow-xl">
+        <div class="bg-gradient-to-r from-indigo-800 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
             <p class="text-emerald-100 text-sm font-bold uppercase tracking-wide mb-2">Paper Evidence</p>
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-3">Dataset Readiness Checker</h1>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">Dataset Readiness Checker</h1>
             <p class="text-emerald-50 max-w-3xl">Checklist kesiapan data dan evidence untuk eksperimen paper: dataset rute, SBERT, GPX provenance, Precision@K, black box testing, dan SUS.</p>
         </div>
     </div>

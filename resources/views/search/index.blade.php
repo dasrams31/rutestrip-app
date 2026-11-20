@@ -7,15 +7,15 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Hero Section -->
-    <div class="relative overflow-hidden bg-mountain-gradient rounded-3xl p-8 md:p-12 mb-12 shadow-2xl">
+    <div class="relative overflow-hidden bg-mountain-gradient rounded-3xl p-6 sm:p-8 md:p-12 mb-10 sm:mb-12 shadow-2xl">
         <div class="absolute inset-0 bg-hero-pattern opacity-30"></div>
         <div class="relative z-10">
             <div class="max-w-3xl">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
                     Temukan Jalur Pendakian
                     <span class="block text-emerald-200">Sesuai Kemampuanmu</span>
                 </h1>
-                <p class="text-lg text-emerald-100 mb-8 max-w-2xl">
+                <p class="text-base sm:text-lg text-emerald-100 mb-6 sm:mb-8 max-w-2xl">
                     Sistem rekomendasi cerdas menggunakan AI untuk menemukan rute pendakian gunung yang paling cocok dengan preferensi dan kemampuan Anda.
                 </p>
 
@@ -24,7 +24,7 @@
                     @csrf
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="flex-1 relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
                                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
@@ -33,7 +33,7 @@
                                    name="query"
                                    placeholder="Contoh: Jalur landai untuk pemula dengan pemandangan indah..."
                                    value="{{ old('query') }}"
-                                   class="w-full pl-12 pr-4 py-4 bg-white/95 backdrop-blur-lg border-0 rounded-2xl text-slate-800 placeholder-slate-400 shadow-xl focus:ring-4 focus:ring-emerald-300 focus:outline-none text-lg"
+                                   class="w-full pl-12 pr-4 py-4 bg-white/95 backdrop-blur-lg border-0 rounded-2xl text-slate-800 placeholder-slate-400 shadow-xl focus:ring-4 focus:ring-emerald-300 focus:outline-none text-base sm:text-lg"
                                    required
                                    minlength="3">
                         </div>
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Decorative Mountain SVG -->
-        <div class="absolute bottom-0 right-0 w-64 h-64 opacity-20">
+        <div class="absolute bottom-0 right-0 w-40 h-40 sm:w-64 sm:h-64 opacity-20 pointer-events-none">
             <svg viewBox="0 0 200 200" fill="currentColor" class="text-white">
                 <path d="M100 20L180 180H20L100 20Z"/>
                 <path d="M150 60L200 180H100L150 60Z" opacity="0.5"/>
@@ -85,7 +85,7 @@
     </div>
 
     <!-- Features Section -->
-    <div class="grid md:grid-cols-3 gap-8">
+    <div class="grid md:grid-cols-3 gap-6 md:gap-8">
         <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
                 <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

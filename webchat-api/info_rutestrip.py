@@ -20,15 +20,15 @@ def get_info():
             pass
     
     return (
-        "🏔️ **INFORMASI RESMI & FITUR BARU RUTESTRIP BOT**\n\n"
-        f"🌐 **Website Utama:** {data.get('website')}\n"
-        f"🤖 **AI Chat RuteStrip:** {data.get('ai_chat')}\n"
-        f"💬 **Grup Telegram Komunitas:** {data.get('telegram_group')}\n"
-        f"📢 **Channel Informasi Resmi:** {data.get('telegram_channel')}\n\n"
-        "✨ **UPDATE FITUR TERBARU:**\n"
-        "1. 🥶 **Kalkulator Wind Chill & Risiko Hipotermia** ➔ Ketik `cuaca <nama_gunung>` (analisis suhu terasa, 4 level risiko, & rekomendasi layering pakaian).\n"
-        "2. 📱 **Auto Story Card / Infografis Rute (9:16)** ➔ Ketik `story <nama_gunung>` atau `infografis <nama_gunung>` (poster profil elevasi GPX, elev gain, jarak, & waktu Naismith siap share Instagram/WA).\n\n"
-        "💡 *Ketik `help` untuk melihat daftar lengkap 12 fitur pendakian.*"
+        "**INFORMASI RESMI & FITUR BARU RUTESTRIP BOT**\n\n"
+        f"**Website Utama:** {data.get('website')}\n"
+        f"**AI Chat RuteStrip:** {data.get('ai_chat')}\n"
+        f"**Grup Telegram Komunitas:** {data.get('telegram_group')}\n"
+        f"**Channel Informasi Resmi:** {data.get('telegram_channel')}\n\n"
+        "**UPDATE FITUR TERBARU:**\n"
+        "1. **Kalkulator Wind Chill & Risiko Hipotermia** → Ketik `cuaca <nama_gunung>` (analisis suhu terasa, 4 level risiko, & rekomendasi layering pakaian).\n"
+        "2. **Auto Story Card / Infografis Rute (9:16)** → Ketik `story <nama_gunung>` atau `infografis <nama_gunung>` (poster profil elevasi GPX, elev gain, jarak, & waktu Naismith siap share Instagram/WA).\n\n"
+        "*Ketik `help` untuk melihat daftar lengkap 12 fitur pendakian.*"
     )
 
 if __name__ == "__main__":

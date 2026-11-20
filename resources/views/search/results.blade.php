@@ -13,11 +13,11 @@
             Kembali ke Pencarian
         </a>
 
-        <h1 class="text-3xl font-bold text-slate-800 mb-2">Hasil Rekomendasi</h1>
-        <p class="text-slate-600">
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Hasil Rekomendasi</h1>
+        <p class="text-slate-600 break-words">
             Pencarian: <span class="font-semibold text-emerald-600">"{{ $query }}"</span>
             @if(isset($searchTime))
-            <span class="ml-2 text-sm bg-slate-100 px-2 py-1 rounded text-slate-500">⚡ {{ $searchTime }} ms</span>
+            <span class="ml-2 text-sm bg-slate-100 px-2 py-1 rounded text-slate-500 inline-flex items-center gap-1"><x-icon name="lightning-bolt" class="w-4 h-4 text-amber-500" /> {{ $searchTime }} ms</span>
             @endif
         </p>
     </div>
@@ -74,22 +74,22 @@
     @endif
 
     <!-- Cosine Similarity Formula Explanation -->
-    <div class="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-        <div class="flex items-start space-x-4">
-            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+    <div class="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6 border border-indigo-100">
+        <div class="flex items-start sm:space-x-4">
+            <div class="hidden sm:flex w-12 h-12 bg-indigo-100 rounded-xl items-center justify-center flex-shrink-0">
                 <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                 </svg>
             </div>
-            <div class="flex-1">
-                <h3 class="text-lg font-bold text-indigo-800 mb-2">Metode: SBERT + Cosine Similarity (Hybrid)</h3>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-base sm:text-lg font-bold text-indigo-800 mb-2">Metode: SBERT + Cosine Similarity (Hybrid)</h3>
                 <p class="text-sm text-slate-600 mb-3">
                     Tingkat kemiripan dihitung menggunakan rumus Cosine Similarity antara vektor query
                     <span class="font-mono bg-white px-1 rounded">Q</span> dan vektor jalur
                     <span class="font-mono bg-white px-1 rounded">D</span>:
                 </p>
                 <div class="bg-white rounded-xl p-4 mb-3 text-center overflow-x-auto">
-                    <code class="text-lg font-mono text-indigo-700">
+                    <code class="text-sm sm:text-lg font-mono text-indigo-700 whitespace-nowrap">
                         Sim(Q, D) = (Q · D) / (||Q|| × ||D||)
                     </code>
                 </div>
@@ -120,11 +120,33 @@
     </div>
 
     <!-- Results Grid -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         @foreach($results as $index => $route)
-        <div class="mountain-card glass-card rounded-2xl overflow-hidden shadow-lg group">
-            <!-- Card Header with Score -->
-            <div class="relative bg-mountain-gradient p-6">
+        @php
+            // Track preview: at most ~150 points, 5 decimals (~1 m), keeps the page light.
+            $trackPreview = [];
+            $rawCoords = is_array($route->route_coordinates) ? array_values($route->route_coordinates) : [];
+            $rawCount = count($rawCoords);
+            if ($rawCount >= 2) {
+                $keep = min($rawCount, 150);
+                $step = ($rawCount - 1) / ($keep - 1);
+                for ($i = 0; $i < $keep; $i++) {
+                    $pt = $rawCoords[(int) round($i * $step)];
+                    if (is_array($pt) && isset($pt[0], $pt[1]) && is_numeric($pt[0]) && is_numeric($pt[1])) {
+                        $trackPreview[] = [round((float) $pt[0], 5), round((float) $pt[1], 5)];
+                    }
+                }
+            }
+        @endphp
+        <div class="mountain-card glass-card rounded-2xl overflow-hidden shadow-lg group min-w-0">
+            <!-- Card Header with Score: route track on an OSM map, gradient fallback -->
+            <div class="relative isolate bg-mountain-gradient p-5 sm:p-6 {{ count($trackPreview) >= 2 ? 'min-h-[13rem] flex flex-col justify-end' : '' }}">
+                @if(count($trackPreview) >= 2)
+                <div class="result-map absolute inset-0 -z-10 pointer-events-none" data-track='@json($trackPreview)' aria-hidden="true"></div>
+                <div class="absolute inset-0 -z-10 pointer-events-none bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/10"></div>
+                <span class="absolute bottom-1 right-2 text-[10px] leading-none text-white/60 pointer-events-none">&copy; OpenStreetMap</span>
+                @endif
+
                 <!-- Match Score Badge -->
                 <div class="absolute top-4 right-4">
                     <div class="score-badge px-3 py-1 rounded-full text-white text-sm font-bold shadow-lg pulse-glow">
@@ -134,13 +156,13 @@
 
                 <!-- Rank Badge -->
                 <div class="absolute top-4 left-4">
-                    <div class="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div class="w-8 h-8 bg-slate-900/40 backdrop-blur-sm ring-1 ring-white/30 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         #{{ $index + 1 }}
                     </div>
                 </div>
 
                 <div class="pt-8">
-                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-2">{{ $route->name }}</h3>
+                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-2 break-words drop-shadow">{{ $route->name }}</h3>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                         @if($route->difficulty_level === 'Mudah') bg-green-100 text-green-800
                         @elseif($route->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-800
@@ -162,12 +184,12 @@
             </div>
 
             <!-- Card Body with Stats -->
-            <div class="p-6">
+            <div class="p-5 sm:p-6">
                 <p class="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500" title="Pengunggah jalur">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     Diunggah oleh <span class="font-semibold text-slate-700">{{ $route->uploader_name }}</span>
                 </p>
-                <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
                     <!-- Distance -->
                     <div class="bg-slate-50 rounded-xl p-3 text-center">
                         <div class="flex items-center justify-center mb-1">
@@ -264,4 +286,50 @@
     @endif
 
 </div>
+
+@push('scripts')
+<script>
+// Static track previews in the result card headers. Maps are created only when
+// a card scrolls near the viewport, so ten results never init at once.
+(function () {
+    var nodes = document.querySelectorAll('.result-map[data-track]');
+    if (!nodes.length || typeof L === 'undefined') return;
+
+    function initMap(el) {
+        if (el.dataset.ready) return;
+        el.dataset.ready = '1';
+        var coords;
+        try { coords = JSON.parse(el.dataset.track); } catch (e) { return; }
+        if (!coords || coords.length < 2) return;
+
+        var map = L.map(el, {
+            zoomControl: false, attributionControl: false, dragging: false, touchZoom: false,
+            doubleClickZoom: false, scrollWheelZoom: false, boxZoom: false, keyboard: false,
+            tap: false, inertia: false, zoomSnap: 0.25
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 17 }).addTo(map);
+        L.polyline(coords, { color: '#ffffff', weight: 7, opacity: 0.75, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        var line = L.polyline(coords, { color: '#059669', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        L.circleMarker(coords[0], { radius: 4, color: '#ffffff', weight: 2, fillColor: '#059669', fillOpacity: 1 }).addTo(map);
+        L.circleMarker(coords[coords.length - 1], { radius: 4, color: '#ffffff', weight: 2, fillColor: '#f59e0b', fillOpacity: 1 }).addTo(map);
+        // Extra bottom padding keeps the track above the title overlay.
+        map.fitBounds(line.getBounds(), { paddingTopLeft: [28, 56], paddingBottomRight: [28, 84] });
+    }
+
+    if (!('IntersectionObserver' in window)) {
+        nodes.forEach(initMap);
+        return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+                io.unobserve(entry.target);
+                initMap(entry.target);
+            }
+        });
+    }, { rootMargin: '200px 0px' });
+    nodes.forEach(function (el) { io.observe(el); });
+})();
+</script>
+@endpush
 @endsection

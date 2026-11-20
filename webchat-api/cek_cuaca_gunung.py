@@ -25,13 +25,13 @@ MOUNTAINS = [
 ]
 
 WMO_CODES = {
-    0: "☀️ Cerah",
-    1: "🌤️ Cerah Berawan", 2: "⛅ Berawan", 3: "☁️ Mendung",
-    45: "🌫️ Kabut", 48: "🌫️ Kabut Tebal/Rime",
-    51: "🌧️ Gerimis Ringan", 53: "🌧️ Gerimis Sedang", 55: "🌧️ Gerimis Lebat",
-    61: "🌧️ Hujan Ringan", 63: "🌧️ Hujan Sedang", 65: "🌧️ Hujan Lebat",
-    80: "🌦️ Hujan Lokal", 81: "🌧️ Hujan Deras", 82: "⛈️ Hujan Ekstrem",
-    95: "⛈️ Badai Petir", 96: "⛈️ Badai Petir + Es"
+    0: "Cerah",
+    1: "Cerah Berawan", 2: "Berawan", 3: "Mendung",
+    45: "Kabut", 48: "Kabut Tebal/Rime",
+    51: "Gerimis Ringan", 53: "Gerimis Sedang", 55: "Gerimis Lebat",
+    61: "Hujan Ringan", 63: "Hujan Sedang", 65: "Hujan Lebat",
+    80: "Hujan Lokal", 81: "Hujan Deras", 82: "Hujan Ekstrem",
+    95: "Badai Petir", 96: "Badai Petir + Es"
 }
 
 def calculate_wind_chill(temp_c: float, wind_kmh: float) -> float:
@@ -52,22 +52,22 @@ def get_hypothermia_assessment(temp_c: float, wind_kmh: float, weather_code: int
     
     if feels_like <= 2.0 or (feels_like <= 6.0 and is_rain) or is_extreme_rain:
         status_code = "EXTREME"
-        level = "🚨 BAHAYA EKSTREM (Risiko Hipotermia Akut)"
+        level = "BAHAYA EKSTREM (Risiko Hipotermia Akut)"
         layering = "• Wajib 3+ Layer: Base layer thermal (quick-dry/merino) + Mid layer (fleece/down jacket) + Outer waterproof/windproof.\n• Aksesoris wajib: Kupluk/beanie polar, sarung tangan polar/waterproof, kaos kaki wol cadangan kering.\n• Pantangan keras: JANGAN biarkan pakaian basah menempel di tubuh saat berhenti/istirahat."
         safe_action = "Potensi drop suhu drastis! Segera pasang shelter/tenda bila basah kuyup, konsumsi makanan kalori tinggi dan minuman hangat."
     elif feels_like <= 8.0 or (feels_like <= 12.0 and is_rain):
         status_code = "HIGH"
-        level = "⚠️ WASPADA TINGGI (Risiko Hipotermia Sedang-Tinggi)"
+        level = "WASPADA TINGGI (Risiko Hipotermia Sedang-Tinggi)"
         layering = "• Wajib 2-3 Layer: Base layer breathable + Jaket Insulasi (Fleece/Windbreaker tebal) + Siapkan Jas Hujan/Outer waterproof.\n• Aksesoris: Buff/kupluk dan sarung tangan polar."
         safe_action = "Ganti pakaian basah sebelum masuk sleeping bag, jangan tidur dengan pakaian lembap."
     elif feels_like <= 14.0:
         status_code = "MODERATE"
-        level = "🟡 WASPADA RINGAN (Sejuk - Dingin)"
+        level = "WASPADA RINGAN (Sejuk - Dingin)"
         layering = "• 2 Layer: Kaos trekking sintetis + Jaket Windbreaker/Gunung saat istirahat atau camp malam."
         safe_action = "Kenakan jaket windbreaker saat berhenti istirahat agar angin tidak menyerap panas tubuh."
     else:
         status_code = "SAFE"
-        level = "🟢 AMAN (Risiko Rendah / Nyaman)"
+        level = "AMAN (Risiko Rendah / Nyaman)"
         layering = "• 1-2 Layer: Pakaian trekking standar yang nyaman dan menyerap keringat."
         safe_action = "Jaga hidrasi tubuh secara berkala selama perjalanan."
         
@@ -104,7 +104,7 @@ def fetch_weather(m: dict) -> dict:
                 "wind": wind,
                 "humidity": humidity,
                 "weather_code": code,
-                "weather_desc": WMO_CODES.get(code, "🌡️ Cerah"),
+                "weather_desc": WMO_CODES.get(code, "Cerah"),
                 "hypo": hypo
             }
     except Exception as e:
@@ -112,23 +112,23 @@ def fetch_weather(m: dict) -> dict:
 
 def format_detailed_weather(res: dict) -> str:
     if not res["success"]:
-        return f"❌ Gagal memuat data cuaca untuk {res['name']}: {res.get('error')}"
+        return f"Gagal memuat data cuaca untuk {res['name']}: {res.get('error')}"
     
     h = res["hypo"]
     out = [
-        f"🏔️ **ANALISIS CUACA & RISIKO HIPOTERMIA - {res['name'].upper()}**",
-        f"📍 Elevasi Puncak: ~{res['elev']} mdpl\n",
-        f"📊 **Kondisi Udara Terkini:**",
+        f"**ANALISIS CUACA & RISIKO HIPOTERMIA - {res['name'].upper()}**",
+        f"Elevasi Puncak: ~{res['elev']} mdpl\n",
+        f"**Kondisi Udara Terkini:**",
         f"• Cuaca: {res['weather_desc']}",
         f"• Suhu Terukur: {res['temp']}°C",
         f"• Kecepatan Angin: {res['wind']} km/h",
         f"• Kelembapan Udara: {res['humidity']}%\n",
-        f"🥶 **Kalkulator Wind Chill & Sensasi Dingin:**",
+        f"**Kalkulator Wind Chill & Sensasi Dingin:**",
         f"• **Suhu Riil Terasa Tubuh (Wind Chill): {h['feels_like']}°C**",
         f"• **Status Risiko: {h['level']}**\n",
-        f"🧥 **Rekomendasi Layering Pakaian:**",
+        f"**Rekomendasi Layering Pakaian:**",
         f"{h['layering']}\n",
-        f"🛡️ **Protokol Keselamatan:**",
+        f"**Protokol Keselamatan:**",
         f"{h['safe_action']}"
     ]
     return "\n".join(out)
@@ -141,25 +141,25 @@ def format_all_weather_summary() -> str:
         res = fetch_weather(m)
         if res["success"]:
             h = res["hypo"]
-            line = f"• **{res['name']}**: {res['weather_desc']} | 🌡️ {res['temp']}°C (Terasa {h['feels_like']}°C) | 💨 {res['wind']} km/h"
+            line = f"• **{res['name']}**: {res['weather_desc']} | Suhu {res['temp']}°C (Terasa {h['feels_like']}°C) | Angin {res['wind']} km/h"
             reports.append(line)
             
             if h["status_code"] in ["EXTREME", "HIGH"] or res["wind"] >= 30 or res["weather_code"] >= 51:
-                alerts.append(f"⚠️ **{res['name']}**: {res['weather_desc']}, Angin {res['wind']} km/h, Terasa {h['feels_like']}°C ➔ {h['level']}")
+                alerts.append(f"• **{res['name']}**: {res['weather_desc']}, Angin {res['wind']} km/h, Terasa {h['feels_like']}°C → {h['level']}")
         else:
             reports.append(f"• **{m['name']}**: Gagal load data")
             
     out = [
-        "📡 **UPDATE LIVE CUACA GUNUNG & INDEKS WIND CHILL**",
+        "**UPDATE LIVE CUACA GUNUNG & INDEKS WIND CHILL**",
         "*(Data realtime Open-Meteo per 3 Jam)*\n",
         "\n".join(reports)
     ]
     
     if alerts:
-        out.append("\n🚨 **PERINGATAN ANGIN KENCANG / HIPOTERMIA / HUJAN:**")
+        out.append("\n**PERINGATAN ANGIN KENCANG / HIPOTERMIA / HUJAN:**")
         out.append("\n".join(alerts))
         
-    out.append("\n💡 *Tips: Ketik `cuaca <nama_gunung>` (contoh: `cuaca sumbing`) untuk analisis detail layering & mitigasi.*")
+    out.append("\n*Tips: Ketik `cuaca <nama_gunung>` (contoh: `cuaca sumbing`) untuk analisis detail layering & mitigasi.*")
     return "\n".join(out)
 
 def check_all_weather(mountain: str = None) -> str:
@@ -209,8 +209,8 @@ def check_single_mountain(mountain_query: str) -> str:
             code = cw.get('weathercode', 0)
             temp = cw.get('temperature', 0)
             wind = cw.get('windspeed', 0)
-            status_txt = WMO_CODES.get(code, "🌡️ Unknown")
-            return f"• {target['name']}: {status_txt} | 🌡️ {temp}°C | 💨 {wind} km/h"
+            status_txt = WMO_CODES.get(code, "Unknown")
+            return f"• {target['name']}: {status_txt} | Suhu {temp}°C | Angin {wind} km/h"
     except Exception as e:
         return f"• {target['name']}: Gagal memuat cuaca ({e})"
 

@@ -13,7 +13,7 @@
             Kembali ke {{ $route->name }}
         </a>
 
-        <h1 class="text-3xl font-bold text-slate-800 mb-2">Rute Serupa dengan {{ $route->name }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Rute Serupa dengan {{ $route->name }}</h1>
         <p class="text-slate-600">
             Ditemukan <span class="font-semibold text-emerald-600">{{ $similarRoutes->count() }}</span> rute dengan kemiripan > 30%
         </p>
@@ -36,7 +36,7 @@
             <div id="map-{{ $similar->id }}" class="w-full h-40 bg-slate-200"></div>
             @else
             <div class="w-full h-40 bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                <span class="text-4xl">🏔️</span>
+                <x-icon name="mountain" class="w-10 h-10 text-emerald-500" />
             </div>
             @endif
 
@@ -99,7 +99,7 @@
     </div>
     @else
     <div class="text-center py-16 bg-white rounded-2xl shadow-lg">
-        <span class="text-6xl mb-4 block">🔍</span>
+        <x-icon name="search" class="w-14 h-14 mx-auto mb-4 text-slate-300" />
         <h3 class="text-xl font-semibold text-slate-700 mb-2">Tidak Ada Rute Serupa</h3>
         <p class="text-slate-500">Tidak ditemukan rute dengan kemiripan > 30%</p>
     </div>

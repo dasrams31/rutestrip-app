@@ -10,7 +10,12 @@
         $seoDescription = trim($__env->yieldContent('meta_description'))
             ?: 'RuteStrip: cari dan bandingkan jalur pendakian gunung di Pulau Jawa berdasarkan data GPX — jarak, total tanjakan, estimasi waktu Naismith, kemiringan, dan peta jalur. Rekomendasi rute dengan AI (SBERT).';
         $seoCanonical = trim($__env->yieldContent('canonical')) ?: url()->current();
-        $seoImage = trim($__env->yieldContent('og_image')) ?: asset('images/mountains/default.png');
+        // Branded 1200x630 card (python/tools/build_og_image.py). A page may
+        // override it with @section('og_image') plus og_image_width/height.
+        $seoImage = trim($__env->yieldContent('og_image')) ?: asset('images/og/rutestrip-og.png');
+        $seoImageWidth = trim($__env->yieldContent('og_image_width', '1200'));
+        $seoImageHeight = trim($__env->yieldContent('og_image_height', '630'));
+        $seoImageAlt = trim($__env->yieldContent('og_image_alt', 'RuteStrip - cari jalur pendakian gunung di Pulau Jawa'));
         // Account/admin/upload pages and POSTed search results stay out of search engines.
         $seoPrivate = request()->isMethod('post') || request()->is(
             'admin*', 'dashboard*', 'profile*', 'favorites*', 'history*', 'login', 'register',
@@ -28,10 +33,20 @@
     <meta property="og:description" content="{{ \Illuminate\Support\Str::limit($seoDescription, 300, '') }}">
     <meta property="og:url" content="{{ $seoCanonical }}">
     <meta property="og:image" content="{{ $seoImage }}">
+    @if(str_starts_with($seoImage, 'https://'))
+    <meta property="og:image:secure_url" content="{{ $seoImage }}">
+    @endif
+    @if(str_ends_with(strtolower(parse_url($seoImage, PHP_URL_PATH) ?? ''), '.png'))
+    <meta property="og:image:type" content="image/png">
+    @endif
+    <meta property="og:image:width" content="{{ $seoImageWidth }}">
+    <meta property="og:image:height" content="{{ $seoImageHeight }}">
+    <meta property="og:image:alt" content="{{ $seoImageAlt }}">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $seoTitle }}">
     <meta name="twitter:description" content="{{ \Illuminate\Support\Str::limit($seoDescription, 200, '') }}">
     <meta name="twitter:image" content="{{ $seoImage }}">
+    <meta name="twitter:image:alt" content="{{ $seoImageAlt }}">
     @if(config('services.seo.google_verification'))
     <meta name="google-site-verification" content="{{ config('services.seo.google_verification') }}">
     @endif
@@ -107,6 +122,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        [x-cloak] { display: none !important; }
+
         * {
             font-family: 'Inter', system-ui, sans-serif;
         }
@@ -159,121 +176,171 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50">
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-emerald-100/50 shadow-sm">
+    @php
+        $navLinks = [
+            ['href' => route('search.index'), 'label' => 'Cari Rute', 'icon' => 'search', 'active' => request()->routeIs('search.*', 'home')],
+            ['href' => route('routes.index'), 'label' => 'Semua Rute', 'icon' => 'map', 'active' => request()->routeIs('routes.index', 'routes.show', 'routes.similar', 'routes.provenance')],
+            ['href' => config('services.webchat.url'), 'label' => 'AI Chat', 'icon' => 'chat', 'active' => false],
+        ];
+        $uploadActive = request()->routeIs('routes.create', 'routes.batch');
+        $navUser = Auth::user();
+        $navInitial = $navUser ? mb_strtoupper(mb_substr(trim($navUser->name) ?: '?', 0, 1)) : '';
+        $navShortName = $navUser ? \Illuminate\Support\Str::limit(\Illuminate\Support\Str::before(trim($navUser->name), ' '), 16) : '';
+    @endphp
+    <nav x-data="{ mobileOpen: false }" @keydown.escape.window="mobileOpen = false" @click.outside="mobileOpen = false"
+         class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-emerald-100/60 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-16 gap-3">
                 <!-- Logo -->
-                <a href="{{ route('search.index') }}" class="flex items-center space-x-3 group">
-                    <img src="/images/logo.svg" alt="RuteStrip" class="w-10 h-10 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow">
-                    <span class="text-xl font-bold gradient-text">RuteStrip</span>
+                <a href="{{ route('search.index') }}" class="flex items-center gap-2.5 group min-w-0">
+                    <img src="/images/logo.svg" alt="" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0">
+                    <span class="text-lg sm:text-xl font-bold gradient-text">RuteStrip</span>
                 </a>
 
-                <!-- Navigation Links -->
-                <div class="flex items-center space-x-1">
-                    <a href="{{ route('search.index') }}"
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all
-                              {{ request()->routeIs('search.*') ? 'bg-emerald-100 text-emerald-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                        <span class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <span>Cari Rute</span>
-                        </span>
+                <!-- Desktop links -->
+                <div class="hidden lg:flex items-center gap-1">
+                    @foreach($navLinks as $link)
+                    <a href="{{ $link['href'] }}"
+                       @if($link['active']) aria-current="page" @endif
+                       class="px-3.5 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2
+                              {{ $link['active'] ? 'bg-emerald-100 text-emerald-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <x-icon :name="$link['icon']" class="w-4 h-4" />
+                        <span>{{ $link['label'] }}</span>
                     </a>
-                    <a href="{{ route('routes.index') }}"
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all
-                              {{ request()->routeIs('routes.index') || request()->routeIs('routes.show') ? 'bg-emerald-100 text-emerald-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                        <span class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                            </svg>
-                            <span>Semua Rute</span>
-                        </span>
-                    </a>
-                    <a href="{{ config('services.webchat.url') }}"
-                       class="px-4 py-2 rounded-lg text-sm font-medium transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                        <span class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                            </svg>
-                            <span>AI Chat</span>
-                        </span>
-                    </a>
-                    @auth
-                    <!-- User Dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" @click.away="open = false"
-                                class="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all">
-                            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                <span class="text-emerald-700 font-bold text-sm">{{ substr(Auth::user()->name, 0, 1) }}</span>
-                            </div>
-                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                    @endforeach
+
+                    <!-- Upload Dropdown -->
+                    <div class="relative ml-1" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                        <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
+                                class="px-4 py-2 bg-mountain-gradient text-white rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-shadow inline-flex items-center gap-2
+                                       {{ $uploadActive ? 'ring-2 ring-emerald-300 ring-offset-2' : '' }}">
+                            <x-icon name="plus" class="w-4 h-4" />
+                            <span>Upload GPX</span>
+                            <x-icon name="chevron-down" class="w-3.5 h-3.5 transition-transform" x-bind:class="{ 'rotate-180': open }" />
                         </button>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                            <div class="px-4 py-2 border-b border-slate-100">
-                                <p class="text-sm font-medium text-slate-800">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-slate-500">{{ Auth::user()->email }}</p>
+                        <div x-show="open" x-cloak x-transition.origin.top.right
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden">
+                            <a href="{{ route('routes.create') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors">
+                                <x-icon name="document-add" class="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                                <span>
+                                    <span class="block text-sm font-medium text-slate-700">Upload Single</span>
+                                    <span class="block text-xs text-slate-500">Satu file GPX</span>
+                                </span>
+                            </a>
+                            <a href="{{ route('routes.batch') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition-colors border-t border-slate-100">
+                                <x-icon name="upload" class="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                                <span>
+                                    <span class="block text-sm font-medium text-slate-700">Batch Upload</span>
+                                    <span class="block text-xs text-slate-500">Banyak file sekaligus</span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
+
+                    @auth
+                    <!-- User menu -->
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                        <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
+                                class="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
+                            <span class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold flex items-center justify-center">{{ $navInitial }}</span>
+                            <span class="text-sm font-medium text-slate-700 max-w-[9rem] truncate" title="{{ $navUser->name }}">{{ $navShortName }}</span>
+                            <x-icon name="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" x-bind:class="{ 'rotate-180': open }" />
+                        </button>
+                        <div x-show="open" x-cloak x-transition.origin.top.right
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2">
+                            <div class="px-4 py-2.5 border-b border-slate-100">
+                                <p class="text-sm font-semibold text-slate-800 truncate">{{ $navUser->name }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ $navUser->email }}</p>
                             </div>
-                            <a href="{{ route('user.dashboard') }}" class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Dashboard</a>
-                            <a href="{{ route('user.favorites') }}" class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Rute Favorit</a>
-                            <a href="{{ route('user.profile') }}" class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Edit Profil</a>
-                            @if(Auth::user()->isAdmin())
+                            <a href="{{ route('user.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><x-icon name="home" class="w-4 h-4 text-slate-400" />Dashboard</a>
+                            <a href="{{ route('user.favorites') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><x-icon name="heart-outline" class="w-4 h-4 text-slate-400" />Rute Favorit</a>
+                            <a href="{{ route('user.history') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><x-icon name="clock" class="w-4 h-4 text-slate-400" />Riwayat Pencarian</a>
+                            <a href="{{ route('user.profile') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><x-icon name="user" class="w-4 h-4 text-slate-400" />Edit Profil</a>
+                            @if($navUser->isAdmin())
                             <div class="border-t border-slate-100 my-1"></div>
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-sm text-purple-700 hover:bg-purple-50">Admin Panel</a>
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-purple-700 hover:bg-purple-50"><x-icon name="shield-check" class="w-4 h-4" />Admin Panel</a>
                             @endif
                             <div class="border-t border-slate-100 my-1"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                                <button type="submit" class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"><x-icon name="logout" class="w-4 h-4" />Logout</button>
                             </form>
                         </div>
                     </div>
                     @else
-                    <a href="{{ route('login') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Masuk</a>
+                    <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Masuk</a>
                     <a href="{{ route('register') }}" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Daftar</a>
                     @endauth
-                    <!-- Upload Dropdown -->
-                    <div class="relative ml-2" x-data="{ open: false }">
-                        <button @click="open = !open" @click.away="open = false"
-                                class="px-4 py-2 bg-mountain-gradient text-white rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center space-x-2
-                                       {{ request()->routeIs('routes.create') || request()->routeIs('routes.batch') ? 'ring-2 ring-emerald-300 ring-offset-2' : '' }}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            <span>Upload GPX</span>
-                            <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
+                </div>
 
-                        <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
-                             x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50">
-                            <a href="{{ route('routes.create') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-emerald-50 transition-colors">
-                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-700">Upload Single</p>
-                                    <p class="text-xs text-slate-500">Satu file GPX</p>
-                                </div>
-                            </a>
-                            <a href="{{ route('routes.batch') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-indigo-50 transition-colors border-t border-slate-100">
-                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                                </svg>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-700">Batch Upload</p>
-                                    <p class="text-xs text-slate-500">Banyak file sekaligus</p>
-                                </div>
-                            </a>
-                        </div>
+                <!-- Mobile: avatar shortcut + menu toggle -->
+                <div class="flex items-center gap-2 lg:hidden">
+                    @auth
+                    <a href="{{ route('user.dashboard') }}" class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold flex items-center justify-center" aria-label="Dashboard {{ $navUser->name }}">{{ $navInitial }}</a>
+                    @endauth
+                    <button type="button" @click="mobileOpen = !mobileOpen" :aria-expanded="mobileOpen" aria-controls="mobile-menu"
+                            class="w-10 h-10 inline-flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200">
+                        <span class="sr-only">Buka menu</span>
+                        <x-icon name="menu" class="w-6 h-6" x-show="!mobileOpen" />
+                        <x-icon name="x" class="w-6 h-6" x-show="mobileOpen" x-cloak />
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu panel -->
+        <div id="mobile-menu" x-show="mobileOpen" x-cloak x-transition.opacity
+             class="lg:hidden border-t border-slate-100 bg-white max-h-[calc(100vh-4rem)] overflow-y-auto shadow-lg">
+            <div class="px-4 py-3 space-y-1">
+                @foreach($navLinks as $link)
+                <a href="{{ $link['href'] }}" @if($link['active']) aria-current="page" @endif
+                   class="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium {{ $link['active'] ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <x-icon :name="$link['icon']" class="w-5 h-5 {{ $link['active'] ? 'text-emerald-600' : 'text-slate-400' }}" />
+                    {{ $link['label'] }}
+                </a>
+                @endforeach
+
+                <p class="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">Upload GPX</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{{ route('routes.create') }}" class="flex items-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium {{ request()->routeIs('routes.create') ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-700 hover:bg-emerald-50' }}">
+                        <x-icon name="document-add" class="w-5 h-5 text-emerald-600 flex-shrink-0" /> Single
+                    </a>
+                    <a href="{{ route('routes.batch') }}" class="flex items-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium {{ request()->routeIs('routes.batch') ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-indigo-50' }}">
+                        <x-icon name="upload" class="w-5 h-5 text-indigo-600 flex-shrink-0" /> Batch
+                    </a>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-100 px-4 py-3">
+                @auth
+                <div class="flex items-center gap-3 px-3 py-2">
+                    <span class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold flex items-center justify-center flex-shrink-0">{{ $navInitial }}</span>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-slate-800 truncate">{{ $navUser->name }}</p>
+                        <p class="text-xs text-slate-500 truncate">{{ $navUser->email }}</p>
                     </div>
                 </div>
+                <div class="mt-1 space-y-1">
+                    <a href="{{ route('user.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-slate-50"><x-icon name="home" class="w-5 h-5 text-slate-400" />Dashboard</a>
+                    <a href="{{ route('user.favorites') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-slate-50"><x-icon name="heart-outline" class="w-5 h-5 text-slate-400" />Rute Favorit</a>
+                    <a href="{{ route('user.history') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-slate-50"><x-icon name="clock" class="w-5 h-5 text-slate-400" />Riwayat Pencarian</a>
+                    <a href="{{ route('user.profile') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-slate-50"><x-icon name="user" class="w-5 h-5 text-slate-400" />Edit Profil</a>
+                    @if($navUser->isAdmin())
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-purple-700 hover:bg-purple-50"><x-icon name="shield-check" class="w-5 h-5" />Admin Panel</a>
+                    @endif
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50"><x-icon name="logout" class="w-5 h-5" />Logout</button>
+                    </form>
+                </div>
+                @else
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{{ route('login') }}" class="px-4 py-3 rounded-xl text-center text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50">Masuk</a>
+                    <a href="{{ route('register') }}" class="px-4 py-3 rounded-xl text-center text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700">Daftar</a>
+                </div>
+                @endauth
             </div>
         </div>
     </nav>
@@ -345,19 +412,22 @@
                     </p>
                     <!-- Social Links -->
                     <div class="flex space-x-3">
-                        <a href="#" class="w-10 h-10 bg-slate-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <a href="https://github.com/RamsNotes31" target="_blank" rel="noopener" aria-label="GitHub RuteStrip" title="GitHub RuteStrip"
+                           class="w-10 h-10 bg-slate-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-colors duration-300 group">
+                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                             </svg>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-slate-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                        <a href="https://instagram.com/ramadanadipa_" target="_blank" rel="noopener" aria-label="Instagram RuteStrip" title="Instagram RuteStrip"
+                           class="w-10 h-10 bg-slate-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors duration-300 group">
+                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                             </svg>
                         </a>
-                        <a href="#" class="w-10 h-10 bg-slate-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        <a href="https://t.me/rutestrip_hikingbot" target="_blank" rel="noopener" aria-label="Bot Telegram RuteStrip" title="Bot Telegram RuteStrip"
+                           class="w-10 h-10 bg-slate-800 hover:bg-sky-500 rounded-lg flex items-center justify-center transition-colors duration-300 group">
+                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                             </svg>
                         </a>
                     </div>
@@ -417,23 +487,23 @@
                     </h3>
                     <ul class="space-y-3">
                         <li class="flex items-start text-slate-400">
-                            <span class="text-emerald-400 mr-2 mt-1">✓</span>
+                            <x-icon name="check" class="w-4 h-4 text-emerald-400 mr-2 mt-1 flex-shrink-0" />
                             <span>Rekomendasi AI dengan SBERT</span>
                         </li>
                         <li class="flex items-start text-slate-400">
-                            <span class="text-emerald-400 mr-2 mt-1">✓</span>
+                            <x-icon name="check" class="w-4 h-4 text-emerald-400 mr-2 mt-1 flex-shrink-0" />
                             <span>Analisis File GPX Otomatis</span>
                         </li>
                         <li class="flex items-start text-slate-400">
-                            <span class="text-emerald-400 mr-2 mt-1">✓</span>
+                            <x-icon name="check" class="w-4 h-4 text-emerald-400 mr-2 mt-1 flex-shrink-0" />
                             <span>Visualisasi Peta Interaktif</span>
                         </li>
                         <li class="flex items-start text-slate-400">
-                            <span class="text-emerald-400 mr-2 mt-1">✓</span>
+                            <x-icon name="check" class="w-4 h-4 text-emerald-400 mr-2 mt-1 flex-shrink-0" />
                             <span>Kalkulasi Naismith Time</span>
                         </li>
                         <li class="flex items-start text-slate-400">
-                            <span class="text-emerald-400 mr-2 mt-1">✓</span>
+                            <x-icon name="check" class="w-4 h-4 text-emerald-400 mr-2 mt-1 flex-shrink-0" />
                             <span>Rating & Review Rute</span>
                         </li>
                     </ul>
@@ -464,7 +534,7 @@
                             <svg class="w-4 h-4 mr-2 mt-1 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
                             </svg>
-                            <span>Laravel 11 + Python 3.11</span>
+                            <span>Laravel 12 + Python 3.12</span>
                         </li>
                         <li class="flex items-start text-slate-400">
                             <svg class="w-4 h-4 mr-2 mt-1 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

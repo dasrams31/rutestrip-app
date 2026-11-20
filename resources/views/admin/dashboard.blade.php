@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-slate-800 mb-2">Admin Dashboard</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Admin Dashboard</h1>
         <p class="text-slate-600">Kelola dataset dan lihat proses SBERT embedding</p>
     </div>
 
@@ -429,7 +429,7 @@
     </div>
 
     <!-- SBERT Process Explanation -->
-    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-8 mb-8 text-white">
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-5 sm:p-8 mb-8 text-white">
         <h2 class="text-2xl font-bold mb-4">Proses SBERT & Cosine Similarity</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5">

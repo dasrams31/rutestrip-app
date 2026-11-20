@@ -6,15 +6,15 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->
     <div class="text-center mb-12">
-        <h1 class="text-3xl font-bold text-slate-800 mb-4">Arsitektur Sistem Rekomendasi</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-4">Arsitektur Sistem Rekomendasi</h1>
         <p class="text-slate-600 max-w-2xl mx-auto">
             Content-Based Filtering dengan SBERT dan Cosine Similarity
         </p>
     </div>
 
     <!-- Architecture Diagram -->
-    <div class="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-slate-100">
-        <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">📊 Diagram Alur Sistem</h2>
+    <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-8 mb-8 border border-slate-100">
+        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center justify-center gap-2"><x-icon name="chart-bar" class="w-5 h-5 text-emerald-600" /> Diagram Alur Sistem</h2>
 
         <div class="flex flex-col lg:flex-row items-center justify-center gap-4 overflow-x-auto py-4">
             <!-- Step 1: Input -->
@@ -118,15 +118,15 @@
             </div>
             <ul class="text-sm text-slate-600 space-y-2">
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Ekstraksi fitur dari GPX (jarak, elevasi, grade, durasi Naismith)
                 </li>
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Deskripsi manual (vegetasi, sumber air, panorama)
                 </li>
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Koordinat rute untuk visualisasi peta
                 </li>
             </ul>
@@ -145,19 +145,19 @@
             </div>
             <ul class="text-sm text-slate-600 space-y-2">
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Data Cleaning (regex: URL, karakter non-ASCII)
                 </li>
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Case Folding (lowercase)
                 </li>
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Stopword Removal Selektif (pertahankan negasi & kata sifat)
                 </li>
                 <li class="flex items-start">
-                    <span class="text-orange-500 mr-2">✗</span>
+                    <x-icon name="x" class="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
                     No Stemming (SBERT sensitif konteks)
                 </li>
             </ul>
@@ -175,15 +175,15 @@
             </div>
             <ul class="text-sm text-slate-600 space-y-2">
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Model: <code class="bg-slate-100 px-1 rounded">paraphrase-multilingual-MiniLM-L12-v2</code>
                 </li>
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Dimensi embedding: 384
                 </li>
                 <li class="flex items-start">
-                    <span class="text-emerald-500 mr-2">✓</span>
+                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                     Support bahasa Indonesia
                 </li>
             </ul>
@@ -214,25 +214,25 @@
 
     <!-- Tech Stack -->
     <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-        <h3 class="text-lg font-bold text-slate-800 mb-4 text-center">🛠️ Technology Stack</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center justify-center gap-2"><x-icon name="cog" class="w-5 h-5 text-emerald-600" /> Technology Stack</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="text-2xl mb-2">🐘</div>
-                <div class="font-medium text-slate-800">Laravel 11</div>
+                <div class="mb-2 flex justify-center"><x-icon name="code" class="w-7 h-7 text-emerald-600" /></div>
+                <div class="font-medium text-slate-800">Laravel 12</div>
                 <div class="text-xs text-slate-500">Backend Framework</div>
             </div>
             <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="text-2xl mb-2">🐍</div>
+                <div class="mb-2 flex justify-center"><x-icon name="terminal" class="w-7 h-7 text-emerald-600" /></div>
                 <div class="font-medium text-slate-800">Python 3.11</div>
                 <div class="text-xs text-slate-500">ML Processing</div>
             </div>
             <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="text-2xl mb-2">🤖</div>
+                <div class="mb-2 flex justify-center"><x-icon name="chip" class="w-7 h-7 text-emerald-600" /></div>
                 <div class="font-medium text-slate-800">SBERT</div>
                 <div class="text-xs text-slate-500">Sentence Transformers</div>
             </div>
             <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="text-2xl mb-2">🗺️</div>
+                <div class="mb-2 flex justify-center"><x-icon name="map" class="w-7 h-7 text-emerald-600" /></div>
                 <div class="font-medium text-slate-800">Leaflet.js</div>
                 <div class="text-xs text-slate-500">Map Visualization</div>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 
 export default function SystemDashboardPage() {
   const [statusData, setStatusData] = useState(null);
@@ -78,59 +79,49 @@ export default function SystemDashboardPage() {
     <div className="sys-container">
       {/* ── Navbar ── */}
       <header className="sys-header">
-        <Link href="/chat" className="sys-brand">
-          <img
-            src="/logo.svg"
-            alt="RuteStrip AI Logo"
-            width={36}
-            height={36}
-            style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'cover' }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span className="sys-title-gradient">RuteStrip</span>
+        <Link href="/chat" className="sys-brand" aria-label="RuteStrip AI, kembali ke chat">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" width={36} height={36} className="sys-brand-logo" />
+          <span className="sys-brand-text">
+            <span className="sys-title-gradient">RuteStrip AI</span>
             <span className="sys-tag">System Monitor</span>
-          </div>
+          </span>
         </Link>
 
-        {/* Action Controls */}
-        <div className="sys-controls">
+        <nav className="sys-controls" aria-label="Navigasi dan kontrol">
+          <a href="https://rutestrip.ai.id" className="sys-nav-link" aria-label="Situs utama" title="Kembali ke rutestrip.ai.id">
+            <Icon name="home" size={16} />
+            <span>Situs Utama</span>
+          </a>
+
           <button
+            type="button"
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`sys-btn-auto${autoRefresh ? ' active' : ''}`}
+            aria-pressed={autoRefresh}
+            aria-label={`Auto refresh ${autoRefresh ? 'aktif, tiap 4 detik' : 'nonaktif'}`}
+            title="Auto refresh"
           >
             <span className={autoRefresh ? 'sys-dot-pulse' : ''} style={{ display: 'inline-block' }} />
-            <span>Auto Refresh: {autoRefresh ? '3s' : 'Off'}</span>
+            <span><span className="sys-auto-label">Auto Refresh: </span>{autoRefresh ? '4s' : 'Off'}</span>
           </button>
 
           <button
+            type="button"
             onClick={() => fetchStatus(true)}
             disabled={refreshing}
             className="sys-btn-icon"
+            aria-label="Segarkan data sekarang"
             title="Segarkan data sekarang"
           >
-            <svg
-              style={{ width: '16px', height: '16px' }}
-              className={refreshing ? 'spin-anim' : ''}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
+            <Icon name="refresh" size={16} className={refreshing ? 'spin-anim' : ''} />
           </button>
 
-          <Link href="/chat" className="sys-btn-chat">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1rem', height: '1rem' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+          <Link href="/chat" className="sys-btn-chat" aria-label="Buka chat assistant">
+            <Icon name="chat" size={16} />
             <span>Chat Assistant</span>
           </Link>
-        </div>
+        </nav>
       </header>
 
       {/* ── Main Body ── */}
@@ -174,21 +165,13 @@ export default function SystemDashboardPage() {
         </div>
 
         {error && (
-          <div
-            style={{
-              background: 'rgba(120, 53, 15, 0.4)',
-              border: '1px solid rgba(245, 158, 11, 0.4)',
-              color: '#fde047',
-              padding: '0.875rem 1.25rem',
-              borderRadius: '0.75rem',
-              fontSize: '0.875rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <span>⚠️ {error}</span>
+          <div className="sys-alert" role="alert">
+            <span className="sys-inline-link" style={{ gap: '0.5rem' }}>
+              <Icon name="warning" size={18} />
+              {error}
+            </span>
             <button
+              type="button"
               onClick={() => fetchStatus(true)}
               style={{ color: '#fde047', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}
             >
@@ -339,11 +322,11 @@ export default function SystemDashboardPage() {
               <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(51, 65, 85, 0.5)', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8' }}>
                 <span>Port: <code style={{ color: '#2dd4bf' }}>8000</code></span>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <a href="http://127.0.0.1:8010/docs" target="_blank" rel="noopener noreferrer" style={{ color: '#34d399', textDecoration: 'none', fontWeight: 600 }}>
-                    Swagger ↗
+                  <a href="http://127.0.0.1:8010/docs" target="_blank" rel="noopener noreferrer" className="sys-inline-link" style={{ color: '#34d399', fontWeight: 600 }}>
+                    Swagger <Icon name="external" size={12} />
                   </a>
-                  <a href="http://127.0.0.1:8010/redoc" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'none' }}>
-                    ReDoc ↗
+                  <a href="http://127.0.0.1:8010/redoc" target="_blank" rel="noopener noreferrer" className="sys-inline-link" style={{ color: '#38bdf8' }}>
+                    ReDoc <Icon name="external" size={12} />
                   </a>
                 </div>
               </div>
@@ -408,7 +391,7 @@ export default function SystemDashboardPage() {
                   </div>
                   <div>
                     <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#ffffff', margin: 0 }}>Telegram Pendakian Bot</h3>
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>@rutestrip_bot Interface</p>
+                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>@rutestrip_hikingbot</p>
                   </div>
                 </div>
                 <span className={services.rutestrip_bot === 'ONLINE' ? 'sys-badge-online' : 'sys-badge-offline'}>
@@ -417,14 +400,14 @@ export default function SystemDashboardPage() {
               </div>
               <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(51, 65, 85, 0.5)', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8' }}>
                 <span>Adapter: <code style={{ color: '#60a5fa' }}>Hermes TG</code></span>
-                <a href="https://t.me/rutestrip_bot" target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'none' }}>
-                  Open Telegram ↗
+                <a href="https://t.me/rutestrip_hikingbot" target="_blank" rel="noopener noreferrer" className="sys-inline-link" style={{ color: '#60a5fa' }}>
+                  Open Telegram <Icon name="external" size={12} />
                 </a>
               </div>
             </div>
 
             {/* Web Assistant UI */}
-            <div className="sys-card" style={{ gridColumn: 'span 2' }}>
+            <div className="sys-card sys-span-2">
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ padding: '0.625rem', borderRadius: '0.75rem', background: 'rgba(6, 95, 70, 0.6)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
@@ -441,8 +424,8 @@ export default function SystemDashboardPage() {
               </div>
               <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(51, 65, 85, 0.5)', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8' }}>
                 <span>Vercel Edge Platform</span>
-                <Link href="/chat" style={{ color: '#34d399', textDecoration: 'none', fontWeight: 600 }}>
-                  Buka Chat UI →
+                <Link href="/chat" className="sys-inline-link" style={{ color: '#34d399', fontWeight: 600 }}>
+                  Buka Chat UI <Icon name="arrow-right" size={12} />
                 </Link>
               </div>
             </div>
@@ -515,12 +498,14 @@ export default function SystemDashboardPage() {
                         </td>
                         <td style={{ fontFamily: 'sans-serif' }}>
                           {p.last_error ? (
-                            <span style={{ color: '#fbbf24', fontFamily: 'monospace', fontSize: '0.6875rem' }}>
-                              ⚠️ {p.last_error}
+                            <span className="sys-note" style={{ color: '#fbbf24', fontFamily: 'monospace' }}>
+                              <Icon name="warning" size={12} />
+                              {p.last_error}
                             </span>
                           ) : (
-                            <span style={{ color: '#34d399', fontSize: '0.6875rem' }}>
-                              ✓ Normal / Operational
+                            <span className="sys-note" style={{ color: '#34d399' }}>
+                              <Icon name="check" size={12} />
+                              Normal / Operational
                             </span>
                           )}
                         </td>
@@ -635,7 +620,7 @@ export default function SystemDashboardPage() {
                   <tr>
                     <td style={{ fontFamily: 'sans-serif', fontWeight: 600, color: '#ffffff' }}>GitLab API Documentation</td>
                     <td style={{ color: '#f43f5e' }}>
-                      <a href="https://gitlab.com/RamsNotes31/rutestrip-bot/-/blob/main/API_DOCUMENTATION.md" target="_blank" rel="noreferrer" style={{ color: '#f43f5e', textDecoration: 'none' }}>GitLab API Docs v1.7.0 ↗</a>
+                      <a href="https://gitlab.com/RamsNotes31/rutestrip-bot/-/blob/main/API_DOCUMENTATION.md" target="_blank" rel="noreferrer" className="sys-inline-link" style={{ color: '#f43f5e' }}>GitLab API Docs v1.7.0 <Icon name="external" size={12} /></a>
                     </td>
                     <td>443</td>
                     <td>

@@ -8,7 +8,7 @@
         <!-- Register Card -->
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
             <!-- Header -->
-            <div class="bg-mountain-gradient p-8 text-center">
+            <div class="bg-mountain-gradient p-6 sm:p-8 text-center">
                 <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
@@ -19,7 +19,7 @@
             </div>
 
             <!-- Form -->
-            <div class="p-8">
+            <div class="p-5 sm:p-8">
                 @if(session('success'))
                 <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
                     {{ session('success') }}

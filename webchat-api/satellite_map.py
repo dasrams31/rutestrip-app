@@ -253,7 +253,7 @@ def generate_satellite_map(query=None, output_img="/tmp/satellite_map.png"):
         cx.add_basemap(ax, source=cx.providers.Esri.WorldTopoMap, zorder=1)
 
     map_type_title = "PETA TOPOGRAFI (KONTUR)" if "topo" in (query or "").lower() else "PETA CITRA SATELIT"
-    title_str = f"🗺️ {map_type_title} & RUTE - {query.upper().replace('TOPO', '').strip() if query else 'GUNUNG JAWA'}"
+    title_str = f"{map_type_title} & RUTE - {query.upper().replace('TOPO', '').strip() if query else 'GUNUNG JAWA'}"
     ax.set_title(title_str, fontsize=13, pad=12, weight='bold', color='#ffffff', bbox=dict(boxstyle="round,pad=0.3", fc="#000000", alpha=0.7))
     ax.axis('off')
     ax.legend(fontsize=8, loc='upper left', framealpha=0.85, facecolor='#000000', labelcolor='#ffffff', edgecolor='#ffea00')

@@ -100,14 +100,14 @@
     <div x-show="showPipeline" x-transition x-cloak
          class="flex-shrink-0 bg-gradient-to-r from-slate-50 via-emerald-50/30 to-slate-50 border-b border-slate-200 px-6 py-3">
         <div class="flex flex-wrap items-center justify-center gap-1.5 text-[11px]">
-            <span class="px-2 py-1 bg-white rounded border border-slate-200 text-slate-600 font-medium">Query → Preprocessing</span>
-            <span class="text-slate-300">→</span>
+            <span class="px-2 py-1 bg-white rounded border border-slate-200 text-slate-600 font-medium inline-flex items-center gap-1">Query <x-icon name="arrow-right" class="w-3 h-3 text-slate-400" /> Preprocessing</span>
+            <x-icon name="chevron-right" class="w-3.5 h-3.5 text-slate-300" />
             <span class="px-2 py-1 bg-white rounded border border-emerald-200 text-emerald-700 font-medium">SBERT 384d</span>
-            <span class="text-slate-300">→</span>
+            <x-icon name="chevron-right" class="w-3.5 h-3.5 text-slate-300" />
             <span class="px-2 py-1 bg-white rounded border border-amber-200 text-amber-700 font-medium">Cosine Similarity</span>
-            <span class="text-slate-300">→</span>
+            <x-icon name="chevron-right" class="w-3.5 h-3.5 text-slate-300" />
             <span class="px-2 py-1 bg-white rounded border border-purple-200 text-purple-700 font-medium">Context Augmentation</span>
-            <span class="text-slate-300">→</span>
+            <x-icon name="chevron-right" class="w-3.5 h-3.5 text-slate-300" />
             <span class="px-2 py-1 bg-white rounded border border-pink-200 text-pink-700 font-medium">Gemini Generation</span>
         </div>
     </div>
@@ -121,14 +121,14 @@
                 <div class="flex flex-col items-center justify-center py-16 text-center">
                     {{-- Mountain icon --}}
                     <img src="/images/logo.svg" alt="RuteStrip" class="w-20 h-20 rounded-2xl shadow-md mb-5">
-                    <h2 class="text-lg font-bold text-slate-800 mb-1">Tanya seputar pendakian 🏔️</h2>
+                    <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center justify-center gap-2">Tanya seputar pendakian <x-icon name="mountain" class="w-5 h-5 text-emerald-600" /></h2>
                     <p class="text-sm text-slate-500 mb-8 max-w-sm">Tanyakan jalur, estimasi waktu, tingkat kesulitan, atau rekomendasi pendakian</p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-md">
                         <button @click="sendSuggestion('Rekomendasikan jalur pendakian untuk pemula')"
                                 class="group text-left p-3.5 bg-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all duration-200">
                             <div class="flex items-center space-x-3">
-                                <span class="text-lg">🥾</span>
+                                <x-icon name="map" class="w-5 h-5 flex-shrink-0 text-emerald-600" />
                                 <div>
                                     <p class="text-sm font-medium text-slate-700 group-hover:text-emerald-700">Jalur untuk pemula</p>
                                     <p class="text-[11px] text-slate-400">Temukan jalur yang mudah</p>
@@ -138,7 +138,7 @@
                         <button @click="sendSuggestion('Jalur pendakian mana yang paling menantang?')"
                                 class="group text-left p-3.5 bg-white rounded-xl border border-slate-200 hover:border-amber-300 hover:shadow-md transition-all duration-200">
                             <div class="flex items-center space-x-3">
-                                <span class="text-lg">⛰️</span>
+                                <x-icon name="mountain" class="w-5 h-5 flex-shrink-0 text-amber-600" />
                                 <div>
                                     <p class="text-sm font-medium text-slate-700 group-hover:text-amber-700">Jalur menantang</p>
                                     <p class="text-[11px] text-slate-400">Tantangan untuk expert</p>
@@ -148,7 +148,7 @@
                         <button @click="sendSuggestion('Berapa estimasi waktu pendakian Gunung Merbabu via Selo?')"
                                 class="group text-left p-3.5 bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200">
                             <div class="flex items-center space-x-3">
-                                <span class="text-lg">⏱️</span>
+                                <x-icon name="clock" class="w-5 h-5 flex-shrink-0 text-blue-600" />
                                 <div>
                                     <p class="text-sm font-medium text-slate-700 group-hover:text-blue-700">Estimasi waktu</p>
                                     <p class="text-[11px] text-slate-400">Info durasi pendakian</p>
@@ -158,7 +158,7 @@
                         <button @click="sendSuggestion('Jalur pendakian dengan pemandangan sabana dan sunrise')"
                                 class="group text-left p-3.5 bg-white rounded-xl border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all duration-200">
                             <div class="flex items-center space-x-3">
-                                <span class="text-lg">🌅</span>
+                                <x-icon name="sun" class="w-5 h-5 flex-shrink-0 text-purple-600" />
                                 <div>
                                     <p class="text-sm font-medium text-slate-700 group-hover:text-purple-700">Sabana & Sunrise</p>
                                     <p class="text-[11px] text-slate-400">Pemandangan terbaik</p>
@@ -194,7 +194,7 @@
                                     <template x-for="route in msg.retrieved_routes" :key="route.id">
                                         <a :href="'/routes/' + route.id"
                                            class="inline-flex items-center space-x-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[11px] hover:bg-emerald-100 transition-colors border border-emerald-100">
-                                            <span>📍</span>
+                                            <x-icon name="location-marker" class="w-3 h-3 flex-shrink-0" />
                                             <span x-text="route.name" class="truncate max-w-[100px]"></span>
                                             <span class="text-emerald-400" x-text="(route.similarity_score * 100).toFixed(0) + '%'"></span>
                                         </a>
@@ -205,7 +205,7 @@
                             {{-- Timing --}}
                             <template x-if="msg.role === 'assistant' && msg.timing">
                                 <div class="flex items-center space-x-2 text-[10px] text-slate-400 ml-0.5">
-                                    <span>⏱ <span x-text="msg.timing.retrieval_ms + 'ms'"></span> retrieval</span>
+                                    <span class="inline-flex items-center gap-1"><x-icon name="clock" class="w-3 h-3" /> <span x-text="msg.timing.retrieval_ms + 'ms'"></span> retrieval</span>
                                     <span>•</span>
                                     <span><span x-text="msg.timing.generation_ms + 'ms'"></span> generation</span>
                                 </div>

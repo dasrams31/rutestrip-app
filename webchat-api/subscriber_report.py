@@ -42,15 +42,15 @@ def generate_report():
             pass
 
     report = (
-        "📊 LAPORAN RUTIN PENGGUNA RUTESTRIP BOT & WEBCHAT 🏔️\n\n"
-        f"👥 Total Pelanggan Bot Aktif: {len(data)}\n"
-        f"👤 Pengguna Personal Telegram (DM): {len(users)}\n"
-        f"💬 Grup Telegram: {len(groups)}\n\n"
+        "LAPORAN RUTIN PENGGUNA RUTESTRIP BOT & WEBCHAT\n\n"
+        f"Total Pelanggan Bot Aktif: {len(data)}\n"
+        f"Pengguna Personal Telegram (DM): {len(users)}\n"
+        f"Grup Telegram: {len(groups)}\n\n"
         "Rincian Pengguna Personal Telegram:\n" + "\n".join(users) + "\n\n"
         "Rincian Grup Telegram:\n" + "\n".join(groups) + "\n\n"
         "========================================\n\n"
-        f"🌐 LAPORAN PENGGUNA WEBCHAT AI (airutestrip.web.id)\n"
-        f"👥 Total Akun WebChat Terdaftar: {len(web_users)}\n\n"
+        f"LAPORAN PENGGUNA WEBCHAT AI (airutestrip.web.id)\n"
+        f"Total Akun WebChat Terdaftar: {len(web_users)}\n\n"
         "Rincian Akun WebChat AI:\n" + ("\n".join(web_users) if web_users else "• Belum ada pengguna terdaftar.") + "\n\n"
         "Laporan ini diperbarui secara otomatis."
     )

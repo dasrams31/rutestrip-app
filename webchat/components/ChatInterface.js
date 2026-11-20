@@ -2,99 +2,83 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import AuthForm from './AuthForm';
 import SidebarHistory from './SidebarHistory';
+import Icon from './Icon';
+import TelegramFab from './TelegramFab';
+import ImageLightbox from './ImageLightbox';
+
+const MAIN_SITE_URL = 'https://rutestrip.ai.id';
+
+/* ── Account dropdown in the header ── */
+function UserMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const name = user.full_name || user.username || 'Pengguna';
+  const initial = name.trim().charAt(0).toUpperCase() || 'U';
+
+  return (
+    <div className="user-menu" ref={wrapRef}>
+      <button
+        type="button"
+        className="user-menu-trigger"
+        onClick={() => setOpen(o => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Menu akun ${name}`}
+      >
+        <span className="user-avatar" aria-hidden="true">{initial}</span>
+        <span className="user-menu-name">{name}</span>
+        <Icon name="chevron-down" size={14} className="user-menu-chevron" />
+      </button>
+
+      {open && (
+        <div className="user-menu-panel" role="menu" aria-label="Akun">
+          <div className="user-menu-head">
+            <p className="user-menu-title">{name}</p>
+            {user.email && <p className="user-menu-sub">{user.email}</p>}
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            className="user-menu-item danger"
+            onClick={() => { setOpen(false); onLogout(); }}
+          >
+            <Icon name="logout" size={16} />
+            <span>Keluar</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Suggestion cards config ── */
 const SUGGESTIONS = [
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-      </svg>
-    ),
-    title: 'Rekomendasi Jalur',
-    desc: 'Cari jalur sesuai preferensi',
-    query: 'Rekomendasikan jalur pendakian untuk pemula',
-    hoverClass: '',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
-      </svg>
-    ),
-    title: 'Cuaca Gunung',
-    desc: 'Prakiraan cuaca realtime',
-    query: 'Cuaca gunung Sumbing hari ini',
-    hoverClass: 'blue-hover',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-      </svg>
-    ),
-    title: 'Peta Satelit',
-    desc: 'Foto satelit & topografi',
-    query: 'Foto satelit gunung Merbabu',
-    hoverClass: 'purple-hover',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
-    title: 'Itinerary',
-    desc: 'Jadwal pendakian Naismith',
-    query: 'Itinerary gunung Sindoro 2D1N',
-    hoverClass: 'amber-hover',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    title: 'Estimasi Biaya',
-    desc: 'Kalkulasi budget pendakian',
-    query: 'Biaya pendakian Sumbing 4 orang 2 hari',
-    hoverClass: '',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    ),
-    title: 'Logistik',
-    desc: 'Checklist perlengkapan',
-    query: 'Logistik pendakian 4 orang 3 hari',
-    hoverClass: 'blue-hover',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    title: 'Panduan Survival',
-    desc: 'P3K & keselamatan',
-    query: 'Panduan survival hipotermia di gunung',
-    hoverClass: 'amber-hover',
-  },
-  {
-    icon: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    ),
-    title: 'Kontak Porter',
-    desc: 'Porter & guide lokal',
-    query: 'Porter gunung Semeru',
-    hoverClass: 'purple-hover',
-  },
+  { icon: 'map',             title: 'Rekomendasi Jalur', desc: 'Cari jalur sesuai preferensi',  query: 'Rekomendasikan jalur pendakian untuk pemula', hoverClass: '' },
+  { icon: 'cloud',           title: 'Cuaca Gunung',      desc: 'Prakiraan cuaca realtime',      query: 'Cuaca gunung Sumbing hari ini',               hoverClass: 'blue-hover' },
+  { icon: 'layers',          title: 'Peta Satelit',      desc: 'Foto satelit & topografi',      query: 'Foto satelit gunung Merbabu',                 hoverClass: 'purple-hover' },
+  { icon: 'calendar',        title: 'Itinerary',         desc: 'Jadwal pendakian Naismith',     query: 'Itinerary gunung Sindoro 2D1N',               hoverClass: 'amber-hover' },
+  { icon: 'currency',        title: 'Estimasi Biaya',    desc: 'Kalkulasi budget pendakian',    query: 'Biaya pendakian Sumbing 4 orang 2 hari',      hoverClass: '' },
+  { icon: 'clipboard-check', title: 'Logistik',          desc: 'Checklist perlengkapan',        query: 'Logistik pendakian 4 orang 3 hari',           hoverClass: 'blue-hover' },
+  { icon: 'shield-check',    title: 'Panduan Survival',  desc: 'P3K & keselamatan',             query: 'Panduan survival hipotermia di gunung',       hoverClass: 'amber-hover' },
+  { icon: 'users',           title: 'Kontak Porter',     desc: 'Porter & guide lokal',          query: 'Porter gunung Semeru',                        hoverClass: 'purple-hover' },
 ];
 
 /* ── Loading stage texts ── */
@@ -107,6 +91,24 @@ const STAGES = [
 ];
 
 /* ── Markdown formatter ── */
+function formatInline(text) {
+  return text
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*(?!\*)([^*]+)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+}
+
+function renderTable(block) {
+  const rows = block.trim().split('\n')
+    .filter((line, i) => i !== 1) // drop the |---|---| separator row
+    .map(line => line.trim().replace(/^\||\|$/g, '').split('|').map(c => formatInline(c.trim())));
+  const [head, ...body] = rows;
+  return '<div class="md-table-wrap"><table class="md-table">'
+    + `<thead><tr>${head.map(c => `<th>${c}</th>`).join('')}</tr></thead>`
+    + `<tbody>${body.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`
+    + '</table></div>';
+}
+
 function formatMessage(content) {
   if (!content) return '';
 
@@ -115,12 +117,17 @@ function formatMessage(content) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;');
 
-  // Code inline
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // Bold
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Italic (single star, not double)
-  html = html.replace(/(?<!\*)\*(?!\*)([^*]+)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+  // Code blocks and tables are rendered first and parked behind placeholders,
+  // so the line-based rules below don't touch them. Both scroll horizontally
+  // inside their own box on narrow screens.
+  const blocks = [];
+  const park = (out) => `\u0000${blocks.push(out) - 1}\u0000`;
+  html = html.replace(/```[\w-]*[ \t]*\n?([\s\S]*?)```/g,
+    (_, code) => park(`<pre class="md-pre"><code>${code.replace(/\n$/, '')}</code></pre>`));
+  html = html.replace(/^[ \t]*\|.*\|[ \t]*\n[ \t]*\|[ \t:|-]+\|[ \t]*(?:\n[ \t]*\|.*\|[ \t]*)*/gm,
+    (tbl) => park(renderTable(tbl)));
+
+  html = formatInline(html);
   // H2 heading
   html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
   // H3 heading
@@ -136,10 +143,14 @@ function formatMessage(content) {
   html = html.replace(/((?:<li class="ol-item">.*?<\/li>\s*)+)/gs, '<ol>$1</ol>');
   // Wrap consecutive ul-items
   html = html.replace(/((?:<li class="ul-item">.*?<\/li>\s*)+)/gs, '<ul>$1</ul>');
+  // Newlines between list items would otherwise become <br> gaps
+  html = html.replace(/<\/li>\s+(?=<li|<\/[ou]l>)/g, '</li>');
   // Double newline → paragraph break
   html = html.replace(/\n\n/g, '</p><p class="mt-1">');
   // Single newline → line break
   html = html.replace(/\n/g, '<br>');
+  // Restore parked blocks, dropping the line breaks hugging them
+  html = html.replace(/(?:<br>)?\u0000(\d+)\u0000(?:<br>)?/g, (_, i) => blocks[i]);
 
   return `<p>${html}</p>`;
 }
@@ -158,6 +169,8 @@ export default function ChatInterface() {
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [showPwaBanner, setShowPwaBanner]   = useState(false);
   const [pwaPrompt, setPwaPrompt]           = useState(null);
+  const [lightbox, setLightbox]             = useState(null);
+  const closeLightbox = useCallback(() => setLightbox(null), []);
 
   const chatRef    = useRef(null);
   const inputRef   = useRef(null);
@@ -238,7 +251,7 @@ export default function ChatInterface() {
         setPwaPrompt(null);
       });
     } else {
-      alert('Untuk menginstall aplikasi PWA di HP Android Anda:\n1. Ketik ikon titik tiga (⋮) di pojok kanan atas Chrome\n2. Pilih "Tambahkan ke Layar Utama" / "Install Aplikasi"\n3. Aplikasi RuteStrip AI siap dibuka dari Home Screen HP Anda! 📱');
+      alert('Untuk menginstall aplikasi PWA di HP Android Anda:\n1. Ketuk ikon titik tiga (⋮) di pojok kanan atas Chrome\n2. Pilih "Tambahkan ke Layar Utama" / "Install Aplikasi"\n3. Aplikasi RuteStrip AI siap dibuka dari Home Screen HP Anda.');
     }
   };
 
@@ -345,6 +358,17 @@ export default function ChatInterface() {
   const handleNewChat = useCallback(() => {
     setActiveSessionId(null);
     setMessages([]);
+  }, []);
+
+  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('rutestrip_auth_token');
+    localStorage.removeItem('user_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('rutestrip_user_profile');
+    setIsSidebarOpen(false);
+    setCurrentUser(null);
   }, []);
 
   /* ── Send message ── */
@@ -575,186 +599,118 @@ export default function ChatInterface() {
             </div>
           </div>
           <div className="pwa-banner-right">
-            <button onClick={handleInstallPwa} className="pwa-install-btn">
-              Install 🚀
+            <button type="button" onClick={handleInstallPwa} className="pwa-install-btn">
+              <Icon name="download" size={14} />
+              <span>Install</span>
             </button>
-            <button onClick={dismissPwaBanner} className="pwa-dismiss-btn" title="Tutup Notifikasi">
-              ✕
+            <button
+              type="button"
+              onClick={dismissPwaBanner}
+              className="pwa-dismiss-btn"
+              aria-label="Tutup notifikasi install"
+              title="Tutup notifikasi"
+            >
+              <Icon name="x" size={14} strokeWidth={2} />
             </button>
           </div>
         </div>
       )}
 
-      {/* ── ChatGPT Style History Sidebar Drawer ── */}
-
+      {/* ── Sidebar drawer: history, links, account ── */}
       <SidebarHistory
         isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
+        onClose={closeSidebar}
         currentUser={currentUser}
         activeSessionId={activeSessionId}
         onSelectSession={handleSelectSession}
         onNewChat={handleNewChat}
-        onLogout={() => {
-          localStorage.removeItem('rutestrip_auth_token');
-          localStorage.removeItem('user_token');
-          localStorage.removeItem('token');
-          localStorage.removeItem('rutestrip_user_profile');
-          setCurrentUser(null);
-        }}
+        onLogout={handleLogout}
       />
 
       {/* ── Header ── */}
       <header className="header">
         <div className="header-left">
-          {/* Sidebar Drawer Toggle Button */}
           <button
+            type="button"
             onClick={() => setIsSidebarOpen(prev => !prev)}
-            className="btn-sidebar-toggle"
-            title="Buka Riwayat Obrolan"
-            aria-label="Toggle Sidebar Riwayat"
+            className="icon-btn"
+            title="Riwayat percakapan & menu"
+            aria-label={isSidebarOpen ? 'Tutup menu riwayat' : 'Buka menu riwayat'}
+            aria-expanded={isSidebarOpen}
+            aria-controls="chat-sidebar"
           >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.25rem', height: '1.25rem' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Icon name="menu" size={20} />
           </button>
 
-          {/* Back to main website button */}
-          <a
-            href="https://rutestrip.ai.id"
-            className="btn-back-web btn-hidden-mobile"
-            title="Kembali ke Website Utama (rutestrip.ai.id)"
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{width:'0.875rem',height:'0.875rem'}}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            <span>Utama</span>
-          </a>
-
-          <div className="divider-v btn-hidden-mobile" />
-
-          <div className="header-logo-wrap">
+          <div className="header-brand">
             <div className="logo-img-wrap">
               <Image
                 src="/logo.svg"
-                alt="RuteStrip AI"
+                alt=""
                 width={36}
                 height={36}
                 className="logo-img"
                 priority
               />
-              <div className="online-dot" aria-hidden="true" />
+              <span className="online-dot" aria-hidden="true" />
             </div>
-            <div>
+            <div className="header-brand-text">
               <h1 className="header-title">RuteStrip AI</h1>
               <p className="header-subtitle">Asisten Pendakian</p>
             </div>
           </div>
         </div>
 
+        <nav className="header-nav" aria-label="Navigasi utama">
+          <a href={MAIN_SITE_URL} className="nav-link" title="Kembali ke rutestrip.ai.id" aria-label="Situs Utama">
+            <Icon name="home" size={16} />
+            <span>Situs Utama</span>
+          </a>
+          <Link href="/system" className="nav-link" title="Status sistem & monitoring" aria-label="Status Sistem">
+            <Icon name="chart-bar" size={16} />
+            <span>Status Sistem</span>
+          </Link>
+        </nav>
+
         <div className="header-right">
-          {/* Logged in User Badge */}
-          {currentUser && (
-            <div className="user-badge-header">
-              <span className="user-badge-name">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '0.875rem', height: '0.875rem' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>{currentUser.full_name || currentUser.username}</span>
-              </span>
-              <button
-                onClick={() => {
-                  localStorage.removeItem('rutestrip_auth_token');
-                  localStorage.removeItem('rutestrip_user_profile');
-                  setCurrentUser(null);
-                }}
-                className="btn-logout-header btn-hidden-mobile"
-                title="Keluar dari akun Anda"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-          {/* Telegram Channel button */}
-          <a
-            href="https://t.me/rutestrip"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-telegram-nav channel-link btn-hidden-mobile"
-            title="Gabung Channel Official RuteStrip di Telegram"
-          >
-            <svg fill="currentColor" viewBox="0 0 24 24" style={{width:'0.875rem',height:'0.875rem'}}>
-              <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-2.13 10.02c-.16.73-.59.91-1.2.57l-3.26-2.4-1.57 1.51c-.17.17-.32.32-.66.32l.23-3.32 6.04-5.46c.26-.23-.06-.36-.4-.14l-7.47 4.7-3.22-1.01c-.7-.22-.71-.7.15-1.04l12.59-4.85c.58-.22 1.09.13.9 1.1z"/>
-            </svg>
-            <span>Channel</span>
-          </a>
+          <div className="header-tools">
+            <button
+              type="button"
+              id="btn-pipeline"
+              className={`icon-btn${showPipeline ? ' active' : ''}`}
+              onClick={() => setShowPipeline(p => !p)}
+              aria-label="Tampilkan info pipeline RAG"
+              aria-pressed={showPipeline}
+              title="Info pipeline RAG"
+            >
+              <Icon name="clipboard-list" size={18} />
+            </button>
+            <button
+              type="button"
+              id="btn-export"
+              className="icon-btn print-hide"
+              onClick={() => window.print()}
+              aria-label="Export percakapan ke PDF"
+              title="Export PDF"
+            >
+              <Icon name="printer" size={18} />
+            </button>
+            <span className="divider-v" aria-hidden="true" />
+          </div>
 
-          {/* Telegram Bot button */}
-          <a
-            href="https://t.me/rutestrip_bot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-telegram-nav btn-hidden-mobile"
-            title="Buka RuteStrip Bot di Telegram"
-          >
-            <svg fill="currentColor" viewBox="0 0 24 24" style={{width:'0.875rem',height:'0.875rem'}}>
-              <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-2.13 10.02c-.16.73-.59.91-1.2.57l-3.26-2.4-1.57 1.51c-.17.17-.32.32-.66.32l.23-3.32 6.04-5.46c.26-.23-.06-.36-.4-.14l-7.47 4.7-3.22-1.01c-.7-.22-.71-.7.15-1.04l12.59-4.85c.58-.22 1.09.13.9 1.1z"/>
-            </svg>
-            <span>Bot</span>
-          </a>
-
-          {/* System Monitor button */}
-          <a
-            href="/system"
-            className="btn-ghost btn-hidden-mobile"
-            title="Buka System Status & Monitoring AI Token Dashboard"
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{width:'0.875rem',height:'0.875rem'}}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <span>Status</span>
-          </a>
-
-          {/* Pipeline toggle */}
           <button
-            id="btn-pipeline"
-            className={`btn-ghost btn-hidden-mobile${showPipeline ? ' active' : ''}`}
-            onClick={() => setShowPipeline(p => !p)}
-            aria-label="Toggle pipeline info"
-            aria-pressed={showPipeline}
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            <span>Pipeline</span>
-          </button>
-
-          {/* Print / Export PDF */}
-          <button
-            id="btn-export"
-            className="btn-ghost btn-hidden-mobile print-hide"
-            onClick={() => window.print()}
-            aria-label="Export PDF"
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-            </svg>
-            <span>Export PDF</span>
-          </button>
-
-          {/* New chat */}
-          <button
+            type="button"
             id="btn-new-chat"
             className="btn-primary"
             onClick={handleNewChat}
-            aria-label="Chat baru"
+            aria-label="Mulai chat baru"
+            title="Chat baru"
           >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
-            </svg>
+            <Icon name="plus" size={16} strokeWidth={2} />
             <span>Chat Baru</span>
           </button>
+
+          <UserMenu user={currentUser} onLogout={handleLogout} />
         </div>
       </header>
 
@@ -765,14 +721,14 @@ export default function ChatInterface() {
         aria-label="RAG Pipeline Info"
       >
         <div className="pipeline-inner">
-          <span className="pipeline-step slate">Query → Preprocessing</span>
-          <span className="pipeline-arrow" aria-hidden>→</span>
+          <span className="pipeline-step slate">Query Preprocessing</span>
+          <Icon name="chevron-right" size={12} className="pipeline-arrow" />
           <span className="pipeline-step emerald">SBERT 384d</span>
-          <span className="pipeline-arrow" aria-hidden>→</span>
+          <Icon name="chevron-right" size={12} className="pipeline-arrow" />
           <span className="pipeline-step amber">Cosine Similarity</span>
-          <span className="pipeline-arrow" aria-hidden>→</span>
+          <Icon name="chevron-right" size={12} className="pipeline-arrow" />
           <span className="pipeline-step purple">Context Augmentation</span>
-          <span className="pipeline-arrow" aria-hidden>→</span>
+          <Icon name="chevron-right" size={12} className="pipeline-arrow" />
           <span className="pipeline-step sky">SBERT + Gemini</span>
         </div>
       </div>
@@ -802,56 +758,18 @@ export default function ChatInterface() {
                   <button
                     key={i}
                     id={`suggestion-${i}`}
+                    type="button"
                     className={`suggestion-card ${s.hoverClass}`}
                     onClick={() => sendMessage(s.query)}
                     aria-label={s.query}
                   >
-                    <span className="suggestion-icon" aria-hidden="true">{s.icon}</span>
+                    <span className="suggestion-icon" aria-hidden="true"><Icon name={s.icon} size={20} /></span>
                     <div>
                       <p className="suggestion-card-title">{s.title}</p>
                       <p className="suggestion-card-desc">{s.desc}</p>
                     </div>
                   </button>
                 ))}
-              </div>
-
-              {/* ── Telegram Community & Bot Promo Banner ── */}
-              <div className="telegram-banner">
-                <div className="telegram-banner-left">
-                  <span className="telegram-banner-icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ width: '1.5rem', height: '1.5rem', color: '#059669' }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </span>
-                  <div>
-                    <h3 className="telegram-banner-title">Gabung Komunitas Telegram RuteStrip!</h3>
-                    <p className="telegram-banner-desc">Dapatkan update info jalur, cuaca realtime, & diskusi pendaki di Telegram.</p>
-                  </div>
-                </div>
-                <div className="telegram-banner-actions">
-                  <a
-                    href="https://t.me/rutestrip"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="telegram-banner-btn channel-btn"
-                  >
-                    <svg fill="currentColor" viewBox="0 0 24 24" style={{width:'0.875rem',height:'0.875rem'}}>
-                      <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-2.13 10.02c-.16.73-.59.91-1.2.57l-3.26-2.4-1.57 1.51c-.17.17-.32.32-.66.32l.23-3.32 6.04-5.46c.26-.23-.06-.36-.4-.14l-7.47 4.7-3.22-1.01c-.7-.22-.71-.7.15-1.04l12.59-4.85c.58-.22 1.09.13.9 1.1z"/>
-                    </svg>
-                    <span>Channel @rutestrip</span>
-                  </a>
-                  <a
-                    href="https://t.me/rutestrip_bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="telegram-banner-btn"
-                  >
-                    <svg fill="currentColor" viewBox="0 0 24 24" style={{width:'0.875rem',height:'0.875rem'}}>
-                      <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-2.13 10.02c-.16.73-.59.91-1.2.57l-3.26-2.4-1.57 1.51c-.17.17-.32.32-.66.32l.23-3.32 6.04-5.46c.26-.23-.06-.36-.4-.14l-7.47 4.7-3.22-1.01c-.7-.22-.71-.7.15-1.04l12.59-4.85c.58-.22 1.09.13.9 1.1z"/>
-                    </svg>
-                    <span>Bot @rutestrip_bot</span>
-                  </a>
-                </div>
               </div>
             </div>
           )}
@@ -884,20 +802,34 @@ export default function ChatInterface() {
                     />
 
                     {/* Satellite map image */}
-                    {msg.map_url && (
-                      <div className="map-img-wrap">
-                        <a href={msg.map_url} target="_blank" rel="noopener noreferrer" title="Buka peta ukuran penuh">
+                    {msg.map_url && (() => {
+                      const mtn = msg.content?.match(/Gunung\s+([A-Za-z-]+)/)?.[1];
+                      const alt = mtn ? `Peta Gunung ${mtn}` : 'Peta satelit';
+                      return (
+                        <button
+                          type="button"
+                          className="map-img-wrap"
+                          onClick={() => setLightbox({
+                            id: Date.now(),
+                            src: msg.map_url,
+                            alt,
+                            name: `rutestrip-peta${mtn ? `-${mtn.toLowerCase()}` : ''}`,
+                          })}
+                          aria-label={`${alt}, buka ukuran penuh`}
+                          title="Perbesar peta"
+                        >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={msg.map_url}
-                            alt="Peta Satelit"
+                            alt={alt}
                             className="map-img"
                             loading="lazy"
+                            onLoad={idx === messages.length - 1 ? scrollToBottom : undefined}
                           />
-                          <div className="map-img-overlay">🔍 Klik untuk perbesar</div>
-                        </a>
-                      </div>
-                    )}
+                          <span className="map-img-overlay print-hide"><Icon name="zoom-in" size={14} /><span>Ketuk untuk perbesar</span></span>
+                        </button>
+                      );
+                    })()}
 
                     {/* GPX download button */}
                     {msg.gpx_url && (
@@ -908,9 +840,7 @@ export default function ChatInterface() {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{width:'1rem',height:'1rem'}}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
+                        <Icon name="download" size={16} />
                         Download {msg.gpx_url?.includes('kml') ? 'KML' : 'GPX'} File
                       </a>
                     )}
@@ -923,7 +853,7 @@ export default function ChatInterface() {
                     <div className="route-chips">
                       {msg.retrieved_routes.map((r, ri) => (
                         <span key={ri} className="route-chip">
-                          📍
+                          <Icon name="map-pin" size={12} />
                           <span>{r.name}</span>
                           {r.similarity_score > 0 && (
                             <span className="route-chip-score">
@@ -940,9 +870,9 @@ export default function ChatInterface() {
                     <div className="quick-actions">
                       {msg.retrieved_routes.slice(0, 2).map((r, ri) => (
                         <span key={`qa-${ri}`} className="quick-action-group">
-                          <button className="quick-action" onClick={() => sendMessage(`Cuaca ${r.name}`)} title={`Cek cuaca ${r.name}`}>☁️ Cuaca</button>
-                          <button className="quick-action" onClick={() => sendMessage(`Foto satelit ${r.name}`)} title={`Peta ${r.name}`}>🗺️ Peta</button>
-                          <button className="quick-action" onClick={() => sendMessage(`Itinerary ${r.name}`)} title={`Itinerary ${r.name}`}>📋 Itinerary</button>
+                          <button type="button" className="quick-action" onClick={() => sendMessage(`Cuaca ${r.name}`)} title={`Cek cuaca ${r.name}`}><Icon name="cloud" size={13} />Cuaca</button>
+                          <button type="button" className="quick-action" onClick={() => sendMessage(`Foto satelit ${r.name}`)} title={`Peta ${r.name}`}><Icon name="map" size={13} />Peta</button>
+                          <button type="button" className="quick-action" onClick={() => sendMessage(`Itinerary ${r.name}`)} title={`Itinerary ${r.name}`}><Icon name="calendar" size={13} />Itinerary</button>
                         </span>
                       ))}
                     </div>
@@ -951,18 +881,26 @@ export default function ChatInterface() {
                   {/* Quick actions for map responses */}
                   {msg.role === 'assistant' && msg.timing?.type === 'map' && (
                     <div className="quick-actions">
-                      <button className="quick-action" onClick={() => sendMessage(`Cuaca ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}>☁️ Cek Cuaca</button>
-                      <button className="quick-action" onClick={() => sendMessage(`Itinerary ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}>📋 Itinerary</button>
-                      <button className="quick-action" onClick={() => sendMessage(`Porter ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}>📞 Porter</button>
+                      <button type="button" className="quick-action" onClick={() => sendMessage(`Cuaca ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}><Icon name="cloud" size={13} />Cek Cuaca</button>
+                      <button type="button" className="quick-action" onClick={() => sendMessage(`Itinerary ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}><Icon name="calendar" size={13} />Itinerary</button>
+                      <button type="button" className="quick-action" onClick={() => sendMessage(`Porter ${msg.content.match(/Gunung\s+(\S+)/i)?.[1] || ''}`)}><Icon name="phone" size={13} />Porter</button>
                     </div>
                   )}
 
                   {/* Timing */}
                   {msg.role === 'assistant' && msg.timing && (
                     <div className="timing-row">
-                      {msg.timing.retrieval_ms > 0 && <span>⏱ {msg.timing.retrieval_ms}ms</span>}
-                      {msg.timing.generation_ms > 0 && <span>• ✨ {msg.timing.generation_ms}ms</span>}
-                      {msg.timing.type && <span>• {msg.timing.type}</span>}
+                      {msg.timing.retrieval_ms > 0 && (
+                        <span className="timing-item" title="Waktu retrieval">
+                          <Icon name="clock" size={11} />{msg.timing.retrieval_ms}ms
+                        </span>
+                      )}
+                      {msg.timing.generation_ms > 0 && (
+                        <span className="timing-item" title="Waktu generasi jawaban">
+                          <Icon name="sparkles" size={11} />{msg.timing.generation_ms}ms
+                        </span>
+                      )}
+                      {msg.timing.type && <span className="timing-item">{msg.timing.type}</span>}
                     </div>
                   )}
 
@@ -972,12 +910,8 @@ export default function ChatInterface() {
 
                 {/* User avatar */}
                 {msg.role === 'user' && (
-                  <div className="avatar avatar-user" aria-label="User">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <circle cx="12" cy="4" r="2"/>
-                      <path strokeLinecap="round" strokeLinejoin="round"
-                        d="M12 6v4m-3 2l3-2 3 2m-6 0l-2 8h2l1-4m4 4h2l-2-8m-1 0l1 4"/>
-                    </svg>
+                  <div className="avatar avatar-user" aria-hidden="true">
+                    <Icon name="user" size={16} />
                   </div>
                 )}
               </div>
@@ -1012,6 +946,8 @@ export default function ChatInterface() {
 
       {/* ── Input Footer ── */}
       <footer className="input-footer print-hide">
+        <TelegramFab />
+
         <form className="input-form" onSubmit={handleSubmit} aria-label="Chat form">
           <div className="input-wrap">
             {/* Voice button */}
@@ -1020,13 +956,11 @@ export default function ChatInterface() {
               id="btn-voice"
               className={`voice-btn${isListening ? ' listening' : ''}`}
               onClick={toggleSpeech}
-              aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+              aria-label={isListening ? 'Hentikan input suara' : 'Mulai input suara'}
+              title={isListening ? 'Hentikan input suara' : 'Input suara'}
               aria-pressed={isListening}
             >
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
-              </svg>
+              <Icon name="microphone" size={20} />
             </button>
 
             {/* Textarea */}
@@ -1055,15 +989,9 @@ export default function ChatInterface() {
             aria-label="Kirim pesan"
           >
             {isLoading ? (
-              <svg className="spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
+              <Icon name="refresh" size={20} className="spin" />
             ) : (
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-              </svg>
+              <Icon name="send" size={20} />
             )}
           </button>
         </form>
@@ -1075,6 +1003,8 @@ export default function ChatInterface() {
           <p>Shift+Enter baris baru</p>
         </div>
       </footer>
+
+      <ImageLightbox key={lightbox?.id || 'none'} image={lightbox} onClose={closeLightbox} />
     </div>
   );
 }

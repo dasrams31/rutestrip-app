@@ -24,7 +24,7 @@ def calculate_split_bill(args_list):
     """
     if not args_list:
         return (
-            "💡 **PANDUAN KALKULATOR PATUNGAN TIM (SPLIT BILL)**\n\n"
+            "**PANDUAN KALKULATOR PATUNGAN TIM (SPLIT BILL)**\n\n"
             "Format Penggunaan:\n"
             "• `patungan <gunung> <jml_orang> <jml_hari>`\n"
             "  *Contoh:* `patungan sumbing 4 2`\n\n"
@@ -43,12 +43,12 @@ def calculate_split_bill(args_list):
         per_person_with_em = (total_bill + emergency_fund) / people
         
         return (
-            f"💰 **KALKULATOR PATUNGAN CEPAT**\n"
-            f"👥 Jumlah Anggota: **{people} Orang**\n"
-            f"💵 Total Pengeluaran Bersama: **Rp {total_bill:,}**\n"
+            f"**KALKULATOR PATUNGAN CEPAT**\n"
+            f"Jumlah Anggota: **{people} Orang**\n"
+            f"Total Pengeluaran Bersama: **Rp {total_bill:,}**\n"
             f"{'─'*38}\n"
-            f"👤 **Iuran Bersih / Orang:** **Rp {int(per_person):,}**\n"
-            f"🛡️ **Iuran + Cadangan Darurat (10%):** **Rp {int(per_person_with_em):,}**\n"
+            f"**Iuran Bersih / Orang:** **Rp {int(per_person):,}**\n"
+            f"**Iuran + Cadangan Darurat (10%):** **Rp {int(per_person_with_em):,}**\n"
             f"*(Dana darurat cadangan: Rp {int(emergency_fund):,} untuk insiden/logistik darurat)*"
         )
 
@@ -104,16 +104,16 @@ def calculate_split_bill(args_list):
     per_person_safe = int(total_dengan_darurat / people)
 
     lines = [
-        f"📊 **RINCIAN PATUNGAN LOGISTIK & TRIP ({mountain_name})**",
-        f"👥 Jumlah Tim: **{people} Pendaki** | ⏱️ Durasi: **{days} Hari {days-1} Malam**",
+        f"**RINCIAN PATUNGAN LOGISTIK & TRIP ({mountain_name})**",
+        f"Jumlah Tim: **{people} Pendaki** | Durasi: **{days} Hari {days-1} Malam**",
         f"{'─'*42}",
-        f"📌 **BIAYA PERORANGAN (VARIABLE COSTS):**",
+        f"**BIAYA PERORANGAN (VARIABLE COSTS):**",
         f" • Tiket Masuk/Simaksi: Rp {simaksi_total:,} (@Rp {cost_base['simaksi']:,})",
         f" • Ojek Basecamp PP: Rp {ojek_pp_total:,} (@Rp {cost_base['ojek']*2:,})",
         f" • Bahan Makanan Tim: Rp {logistik_makan_total:,} (@Rp {cost_base['makan_hari']*days:,})",
         f" • Gas Kaleng & Bahan Bakar: Rp {gas_total:,} (@Rp {cost_base['gas_hari']*days:,})",
         f"",
-        f"📌 **BIAYA BERSAMA / TETAP (FIXED COSTS):**",
+        f"**BIAYA BERSAMA / TETAP (FIXED COSTS):**",
         f" • Parkir Kendaraan: Rp {parkir_total:,}"
     ]
 
@@ -122,12 +122,12 @@ def calculate_split_bill(args_list):
 
     lines.extend([
         f"{'─'*42}",
-        f"💵 **SUBTOTAL ANGGARAN TRIP:** **Rp {grand_total:,}**",
-        f"🛡️ **DANA CADANGAN DARURAT (10%):** **Rp {dana_darurat:,}**",
-        f"⭐ **TOTAL DANA KAS TIM:** **Rp {total_dengan_darurat:,}**",
+        f"**SUBTOTAL ANGGARAN TRIP:** **Rp {grand_total:,}**",
+        f"**DANA CADANGAN DARURAT (10%):** **Rp {dana_darurat:,}**",
+        f"**TOTAL DANA KAS TIM:** **Rp {total_dengan_darurat:,}**",
         f"{'─'*42}",
-        f"👤 **IURAN TARGET PER ORANG:**",
-        f"👉 **Rp {per_person_safe:,}** *(sudah termasuk kas darurat & logistik)*",
+        f"**IURAN TARGET PER ORANG:**",
+        f"**Rp {per_person_safe:,}** *(sudah termasuk kas darurat & logistik)*",
         f"*(Minimal iuran pas-pasan: Rp {per_person_base:,}/orang)*"
     ])
 

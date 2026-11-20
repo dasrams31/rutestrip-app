@@ -6,10 +6,10 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-slate-800">👤 Edit Profil</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="user" class="w-7 h-7 text-emerald-600" /> Edit Profil</h1>
             <p class="text-slate-600">Ubah informasi akun Anda</p>
         </div>
-        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline">← Kembali</a>
+        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1"><x-icon name="arrow-left" class="w-4 h-4" /> Kembali</a>
     </div>
 
     @if(session('success'))

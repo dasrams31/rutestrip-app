@@ -11,7 +11,7 @@
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-slate-800 mb-2">Semua Rute Pendakian</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Semua Rute Pendakian</h1>
             <p class="text-slate-600">Database jalur pendakian yang telah diupload</p>
         </div>
         <a href="{{ route('routes.create') }}"

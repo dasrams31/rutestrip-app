@@ -7,7 +7,7 @@
     <!-- Welcome Header -->
     <div class="mb-8 flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-800">Halo, {{ $user->name }}! 👋</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">Halo, {{ $user->name }}!</h1>
             <p class="text-slate-600 mt-1">Kelola rute favorit dan riwayat pencarian Anda</p>
         </div>
         <!-- Realtime Indicator -->
@@ -65,7 +65,7 @@
         <!-- Recent Favorites -->
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-slate-800">⭐ Rute Favorit Terakhir</h2>
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><x-icon name="star" class="w-5 h-5 text-amber-500" /> Rute Favorit Terakhir</h2>
                 <a href="{{ route('user.favorites') }}" class="text-emerald-600 hover:underline text-sm">Lihat Semua</a>
             </div>
 
@@ -91,7 +91,7 @@
         <!-- Recent Searches -->
         <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-slate-800">🔍 Pencarian Terakhir</h2>
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><x-icon name="search" class="w-5 h-5 text-emerald-600" /> Pencarian Terakhir</h2>
                 <a href="{{ route('user.history') }}" class="text-emerald-600 hover:underline text-sm">Semua</a>
             </div>
 

@@ -265,7 +265,7 @@ const SYSTEM_PROMPT = `Kamu adalah **RuteStrip AI**, asisten AI cerdas & ahli se
 ## KEPRIBADIAN & GAYA BAHASA
 - Ramah, sopan, antusias, dan informatif seperti teman pendaki berpengalaman / senior outdoor guide.
 - Gunakan Bahasa Indonesia yang natural, hangat, dan mudah dipahami.
-- Gunakan emoji yang relevan (🏔️ ⛰️ 🥾 ☁️ ⏱️ 🎒 ⛺) untuk membuat percakapan hidup.
+- JANGAN gunakan emoji atau emotikon dalam jawaban. Gunakan teks biasa dengan format markdown (judul, daftar, teks tebal) agar jawaban tetap rapi dan mudah dibaca.
 
 ## CAKUPAN TOPIK YANG DIPERBOLEHKAN (IN-SCOPE):
 Kamu BISA menjawab pertanyaan bebas secara fleksibel dan luas JIKA pertanyaan berkaitan dengan:
@@ -274,14 +274,14 @@ Kamu BISA menjawab pertanyaan bebas secara fleksibel dan luas JIKA pertanyaan be
 3. **Tips & Trik Outdoor**: Cara packing carrier, memilih tenda/sepatu/layering pakaian, manajemen air & logistik, etika pendakian (Leave No Trace), persiapan fisik & latihan endurance.
 4. **Keselamatan & Survival**: Pertolongan pertama (P3K), penanganan hipotermia, AMS (penyakit ketinggian), navigasi kompas/peta, trik jika tersesat/cuaca buruk.
 
-⛔ **BATASAN & PENOLAKAN SONTAN (OUT-OF-SCOPE):**
+**BATASAN & PENOLAKAN SONTAN (OUT-OF-SCOPE):**
 - Jika pengguna bertanya topik yang SAMA SEKALI TIDAK RELEVAN dengan dunia pendakian, alam bebas, atau perkenalan (contoh: koding/pemrograman, politik, matematika sekolah, resep masakan umum, finansial/saham, gosip selebriti, dll.), TOLAK secara ramah dan alihkan kembali ke topik pendakian.
-- Contoh penolakan ramah: "Maaf ya, sebagai RuteStrip AI fokus utama saya adalah seputar dunia pendakian gunung, tips outdoor, dan informasi alam bebas. Ada yang ingin kamu tanyakan seputar persiapan pendakianmu? 🏔️"
+- Contoh penolakan ramah: "Maaf ya, sebagai RuteStrip AI fokus utama saya adalah seputar dunia pendakian gunung, tips outdoor, dan informasi alam bebas. Ada yang ingin kamu tanyakan seputar persiapan pendakianmu?"
 
 ## PANDUAN UTAMA DATA API & INTERPRETASI AI (API-FIRST + AI HYBRID):
 1. **WAJIB MENAMPILKAN DATA RESMI DARI API TERLEBIH DAHULU (API-FIRST)**:
    - Jika terdapat data dari API (Cuaca Realtime, Rekomendasi Jalur SBERT, Estimasi Biaya Rupiah, Naismith Itinerary, Logistik Air, Panduan Survival, Kontak Porter, Peta Satelit, GPX Track), KAMU WAJIB MENAMPILKAN DATA ANGKA & STATUS RESMI DARI API TERSEBUT DI BAGIAN PALING ATAS RESPONSMU!
-   - Contoh Cuaca: Tampilkan *☁️ Mendung | 🌡️ 10.2°C | 💨 2.9 km/h* paling atas.
+   - Contoh Cuaca: Tampilkan *Cuaca: Mendung | Suhu: 10.2°C | Angin: 2.9 km/h* paling atas.
    - Contoh Itinerary: Tampilkan *Timeline Jam & Naismith Duration* paling atas.
    - Contoh Biaya: Tampilkan *Rincian Budget Rupiah & Simaksi* paling atas.
    - Contoh Porter: Tampilkan *Nomor Kontak & Tarif Porter* paling atas.
@@ -294,38 +294,38 @@ Kamu BISA menjawab pertanyaan bebas secara fleksibel dan luas JIKA pertanyaan be
    STATIC RESPONSES for non-hiking intents
 ───────────────────────────────────────────── */
 const GREETING_RESPONSES = [
-  'Halo! 👋 Selamat datang di **RuteStrip AI**! Saya siap membantu kamu menemukan jalur pendakian yang sempurna.\n\nMau tanya apa hari ini? Rekomendasi jalur, info cuaca, estimasi biaya, atau panduan survival? 🏔️',
-  'Hai! 😊 Saya RuteStrip AI, asisten pendakian gunung Indonesia. Ada yang bisa saya bantu?\n\nCoba tanya:\n- *"Rekomendasikan jalur untuk pemula"*\n- *"Cuaca Gunung Sumbing"*\n- *"Itinerary Merbabu 2D1N"*',
-  'Halo, pendaki! ⛰️ Siap jelajahi gunung hari ini?\n\nSaya bisa bantu:\n🥾 Rekomendasi jalur sesuai kemampuan\n☁️ Info cuaca realtime\n💰 Estimasi biaya pendakian\n🚑 Panduan survival',
+  'Halo! Selamat datang di **RuteStrip AI**. Saya siap membantu kamu menemukan jalur pendakian yang sempurna.\n\nMau tanya apa hari ini? Rekomendasi jalur, info cuaca, estimasi biaya, atau panduan survival?',
+  'Hai! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Ada yang bisa saya bantu?\n\nCoba tanya:\n- *"Rekomendasikan jalur untuk pemula"*\n- *"Cuaca Gunung Sumbing"*\n- *"Itinerary Merbabu 2D1N"*',
+  'Halo, pendaki! Siap jelajahi gunung hari ini?\n\nSaya bisa bantu:\n- Rekomendasi jalur sesuai kemampuan\n- Info cuaca realtime\n- Estimasi biaya pendakian\n- Panduan survival',
 ];
 
-const HELP_RESPONSE = `## 🏔️ Panduan Penggunaan RuteStrip AI
+const HELP_RESPONSE = `## Panduan Penggunaan RuteStrip AI
 
 Saya bisa menjawab berbagai pertanyaan seputar pendakian gunung!
 
-**📍 Rekomendasi Jalur**
+**Rekomendasi Jalur**
 > "Rekomendasikan jalur pendakian untuk pemula"
 > "Jalur dengan pemandangan sabana terbaik"
 
-**☁️ Info Cuaca**
+**Info Cuaca**
 > "Cuaca Gunung Sumbing sekarang"
 > "Cuaca Merbabu hari ini"
 
-**⏱️ Itinerary**
+**Itinerary**
 > "Itinerary Gunung Sindoro 2D1N"
 > "Jadwal pendakian Prau tektok"
 
-**💰 Estimasi Biaya**
+**Estimasi Biaya**
 > "Biaya pendakian Sumbing untuk 3 orang 2 hari"
 
-**🧳 Logistik**
+**Logistik**
 > "Logistik pendakian 4 orang 3 hari"
 
-**🚑 Panduan Survival**
+**Panduan Survival**
 > "Pertolongan pertama hipotermia"
 > "Tips survival tersesat di gunung"
 
-**📞 Kontak Porter**
+**Kontak Porter**
 > "Porter Gunung Semeru"`;
 
 /* ─────────────────────────────────────────────
@@ -507,7 +507,7 @@ async function generateAnswer({ message, history, contextText, onDelta = () => {
   // ── 3. Fallback Ramah ──
   const fallback = contextText
     ? `Berikut informasi pendakian yang saya temukan:\n\n${contextText}`
-    : 'Halo! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Mohon maaf, server AI sedang mengalami antrean padat. Silakan coba tanyakan kembali beberapa saat lagi. 🏔️';
+    : 'Halo! Saya RuteStrip AI, asisten pendakian gunung Indonesia. Mohon maaf, server AI sedang mengalami antrean padat. Silakan coba tanyakan kembali beberapa saat lagi.';
   onDelta(fallback);
   return { text: fallback, model: 'fallback', error: g.error };
 }
@@ -593,7 +593,7 @@ export async function POST(request) {
 
     if (intentType === 'jailbreak') {
       return NextResponse.json({
-        response: 'Maaf, saya adalah **RuteStrip AI**, asisten resmi pendakian gunung dan kegiatan outdoor di Indonesia. 🏔️\n\nIdentitas, prinsip keselamatan, dan batasan operasional saya bersifat permanen dan tidak dapat diubah oleh instruksi luar. Ada informasi seputar pendakian gunung yang bisa saya bantu? 🥾',
+        response: 'Maaf, saya adalah **RuteStrip AI**, asisten resmi pendakian gunung dan kegiatan outdoor di Indonesia.\n\nIdentitas, prinsip keselamatan, dan batasan operasional saya bersifat permanen dan tidak dapat diubah oleh instruksi luar. Ada informasi seputar pendakian gunung yang bisa saya bantu?',
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'jailbreak_blocked' },
       });
@@ -610,7 +610,7 @@ export async function POST(request) {
 
     if (intentType === 'identity') {
       return NextResponse.json({
-        response: 'Halo! Saya **RuteStrip AI**, asisten cerdas khusus pendakian gunung di Indonesia. 🏔️\n\nSaya bisa membantu kamu dengan:\n🥾 **Rekomendasi Jalur** pendakian sesuai kemampuanmu\n☁️ **Info Cuaca** realtime di berbagai gunung\n⏱️ **Itinerary & Kalkulasi Naismith** per pos\n💰 **Estimasi Biaya & Logistik** kelompok\n🚑 **Panduan Survival & P3K** darurat\n🗺️ **Peta Satelit & Download File GPX/KML**\n\nAda yang ingin kamu persiapkan untuk pendakianmu berikutnya? 😊',
+        response: 'Halo! Saya **RuteStrip AI**, asisten cerdas khusus pendakian gunung di Indonesia.\n\nSaya bisa membantu kamu dengan:\n- **Rekomendasi Jalur** pendakian sesuai kemampuanmu\n- **Info Cuaca** realtime di berbagai gunung\n- **Itinerary & Kalkulasi Naismith** per pos\n- **Estimasi Biaya & Logistik** kelompok\n- **Panduan Survival & P3K** darurat\n- **Peta Satelit & Download File GPX/KML**\n\nAda yang ingin kamu persiapkan untuk pendakianmu berikutnya?',
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'identity' },
       });
@@ -626,7 +626,7 @@ export async function POST(request) {
 
     if (intentType === 'goodbye') {
       return NextResponse.json({
-        response: 'Sama-sama! Semoga pendakianmu menyenangkan dan aman. **Happy hiking!** 🏔️🥾\n\nKalau butuh info lain, saya siap membantu kapan saja!',
+        response: 'Sama-sama! Semoga pendakianmu menyenangkan dan aman. **Happy hiking!**\n\nKalau butuh info lain, saya siap membantu kapan saja!',
         retrieved_routes: [],
         timing: { retrieval_ms: 0, generation_ms: Date.now() - t0, type: 'goodbye' },
       });
@@ -642,7 +642,7 @@ export async function POST(request) {
     if (apiType === 'map' && map_url) {
       const cap = mapMountain ? mapMountain.charAt(0).toUpperCase() + mapMountain.slice(1) : '';
       directResponse = {
-        response: `Berikut peta **${mapType}** Gunung ${cap} 🗺️\n\nKlik gambar untuk memperbesar.`,
+        response: `Berikut peta **${mapType}** Gunung ${cap}.\n\nKlik gambar untuk memperbesar.`,
         map_url,
         retrieved_routes: [],
         timing: { retrieval_ms, generation_ms: 0, total_ms: Date.now() - t0, type: 'map' },
@@ -650,7 +650,7 @@ export async function POST(request) {
     } else if (apiType === 'gpx' && gpx_url) {
       const cap = mapMountain ? mapMountain.charAt(0).toUpperCase() + mapMountain.slice(1) : '';
       directResponse = {
-        response: `File **${format?.toUpperCase()}** Gunung ${cap} siap didownload 📥`,
+        response: `File **${format?.toUpperCase()}** Gunung ${cap} siap didownload.`,
         gpx_url,
         retrieved_routes: [],
         timing: { retrieval_ms, generation_ms: 0, total_ms: Date.now() - t0, type: 'gpx' },

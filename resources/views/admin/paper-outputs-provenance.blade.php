@@ -5,13 +5,13 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
-        <a href="{{ route('admin.evaluation.provenance') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 font-medium">
-            ← Kembali ke Evaluasi Provenance
+        <a href="{{ route('admin.evaluation.provenance') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 font-medium gap-1.5">
+            <x-icon name="arrow-left" class="w-4 h-4" /> Kembali ke Evaluasi Provenance
         </a>
 
-        <div class="bg-gradient-to-r from-slate-800 to-emerald-800 rounded-3xl p-8 text-white shadow-xl">
+        <div class="bg-gradient-to-r from-slate-800 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
             <p class="text-emerald-100 text-sm font-semibold mb-2">SINTA 3 Paper Outputs</p>
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-3">Tabel Paper GPX Provenance</h1>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">Tabel Paper GPX Provenance</h1>
             <p class="text-slate-100 max-w-3xl">
                 Download tabel CSV yang siap dipakai untuk bagian hasil dan pembahasan paper: version control, integrity verification, version recovery, dan ringkasan evaluasi.
             </p>

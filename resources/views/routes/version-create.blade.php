@@ -12,7 +12,7 @@
             Kembali ke Provenance
         </a>
 
-        <h1 class="text-3xl font-bold text-slate-800 mb-2">Upload Versi GPX Baru</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Upload Versi GPX Baru</h1>
         <p class="text-slate-600">Rute: <span class="font-semibold text-emerald-700">{{ $route->name }}</span></p>
     </div>
 
@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <form action="{{ route('routes.versions.store', $route) }}" method="POST" enctype="multipart/form-data" class="p-8">
+        <form action="{{ route('routes.versions.store', $route) }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8">
             @csrf
 
             <div class="mb-6">

@@ -40,8 +40,8 @@ def generate_itinerary(mountain_key="sumbing", mode="2d1n", start_time="07:00"):
     curr_t = datetime.strptime(start_time, t_fmt)
     
     timeline = []
-    timeline.append(f"⏱️ **ITINERARY PENDAKIAN: {data['name']} ({mode.upper()})**")
-    timeline.append(f"🚀 Start Basecamp: {curr_t.strftime(t_fmt)}")
+    timeline.append(f"**ITINERARY PENDAKIAN: {data['name']} ({mode.upper()})**")
+    timeline.append(f"Start Basecamp: {curr_t.strftime(t_fmt)}")
     timeline.append("-" * 40)
     
     for i in range(1, len(pos_list)):
@@ -52,12 +52,12 @@ def generate_itinerary(mountain_key="sumbing", mode="2d1n", start_time="07:00"):
         hrs = naismith_hours(d, gain)
         mins = int(hrs * 60)
         curr_t += timedelta(minutes=mins)
-        timeline.append(f"• {prev['name']} ➔ {curr['name']}: ~{mins} mnt | Arrive: **{curr_t.strftime(t_fmt)}**")
+        timeline.append(f"• {prev['name']} → {curr['name']}: ~{mins} mnt | Arrive: **{curr_t.strftime(t_fmt)}**")
         
         if mode == "2d1n" and "Camp" in curr["name"]:
-            timeline.append(f"  ⛺ *CAMP & ISTIRAHAT DARI {curr_t.strftime(t_fmt)}*")
+            timeline.append(f"  *CAMP & ISTIRAHAT DARI {curr_t.strftime(t_fmt)}*")
             curr_t = datetime.strptime("03:30", t_fmt) # Summit attack time
-            timeline.append(f"  🌄 *SUMMIT ATTACK BESOK JAM {curr_t.strftime(t_fmt)}*")
+            timeline.append(f"  *SUMMIT ATTACK BESOK JAM {curr_t.strftime(t_fmt)}*")
             
     return "\n".join(timeline)
 
@@ -67,13 +67,13 @@ def generate_logistics(group_size=3, days=2):
     tents = (group_size + 3) // 4
     
     out = [
-        f"🎒 **LOGISTIK & GEAR CHECKLIST ({group_size} Orang, {days} Hari)**",
-        f"• 💧 **Air Bersih:** {water_l:.1f} Liter total ({days*3}L / orang)",
-        f"• ⛺ **Tenda Dome:** {tents} unit (Kapasitas 4)",
-        f"• ⛽ **Gas Kaleng:** {gas_canisters} kaleng + 1 kompor portable",
-        f"• 🍲 **Logistik Makanan:** {group_size * days * 3} porsi utama + snack energi",
-        f"• 🧥 **Personal Gear (Wajib):** Jaket gunung, sleeping bag, matras, headlamp, raincoat, sepatu trekking",
-        f"• 🚑 **Safety & Medical:** P3K (obat pribadi, oxycan, thermal blanket, povidone), Trash bag x{group_size}"
+        f"**LOGISTIK & GEAR CHECKLIST ({group_size} Orang, {days} Hari)**",
+        f"• **Air Bersih:** {water_l:.1f} Liter total ({days*3}L / orang)",
+        f"• **Tenda Dome:** {tents} unit (Kapasitas 4)",
+        f"• **Gas Kaleng:** {gas_canisters} kaleng + 1 kompor portable",
+        f"• **Logistik Makanan:** {group_size * days * 3} porsi utama + snack energi",
+        f"• **Personal Gear (Wajib):** Jaket gunung, sleeping bag, matras, headlamp, raincoat, sepatu trekking",
+        f"• **Safety & Medical:** P3K (obat pribadi, oxycan, thermal blanket, povidone), Trash bag x{group_size}"
     ]
     return "\n".join(out)
 

@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-3xl p-8 text-white shadow-xl">
+    <div class="mb-8 bg-gradient-to-r from-emerald-700 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
         <p class="text-emerald-100 text-sm font-bold uppercase tracking-wide mb-2">Usability Evaluation</p>
-        <h1 class="text-3xl font-extrabold mb-3">System Usability Scale (SUS)</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold mb-3">System Usability Scale (SUS)</h1>
         <p class="text-emerald-50">Isi 10 pertanyaan berikut setelah mencoba fitur rekomendasi dan provenance GPX.</p>
     </div>
 

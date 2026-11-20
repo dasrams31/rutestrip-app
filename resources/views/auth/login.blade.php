@@ -8,7 +8,7 @@
         <!-- Login Card -->
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
             <!-- Header - Green Theme for User -->
-            <div class="bg-mountain-gradient p-8 text-center">
+            <div class="bg-mountain-gradient p-6 sm:p-8 text-center">
                 <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -19,7 +19,7 @@
             </div>
 
             <!-- Form -->
-            <div class="p-8">
+            <div class="p-5 sm:p-8">
                 @if(session('success'))
                 <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
                     {{ session('success') }}
@@ -32,7 +32,7 @@
                     <!-- Email -->
                     <div class="mb-6">
                         <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
-                            Email Admin
+                            Email
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -102,11 +102,11 @@
                         Belum punya akun?
                         <a href="{{ route('register') }}" class="text-emerald-600 hover:text-emerald-700 font-medium">Daftar</a>
                     </p>
-                    <a href="{{ route('admin.login') }}" class="text-sm text-purple-600 hover:text-purple-700 block">
-                        🔐 Login sebagai Admin
+                    <a href="{{ route('admin.login') }}" class="text-sm text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1.5">
+                        <x-icon name="lock-closed" class="w-4 h-4" /> Login sebagai Admin
                     </a>
-                    <a href="{{ route('search.index') }}" class="text-sm text-slate-500 hover:text-slate-600 block">
-                        ← Kembali ke Beranda
+                    <a href="{{ route('search.index') }}" class="text-sm text-slate-500 hover:text-slate-600 flex items-center justify-center gap-1.5">
+                        <x-icon name="arrow-left" class="w-4 h-4" /> Kembali ke Beranda
                     </a>
                 </div>
             </div>

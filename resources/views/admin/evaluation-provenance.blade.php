@@ -5,12 +5,12 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
-        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 font-medium">
-            ← Kembali ke Admin Dashboard
+        <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 font-medium gap-1.5">
+            <x-icon name="arrow-left" class="w-4 h-4" /> Kembali ke Admin Dashboard
         </a>
-        <div class="bg-gradient-to-r from-emerald-700 to-teal-700 rounded-3xl p-8 text-white shadow-xl">
+        <div class="bg-gradient-to-r from-emerald-700 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
             <p class="text-emerald-100 text-sm font-semibold mb-2">Paper Evaluation Module</p>
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-3">Evaluasi GPX Provenance</h1>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">Evaluasi GPX Provenance</h1>
             <p class="text-emerald-50 max-w-3xl">
                 Ringkasan metrik version control dan integrity verification untuk kebutuhan tabel hasil paper SINTA 3.
             </p>

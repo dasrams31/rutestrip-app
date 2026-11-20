@@ -2,7 +2,7 @@ import sys
 import json
 
 SURVIVAL_DB = {
-    "hipotermia": """🧊 **FIRST AID: HIPOTERMIA**
+    "hipotermia": """**FIRST AID: HIPOTERMIA**
 1. **Tanda:** Menggigil hebat, bicara meracau/lambat, bibir kebiruan, lemas.
 2. **Tindakan Cepat:**
    • Pindahkan ke dalam tenda/tempat terlindung dari angin.
@@ -12,21 +12,21 @@ SURVIVAL_DB = {
    • Beri minuman manis hangat (jika sadar). DILARANG kopi/alkohol!
    • Balut dengan Thermal Blanket (Emergency Foil).""",
 
-    "ams": """🏔️ **FIRST AID: AMS (MOUNTAIN SICKNESS)**
+    "ams": """**FIRST AID: AMS (MOUNTAIN SICKNESS)**
 1. **Tanda:** Pusing/sakit kepala hebat, mual, muntah, insomnia, napas pendek.
 2. **Tindakan:**
    • ISTIRAHAT total, jangan paksa naik!
    • Minum air putih hangat & konsumsi parasetamol / ibuprofen.
-   • Jika gejala berat/tidak membaik 2 jam ➔ **TURUN ELEVASI SEGERA** (turun 300-500m).
+   • Jika gejala berat/tidak membaik 2 jam → **TURUN ELEVASI SEGERA** (turun 300-500m).
    • Gunakan tabung oksigen kaleng (Oxycan).""",
 
-    "tersesat": """🗺️ **SURVIVAL: TERSESAT DI GUNUNG (STOP RULE)**
+    "tersesat": """**SURVIVAL: TERSESAT DI GUNUNG (STOP RULE)**
 • **S - Stop:** Berhenti berjalan, jangan panik.
 • **T - Think:** Amati sekitar, ingat patokan terakhir.
 • **O - Observe:** Cek sisa air, baterai HP, kompas/GPS, cuaca.
-• **P - Plan:** Jika ada sinyal ➔ kirim koordinat lokasi ke pos/teman. Jika tidak ada sinyal, ikuti punggungan/aliran air TURUN (jangan naik puncak), buat tanda jejak (batu/pita).""",
+• **P - Plan:** Jika ada sinyal → kirim koordinat lokasi ke pos/teman. Jika tidak ada sinyal, ikuti punggungan/aliran air TURUN (jangan naik puncak), buat tanda jejak (batu/pita).""",
 
-    "gigitan_ular": """🐍 **FIRST AID: GIGITAN ULAR / HEWAN BISA**
+    "gigitan_ular": """**FIRST AID: GIGITAN ULAR / HEWAN BISA**
 1. Immobilisasi (ISTIRAHATKAN) anggota tubuh yang tergigit (jangan banyak bergerak agar bisa tidak cepat menyebar).
 2. Posisikan luka LEBIH RENDAH dari jantung.
 3. **DILARANG:** Menyedot luka, mengikat kencang (tourniquet), atau menoreh pisau!
@@ -63,16 +63,16 @@ def calculate_budget(mountain="sumbing", group_size=3, days=2):
     per_person = total_group / group_size
     
     out = [
-        f"💰 **ESTIMASI BIAYA PENDAKIAN: {mountain.upper()}**",
-        f"👥 Rombongan: {group_size} Orang | ⏱️ Durasi: {days} Hari",
+        f"**ESTIMASI BIAYA PENDAKIAN: {mountain.upper()}**",
+        f"Rombongan: {group_size} Orang | Durasi: {days} Hari",
         "-" * 40,
         f"• Simaksi: Rp {simaksi_total:,} (Rp {b['simaksi']:,}/orang)",
         f"• Ojek Basecamp (PP): Rp {ojek_total:,} (Rp {b['ojek']*2:,}/orang)",
         f"• Parkir Kendaraan: Rp {parkir:,}",
         f"• Logistik Makanan: Rp {logistik:,} (Rp {b['logistik_per_day']*days:,}/orang)",
         "-" * 40,
-        f"💵 **TOTAL TIM:** **Rp {total_group:,}**",
-        f"👤 **ESTIMASI PER ORANG:** **Rp {int(per_person):,}**"
+        f"**TOTAL TIM:** **Rp {total_group:,}**",
+        f"**ESTIMASI PER ORANG:** **Rp {int(per_person):,}**"
     ]
     return "\n".join(out)
 

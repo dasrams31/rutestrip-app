@@ -21,9 +21,9 @@ BLOCKED_PATTERNS = [
     r'trycloudflare', r'8000', r'/docs', r'openapi', r'endpoint'
 ]
 
-OUT_OF_SCOPE_MSG = "Maaf, saya adalah RuteStrip AI Assistant yang khusus diprogram untuk membantu informasi pendakian gunung, cuaca live, rute trek, logistik, dan survival outdoor. Ada informasi pendakian gunung yang bisa saya bantu? 🏔️"
+OUT_OF_SCOPE_MSG = "Maaf, saya adalah RuteStrip AI Assistant yang khusus diprogram untuk membantu informasi pendakian gunung, cuaca live, rute trek, logistik, dan survival outdoor. Ada informasi pendakian gunung yang bisa saya bantu?"
 
-SYSTEM_BLOCKED_MSG = "Maaf, informasi sistem dan API backend bersifat rahasia dan hanya dapat diakses oleh Admin (@dasrams). Ada informasi pendakian gunung yang bisa saya bantu? 🏔️"
+SYSTEM_BLOCKED_MSG = "Maaf, informasi sistem dan API backend bersifat rahasia dan hanya dapat diakses oleh Admin (@dasrams). Ada informasi pendakian gunung yang bisa saya bantu?"
 
 def validate_webchat_query(prompt: str) -> dict:
     text = (prompt or "").strip()
