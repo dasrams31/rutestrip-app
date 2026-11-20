@@ -19,7 +19,7 @@ class TamperGpxVersion extends Command
             return self::FAILURE;
         }
 
-        $path = storage_path('app/public/' . $version->gpx_file_path);
+        $path = \Illuminate\Support\Facades\Storage::disk('public')->path($version->gpx_file_path);
 
         if (! is_file($path)) {
             $this->error('GPX file not found: ' . $version->gpx_file_path);

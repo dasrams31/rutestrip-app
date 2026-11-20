@@ -8,8 +8,10 @@ use App\Models\Rating;
 use App\Services\GpxVersionService;
 use App\Services\PythonProcessorService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class RouteController extends Controller
 {
@@ -69,10 +71,13 @@ class RouteController extends Controller
             return back()->withErrors(['gpx_file' => 'File harus berformat GPX atau XML.'])->withInput();
         }
 
-        // Store GPX file
-        $fileName = time() . '_' . $gpxFile->getClientOriginalName();
-        $filePath = $gpxFile->storeAs('gpx_files', $fileName, 'public');
-        $fullPath = storage_path('app/public/' . $filePath);
+        if (! $this->isValidGpx($gpxFile->getRealPath())) {
+            return back()->withErrors(['gpx_file' => 'Isi file bukan GPX yang valid.'])->withInput();
+        }
+
+        // Store GPX file under a safe name with a .gpx extension
+        $filePath = $this->storeGpx($gpxFile);
+        $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
 
         try {
             // Process GPX with Python
@@ -191,16 +196,21 @@ class RouteController extends Controller
      */
     public function storeBatch(Request $request)
     {
+        // PHP silently drops files beyond max_file_uploads, so validate against it
+        $maxFiles = min(50, (int) ini_get('max_file_uploads') ?: 20);
         $request->validate([
-            'gpx_files'   => 'required|array|min:1|max:50',
+            'gpx_files'   => "required|array|min:1|max:{$maxFiles}",
             'gpx_files.*' => 'required|file|max:10240',
+        ], [
+            'gpx_files.required' => 'Pilih minimal satu file GPX (total ukuran maksimal ' . ini_get('post_max_size') . ').',
+            'gpx_files.max'      => "Maksimal {$maxFiles} file per batch.",
         ]);
 
         // Additional validation for file extensions
         $allowedExtensions = ['gpx', 'xml'];
         foreach ($request->file('gpx_files') as $index => $file) {
             $extension = strtolower($file->getClientOriginalExtension());
-            if (! in_array($extension, $allowedExtensions)) {
+            if (! in_array($extension, $allowedExtensions) || ! $this->isValidGpx($file->getRealPath())) {
                 return back()->withErrors([
                     'gpx_files' => "File #{$index}: {$file->getClientOriginalName()} bukan file GPX/XML yang valid.",
                 ])->withInput();
@@ -216,10 +226,9 @@ class RouteController extends Controller
             $originalName = $gpxFile->getClientOriginalName();
             $routeName    = pathinfo($originalName, PATHINFO_FILENAME);
 
-            // Store GPX file
-            $fileName = time() . '_' . uniqid() . '_' . $originalName;
-            $filePath = $gpxFile->storeAs('gpx_files', $fileName, 'public');
-            $fullPath = storage_path('app/public/' . $filePath);
+            // Store GPX file under a safe name with a .gpx extension
+            $filePath = $this->storeGpx($gpxFile);
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
 
             try {
                 // Process GPX with Python
@@ -372,5 +381,34 @@ class RouteController extends Controller
         }
 
         return view('routes.similar', compact('route', 'similarRoutes'));
+    }
+
+    /**
+     * Store an uploaded GPX under a sanitised name, always with a .gpx
+     * extension (never .xml, which browsers could render as XHTML).
+     */
+    private function storeGpx(UploadedFile $file): string
+    {
+        $base = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'route';
+
+        return $file->storeAs('gpx_files', time() . '_' . Str::random(8) . '_' . $base . '.gpx', 'public');
+    }
+
+    /**
+     * The file must be well-formed XML whose root element is <gpx>.
+     * Network access is disabled while parsing.
+     */
+    private function isValidGpx(?string $path): bool
+    {
+        if (! $path || ! is_file($path)) {
+            return false;
+        }
+
+        $previous = libxml_use_internal_errors(true);
+        $xml      = simplexml_load_file($path, \SimpleXMLElement::class, LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        return $xml !== false && strtolower($xml->getName()) === 'gpx';
     }
 }

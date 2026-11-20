@@ -14,6 +14,7 @@
             <h1 class="text-3xl font-bold text-slate-800 mb-2">Semua Rute Pendakian</h1>
             <p class="text-slate-600">Database jalur pendakian yang telah diupload</p>
         </div>
+        @if(auth()->user()?->isAdmin())
         <a href="{{ route('routes.create') }}"
            class="mt-4 md:mt-0 inline-flex items-center px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,6 +22,7 @@
             </svg>
             Upload GPX Baru
         </a>
+        @endif
     </div>
 
     @php
@@ -49,6 +51,7 @@
         </svg>
         <h3 class="text-xl font-semibold text-slate-600 mb-2">Belum Ada Rute</h3>
         <p class="text-slate-500 mb-6">Mulai dengan mengupload file GPX pertama Anda.</p>
+        @if(auth()->user()?->isAdmin())
         <a href="{{ route('routes.create') }}"
            class="inline-flex items-center px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,6 +59,7 @@
             </svg>
             Upload GPX Sekarang
         </a>
+        @endif
     </div>
     @else
     <!-- Routes Grid -->

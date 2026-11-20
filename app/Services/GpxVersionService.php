@@ -22,7 +22,7 @@ class GpxVersionService
     public function createVersion(HikingRoute $route, string $filePath, ?int $uploadedBy = null, ?string $changeLog = null): GpxVersion
     {
         $versionNumber = ((int) $route->gpxVersions()->max('version_number')) + 1;
-        $absolutePath  = storage_path('app/public/' . $filePath);
+        $absolutePath  = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
         $fileHash      = $this->hashService->hash($absolutePath);
 
         $route->gpxVersions()->update(['is_active' => false]);
@@ -45,7 +45,7 @@ class GpxVersionService
 
     public function verify(GpxVersion $version, ?int $verifiedBy = null): GpxVersion
     {
-        $absolutePath = storage_path('app/public/' . $version->gpx_file_path);
+        $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($version->gpx_file_path);
 
         try {
             $result = $this->hashService->verify($absolutePath, $version->file_hash);

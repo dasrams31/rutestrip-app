@@ -60,9 +60,10 @@ class ProvenanceController extends Controller
             return back()->withErrors(['gpx_file' => 'File harus berformat GPX atau XML.'])->withInput();
         }
 
-        $fileName = time() . '_' . uniqid() . '_' . $gpxFile->getClientOriginalName();
+        // Safe name, always .gpx (an .xml file could be rendered as XHTML by browsers)
+        $fileName = time() . '_' . Str::random(8) . '_' . (Str::slug(pathinfo($gpxFile->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'route') . '.gpx';
         $filePath = $gpxFile->storeAs('gpx_files', $fileName, 'public');
-        $fullPath = storage_path('app/public/' . $filePath);
+        $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
 
         try {
             $result = $this->pythonService->ingest($fullPath);

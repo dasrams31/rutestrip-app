@@ -35,15 +35,7 @@ Notebook ini menjalankan **kode yang sama dengan website** (`python/processor.py
 4. **Preprocessing** (regex cleaning, case folding, stopword removal selektif, tanpa stemming).
 5. **SBERT** `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensi) → embedding dokumen jalur dan per kalimat aspek.
 6. **Cosine similarity** antara query dan jalur → **skor hybrid** (cosine + kecocokan atribut GPX + kecocokan nama) → Top-N.
-7. **Evaluasi** Precision@5 dan MRR: metode awal (cosine murni) vs metode web (hybrid).
-
-| Komponen | Metode awal (paper) | Versi web saat ini |
-|---|---|---|
-| Model SBERT, preprocessing, Naismith, grade | sama | sama |
-| Elevasi GPX | tanpa smoothing | `gpx.smooth(vertical=True)` |
-| Tingkat kesulitan | grade saja (<5/<10/<15%) | skor profil jalur (Shenandoah) |
-| Teks yang di-embed | narasi statistik | nama jalur + narasi, plus embedding per aspek |
-| Ranking | cosine murni | hybrid (cosine + atribut + nama) |
+7. **Evaluasi** Precision@5 dan MRR.
 """)
 
 code(r"""
@@ -173,7 +165,7 @@ for f in files:
                    'average_grade_pct': grade, 'min_elevation': lo, 'max_elevation': hi,
                    'difficulty': processor.classify_difficulty(km, gain, grade, hi),
                    'difficulty_score': round(processor.difficulty_score(km, gain, grade, hi)),
-                   'narrative_text': r['narrative_text'], 'baseline_embedding': r['embedding']})
+                   'narrative_text': r['narrative_text']})
 
 print(f'Jalur dipakai : {len(routes)}')
 print(f'Dilewati      : {len(skipped)}')
@@ -214,11 +206,8 @@ print('Jumlah aspek  :', len(contoh['aspects']))
 """)
 
 md(r"""
-## 6️⃣ Skor relevansi
-**Metode awal (paper)**: `Sim(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)` antara query dan narasi.
-
-**Metode web (hybrid)**:
-1. `semantik = 0,4 × cos(Q, dokumen) + 0,6 × max cos(Q, aspek)`
+## 6️⃣ Skor relevansi (hybrid)
+1. `semantik = 0,4 × cos(Q, dokumen) + 0,6 × max cos(Q, aspek)`, dengan `cos(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)`.
 2. Jika query memuat kata intent, skor dicampur dengan kecocokan atribut GPX (bobot 0,45):
    *landai* → kemiringan rendah (0,4 grade + 0,3 tanjakan + 0,3 durasi); *pemula/mudah/santai* → sedikit tanjakan & singkat (0,2 / 0,4 / 0,4);
    *curam/sulit/menantang* → kebalikannya; *singkat/tektok* dan *panjang/ekspedisi* → durasi. Negasi dibaca ("tidak terlalu curam" → landai).
@@ -233,17 +222,9 @@ print(inspect.getsource(search_scoring.detect_intents))
 print(inspect.getsource(search_scoring.attribute_score))
 print(inspect.getsource(search_scoring.hybrid_score))
 
-def cos(a, b):
-    a, b = np.asarray(a), np.asarray(b)
-    return float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-12))
-
-def search(query, mode='hybrid', top_n=5):
-    if mode == 'paper':
-        q = model.encode(processor.preprocess_text(query)).tolist()
-        scored = [(r, cos(q, r['baseline_embedding'])) for r in routes]
-    else:
-        q = model.encode(search_scoring.query_text(query)).tolist()
-        scored = [(r, search_scoring.hybrid_score(query, q, r['embedding'], r['aspect_embeddings'], r, routes)['score']) for r in routes]
+def search(query, top_n=5):
+    q = model.encode(search_scoring.query_text(query)).tolist()
+    scored = [(r, search_scoring.hybrid_score(query, q, r['embedding'], r['aspect_embeddings'], r, routes)['score']) for r in routes]
     return sorted(scored, key=lambda x: -x[1])[:top_n]
 """)
 
@@ -251,22 +232,18 @@ code(r"""
 #@title 7️⃣ Coba pencarian (ubah query di kolom kanan)
 QUERY = "jalur landai untuk pemula"  #@param {type:"string"}
 
-for mode in ('paper', 'hybrid'):
-    print(f"\n=== {'Metode awal (cosine murni)' if mode == 'paper' else 'Metode web (hybrid)'} — query: {QUERY!r}")
-    for i, (r, s) in enumerate(search(QUERY, mode), 1):
-        print(f"{i}. {r['name']:<42} skor {s:.4f} | {r['distance_km']} km, {r['elevation_gain_m']} m, "
-              f"{r['naismith_duration_hour']} jam, grade {r['average_grade_pct']}%, {r['difficulty']}")
+print(f"Query: {QUERY!r}\n")
+for i, (r, s) in enumerate(search(QUERY), 1):
+    print(f"{i}. {r['name']:<42} skor {s:.4f} | {r['distance_km']} km, {r['elevation_gain_m']} m, "
+          f"{r['naismith_duration_hour']} jam, grade {r['average_grade_pct']}%, {r['difficulty']}")
 """)
 
 code(r"""
-#@title Perbandingan beberapa query (Top-3)
+#@title Contoh hasil beberapa query (Top-3)
 rows = []
 for q in ['jalur mudah untuk pemula', 'jalur landai', 'trek menantang elevasi tinggi', 'pendakian singkat 2-3 jam',
           'pendakian panjang beberapa hari', 'jalur pemula merbabu', 'gede pangrango', 'kawah ijen']:
-    p = search(q, 'paper', 3); h = search(q, 'hybrid', 3)
-    rows.append({'Query': q,
-                 'Cosine murni (paper)': ' | '.join(f"{r['name']} ({s:.2f})" for r, s in p),
-                 'Hybrid (web)': ' | '.join(f"{r['name']} ({s:.2f})" for r, s in h)})
+    rows.append({'Query': q, 'Top-3 (skor)': ' | '.join(f"{r['name']} ({s:.2f})" for r, s in search(q, 3))})
 pd.set_option('display.max_colwidth', None)
 display(pd.DataFrame(rows))
 """)
@@ -279,39 +256,35 @@ Label relevansi diturunkan otomatis dari statistik GPX (`python/evaluate_search.
 - query *curam/sulit* → grade di sepertiga tertinggi; *singkat* / *panjang* → durasi Naismith sepertiga terendah / tertinggi;
 - query nama gunung → nama jalur mengandung nama gunung tersebut.
 
-Metrik: **Precision@5** dan **MRR**.
+Metrik: **Precision@5** (proporsi jalur relevan di 5 teratas) dan **MRR** (rata-rata 1/peringkat jalur relevan pertama).
 
-> **Catatan metodologi:** label relevansi dan boost atribut sama-sama diturunkan dari statistik GPX, sehingga angka metode hybrid mengukur *konsistensi ranking dengan definisi intent*, bukan penilaian manusia. Untuk naskah, lengkapi dengan label relevansi manual (misalnya penilaian pendaki/pakar) agar evaluasinya independen.
+> **Catatan metodologi:** label relevansi dan boost atribut sama-sama diturunkan dari statistik GPX, sehingga angka ini mengukur *konsistensi ranking dengan definisi intent*, bukan penilaian manusia. Untuk naskah, lengkapi dengan label relevansi manual (misalnya penilaian pendaki/pakar) agar evaluasinya independen.
 """)
 
 code(r"""
-#@title Precision@5 & MRR: metode awal vs metode web
+#@title Precision@5 & MRR
 import evaluate_search as ev
-
-def rank(query, mode):
-    return [(r['id'], s) for r, s in search(query, mode, top_n=len(routes))]
 
 res = []
 for q, label in ev.QUERIES:
     rel = ev.relevant_ids(routes, label)
-    for mode in ('paper', 'hybrid'):
-        ranked = rank(q, mode)
-        p5, rr = ev.metrics(ranked, rel)
-        res.append({'query': q, 'mode': mode, 'P@5': p5, 'RR': rr, 'top1': ranked[0][1]})
+    ranked = [(r['id'], s) for r, s in search(q, top_n=len(routes))]
+    p5, rr = ev.metrics(ranked, rel)
+    res.append({'Query': q, 'Label': label, 'Jalur relevan': len(rel), 'P@5': p5, 'RR': rr, 'Skor top-1': round(ranked[0][1], 4)})
 ev_df = pd.DataFrame(res)
-summary = ev_df.groupby('mode')[['P@5', 'RR', 'top1']].mean().rename(columns={'RR': 'MRR', 'top1': 'skor top-1'})
-display(ev_df.pivot(index='query', columns='mode', values='P@5'))
-display(summary.round(3))
+display(ev_df)
+summary = {'Precision@5': ev_df['P@5'].mean(), 'MRR': ev_df['RR'].mean(), 'Skor top-1 rata-rata': ev_df['Skor top-1'].mean()}
+display(pd.Series(summary).round(3).to_frame('Nilai'))
 """)
 
 code(r"""
 #@title 9️⃣ Ringkasan (dihitung dari hasil di atas)
-s = summary
-print(f"Dataset: {len(routes)} jalur dari {len(files)} file GPX ({len(skipped)} dilewati karena duplikat/data rusak).")
-print(f"Kesulitan: " + ', '.join(f"{k} {v}" for k, v in df['Kesulitan'].value_counts().items()))
-print(f"Precision@5 : cosine murni {s.loc['paper','P@5']:.3f} → hybrid {s.loc['hybrid','P@5']:.3f}")
-print(f"MRR         : cosine murni {s.loc['paper','MRR']:.3f} → hybrid {s.loc['hybrid','MRR']:.3f}")
-print(f"Skor top-1  : cosine murni {s.loc['paper','skor top-1']:.3f} → hybrid {s.loc['hybrid','skor top-1']:.3f}")
+print(f"Dataset    : {len(routes)} jalur dari {len(files)} file GPX ({len(skipped)} dilewati karena duplikat/data rusak)")
+print(f"Kesulitan  : " + ', '.join(f"{k} {v}" for k, v in df['Kesulitan'].value_counts().items()))
+print(f"Query uji  : {len(ev_df)}")
+print(f"Precision@5: {summary['Precision@5']:.3f}")
+print(f"MRR        : {summary['MRR']:.3f}")
+print(f"Skor top-1 : {summary['Skor top-1 rata-rata']:.3f}")
 """)
 
 code(r"""

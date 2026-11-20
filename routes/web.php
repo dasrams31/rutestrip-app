@@ -19,16 +19,20 @@ Route::get('/', [SearchController::class, 'index'])->name('home');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 
-// Public Routes - GPX Upload & View
+// GPX upload (single & batch) changes the public dataset: admins only.
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/routes/create', [RouteController::class, 'create'])->name('routes.create');
+    Route::post('/routes', [RouteController::class, 'store'])->name('routes.store');
+    Route::get('/routes-batch', [RouteController::class, 'createBatch'])->name('routes.batch');
+    Route::post('/routes-batch', [RouteController::class, 'storeBatch'])->name('routes.batch.store');
+});
+
+// Public Routes - View
 Route::get('/routes', [RouteController::class, 'index'])->name('routes.index');
-Route::get('/routes/create', [RouteController::class, 'create'])->name('routes.create');
-Route::post('/routes', [RouteController::class, 'store'])->name('routes.store');
 Route::get('/routes/{route}', [RouteController::class, 'show'])->name('routes.show');
 Route::get('/routes/{route}/provenance', [ProvenanceController::class, 'show'])->name('routes.provenance');
 Route::get('/routes/{route}/provenance/{version}/download', [ProvenanceController::class, 'downloadVersion'])->name('routes.provenance.download-version');
 Route::get('/routes/{route}/similar', [RouteController::class, 'similarRoutes'])->name('routes.similar');
-Route::get('/routes-batch', [RouteController::class, 'createBatch'])->name('routes.batch');
-Route::post('/routes-batch', [RouteController::class, 'storeBatch'])->name('routes.batch.store');
 
 // Reviews & Ratings (Auth required)
 Route::middleware('auth')->group(function () {

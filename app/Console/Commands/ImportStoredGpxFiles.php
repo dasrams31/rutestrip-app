@@ -37,7 +37,7 @@ class ImportStoredGpxFiles extends Command
             $this->line("Importing {$filePath}...");
 
             try {
-                $result = $pythonService->ingest(storage_path('app/public/' . $filePath));
+                $result = $pythonService->ingest(\Illuminate\Support\Facades\Storage::disk('public')->path($filePath));
 
                 $route = HikingRoute::create([
                     'name'                   => $this->routeName($filePath),

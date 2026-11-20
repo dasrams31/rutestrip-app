@@ -18,7 +18,7 @@ class BackfillGpxVersions extends Command
 
         HikingRoute::whereDoesntHave('gpxVersions')->chunkById(50, function ($routes) use ($gpxVersionService, &$created, &$skipped) {
             foreach ($routes as $route) {
-                if (! $route->gpx_file_path || ! is_file(storage_path('app/public/' . $route->gpx_file_path))) {
+                if (! $route->gpx_file_path || ! is_file(\Illuminate\Support\Facades\Storage::disk('public')->path($route->gpx_file_path))) {
                     $skipped++;
                     $this->warn("Skipped route {$route->id}: GPX file missing.");
                     continue;
