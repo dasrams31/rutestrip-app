@@ -274,7 +274,8 @@ display(pd.DataFrame(rows))
 md(r"""
 ## 8️⃣ Evaluasi
 Label relevansi diturunkan otomatis dari statistik GPX (`python/evaluate_search.py`), sehingga dapat direproduksi:
-- query *mudah/pemula/landai* → grade < 15% dan total tanjakan di sepertiga terendah;
+- query *landai* / *tidak terlalu curam* → grade < 15% dan total tanjakan di sepertiga terendah;
+- query *pemula/mudah/santai* → total tanjakan di sepertiga terendah dan grade < 30%;
 - query *curam/sulit* → grade di sepertiga tertinggi; *singkat* / *panjang* → durasi Naismith sepertiga terendah / tertinggi;
 - query nama gunung → nama jalur mengandung nama gunung tersebut.
 
