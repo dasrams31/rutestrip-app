@@ -84,10 +84,22 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.submit')->middleware('throttle:5,1');
-    Route::get('/altcha/challenge', [AuthController::class, 'altchaChallenge'])->name('altcha.challenge')->middleware('throttle:30,1');
     Route::get('/admin/login', [AuthController::class, 'showAdminLoginForm'])->name('admin.login');
     Route::post('/admin/login', [AuthController::class, 'adminLogin'])->name('admin.login.submit');
 });
+
+// ALTCHA challenge for the register form. Fetched by the widget without
+// X-Requested-With, so it runs without the session: otherwise it becomes the
+// "previous URL" and a failed register would redirect the user to this JSON.
+Route::get('/altcha/challenge', [AuthController::class, 'altchaChallenge'])
+    ->name('altcha.challenge')
+    ->middleware('throttle:30,1')
+    ->withoutMiddleware([
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+    ]);
 
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');

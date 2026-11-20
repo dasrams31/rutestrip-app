@@ -96,6 +96,15 @@ class RegisterAltchaTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'pendaki@example.com', 'role' => 'user']);
     }
 
+    public function test_failed_register_returns_to_form_after_widget_fetched_challenge(): void
+    {
+        // Real browser order: open the form, the widget fetches a challenge, then submit.
+        $this->get(route('register'))->assertOk();
+        $this->get(route('altcha.challenge'))->assertOk();
+
+        $this->assertRejected($this->post(route('register.submit'), $this->form()));
+    }
+
     public function test_register_without_payload_fails(): void
     {
         $this->assertRejected($this->from(route('register'))->post(route('register.submit'), $this->form()));
