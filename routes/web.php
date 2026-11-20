@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminEvaluationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ProvenanceController;
+use App\Http\Controllers\RouteConditionsController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SeoController;
@@ -34,6 +35,12 @@ Route::get('/routes/{route}', [RouteController::class, 'show'])->name('routes.sh
 Route::get('/routes/{route}/provenance', [ProvenanceController::class, 'show'])->name('routes.provenance');
 Route::get('/routes/{route}/provenance/{version}/download', [ProvenanceController::class, 'downloadVersion'])->name('routes.provenance.download-version');
 Route::get('/routes/{route}/similar', [RouteController::class, 'similarRoutes'])->name('routes.similar');
+// Route page extras: lazily fetched live conditions (external APIs, cached) and
+// "log in to review" redirect that remembers the route page.
+Route::get('/routes/{route}/conditions', [RouteConditionsController::class, 'show'])
+    ->middleware('throttle:30,1')
+    ->name('routes.conditions');
+Route::get('/routes/{route}/review/login', [RouteConditionsController::class, 'loginToReview'])->name('routes.review.login');
 
 // Reviews & Ratings (Auth required)
 Route::middleware('auth')->group(function () {

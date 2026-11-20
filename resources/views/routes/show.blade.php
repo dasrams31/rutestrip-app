@@ -36,8 +36,17 @@
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 @endpush
 
+@push('styles')
+<style>[x-cloak]{display:none !important}</style>
+@endpush
+
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+@inject('conditionsService', 'App\Services\RouteConditionsService')
+@php
+    // Cache-only read: the page never waits on external APIs.
+    $trailPoints = $conditionsService->points($route, false);
+@endphp
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-x-clip">
     <!-- Back Link -->
     <div class="flex items-center justify-between mb-6">
         <a href="{{ route('routes.index') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 group font-medium">
@@ -54,15 +63,16 @@
         <!-- ============================== -->
         <!-- LEFT COLUMN: MAIN CONTENT      -->
         <!-- ============================== -->
-        <div class="lg:col-span-8 space-y-6">
-            
+        <div class="lg:col-span-8 space-y-6 min-w-0">
+
             <!-- 1. HEADER & MAIN STATS -->
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
                 <!-- Cover / Header -->
-                <div class="bg-mountain-gradient p-8 relative">
+                <div class="bg-mountain-gradient p-5 sm:p-8 relative">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold mb-4
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="inline-flex items-center px-3 sm:px-4 py-1.5 rounded-full text-sm font-bold
                                 @if($route->difficulty_level === 'Mudah') bg-green-100 text-green-800
                                 @elseif($route->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-800
                                 @elseif($route->difficulty_level === 'Sulit') bg-orange-100 text-orange-800
@@ -73,7 +83,7 @@
                                 <span class="ml-1 font-medium opacity-70">· skor {{ number_format($route->difficulty_score, 0) }}</span>
                             </span>
                             @if($route->activeGpxVersion)
-                            <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold mb-4 ml-2 shadow-sm
+                            <span class="inline-flex items-center px-3 sm:px-4 py-1.5 rounded-full text-sm font-bold shadow-sm
                                 @if($route->activeGpxVersion->verification_status === 'verified') bg-emerald-100 text-emerald-800
                                 @elseif($route->activeGpxVersion->verification_status === 'invalid') bg-red-100 text-red-800
                                 @else bg-amber-100 text-amber-800
@@ -81,41 +91,42 @@
                                 GPX v{{ $route->activeGpxVersion->version_number }}: {{ str_replace('_', ' ', ucfirst($route->activeGpxVersion->verification_status)) }}
                             </span>
                             @endif
-                            <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">{{ $route->name }}</h1>
-                            <p class="text-emerald-100 font-medium">Diunggah oleh <span class="font-bold text-white">{{ $route->uploader_name }}</span> pada {{ $route->created_at->format('d M Y, H:i') }}</p>
+                            </div>
+                            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight break-words">{{ $route->name }}</h1>
+                            <p class="text-sm sm:text-base text-emerald-100 font-medium break-words">Diunggah oleh <span class="font-bold text-white">{{ $route->uploader_name }}</span> pada {{ $route->created_at->format('d M Y, H:i') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-100">
-                    <div class="bg-white p-6 text-center">
+                    <div class="bg-white p-4 sm:p-6 text-center min-w-0">
                         <div class="text-emerald-600 mb-2 flex justify-center">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                         </div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $route->formatted_distance }}</p>
-                        <p class="text-sm text-slate-500 font-medium">Total Jarak</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-800 break-words">{{ $route->formatted_distance }}</p>
+                        <p class="text-xs sm:text-sm text-slate-500 font-medium">Total Jarak</p>
                     </div>
-                    <div class="bg-white p-6 text-center">
+                    <div class="bg-white p-4 sm:p-6 text-center min-w-0">
                         <div class="text-teal-600 mb-2 flex justify-center">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $route->formatted_duration }}</p>
-                        <p class="text-sm text-slate-500 font-medium">Estimasi Waktu</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-800 break-words">{{ $route->formatted_duration }}</p>
+                        <p class="text-xs sm:text-sm text-slate-500 font-medium">Estimasi Waktu</p>
                     </div>
-                    <div class="bg-white p-6 text-center">
+                    <div class="bg-white p-4 sm:p-6 text-center min-w-0">
                         <div class="text-cyan-600 mb-2 flex justify-center">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
+                            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
                         </div>
-                        <p class="text-2xl font-bold text-slate-800">{{ number_format($route->elevation_gain_m) }}m</p>
-                        <p class="text-sm text-slate-500 font-medium">Elevasi Gain</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-800 break-words">{{ number_format($route->elevation_gain_m) }}m</p>
+                        <p class="text-xs sm:text-sm text-slate-500 font-medium">Elevasi Gain</p>
                     </div>
-                    <div class="bg-white p-6 text-center">
+                    <div class="bg-white p-4 sm:p-6 text-center min-w-0">
                         <div class="text-amber-600 mb-2 flex justify-center">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                         </div>
-                        <p class="text-2xl font-bold text-slate-800">{{ $route->formatted_grade }}</p>
-                        <p class="text-sm text-slate-500 font-medium">Grade Rata-rata</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-800 break-words">{{ $route->formatted_grade }}</p>
+                        <p class="text-xs sm:text-sm text-slate-500 font-medium">Grade Rata-rata</p>
                     </div>
                 </div>
             </div>
@@ -135,7 +146,7 @@
                     </span>
                 </div>
                 <!-- Fixed size, smaller map frame for compact layout -->
-                <div id="route-map" class="w-full h-[400px]"></div>
+                <div id="route-map" class="w-full h-[300px] sm:h-[400px]"></div>
             </div>
             @endif
 
@@ -171,11 +182,162 @@
                 </div>
             </div>
 
+            @if($trailPoints)
+            <!-- 3b. BASECAMP, LOCATION & LIVE CONDITIONS (location + weather load after the page) -->
+            <div class="space-y-6"
+                 x-data="routeConditions(@js(route('routes.conditions', $route)), @js($trailPoints))"
+                 x-init="load()">
+
+                <!-- Info Basecamp & Lokasi -->
+                <section id="info-basecamp" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                    <div class="p-4 sm:p-6 border-b border-slate-100 bg-slate-50">
+                        <h3 class="font-bold text-slate-800 flex items-center">
+                            <x-icon name="location-marker" class="w-5 h-5 text-emerald-500 mr-2 shrink-0" />
+                            Info Basecamp &amp; Lokasi
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">Titik awal dan titik tertinggi diambil dari jalur GPX.</p>
+                    </div>
+
+                    <div class="p-4 sm:p-6 space-y-5">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <!-- Basecamp / trailhead -->
+                            <div class="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 min-w-0">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0"><x-icon name="home" class="w-5 h-5 text-emerald-600" /></div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold text-emerald-700">Basecamp / titik awal</p>
+                                        <p class="font-bold text-slate-800 break-words" x-text="points.basecamp.name || 'Titik awal jalur'">{{ $trailPoints['basecamp']['name'] ?? 'Titik awal jalur' }}</p>
+                                        <p class="text-sm text-slate-600 font-mono break-all" x-text="coords(points.basecamp)">{{ number_format($trailPoints['basecamp']['lat'], 5, '.', '') }}, {{ number_format($trailPoints['basecamp']['lng'], 5, '.', '') }}</p>
+                                        <p class="text-sm text-slate-600" x-text="ele(points.basecamp)">{{ $trailPoints['basecamp']['elevation_m'] ? '± ' . number_format($trailPoints['basecamp']['elevation_m'], 0, ',', '.') . ' mdpl' : 'Ketinggian belum diketahui' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Summit / highest point -->
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 min-w-0">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0"><x-icon name="mountain" class="w-5 h-5 text-slate-600" /></div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold text-slate-600">Puncak / titik tertinggi</p>
+                                        <p class="font-bold text-slate-800" x-text="ele(points.summit)">{{ $trailPoints['summit']['elevation_m'] ? '± ' . number_format($trailPoints['summit']['elevation_m'], 0, ',', '.') . ' mdpl' : 'Ketinggian belum diketahui' }}</p>
+                                        <p class="text-sm text-slate-600 font-mono break-all" x-text="coords(points.summit)">{{ number_format($trailPoints['summit']['lat'], 5, '.', '') }}, {{ number_format($trailPoints['summit']['lng'], 5, '.', '') }}</p>
+                                        <a :href="points.summit.osm_url" href="{{ $trailPoints['summit']['osm_url'] }}" target="_blank" rel="noopener" class="text-xs text-emerald-700 hover:underline inline-flex items-center gap-1 mt-1">Lihat puncak di peta <x-icon name="external-link" class="w-3 h-3" /></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Administrative location of the trailhead (Nominatim, cached) -->
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 mb-2">Lokasi titik awal</p>
+                            <dl class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                @foreach(['village' => 'Desa/Kelurahan', 'district' => 'Kecamatan', 'regency' => 'Kabupaten/Kota', 'province' => 'Provinsi'] as $key => $label)
+                                <div class="rounded-xl border border-slate-100 bg-white px-3 py-2 min-w-0">
+                                    <dt class="text-[11px] text-slate-500">{{ $label }}</dt>
+                                    <dd class="font-semibold text-slate-800 break-words">
+                                        <span x-show="loading" class="inline-block h-4 w-20 rounded bg-slate-200 animate-pulse align-middle"></span>
+                                        <span x-show="!loading" x-cloak x-text="(location && location.{{ $key }}) || '–'"></span>
+                                    </dd>
+                                </div>
+                                @endforeach
+                            </dl>
+                            <p x-show="!loading && !location" x-cloak class="text-xs text-slate-500 mt-2">Lokasi administratif belum tersedia. Coba muat ulang halaman nanti.</p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                            <a :href="points.basecamp.directions_url" href="{{ $trailPoints['basecamp']['directions_url'] }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">
+                                <x-icon name="map" class="w-4 h-4" /> Petunjuk arah ke basecamp
+                            </a>
+                            <a :href="points.basecamp.osm_url" href="{{ $trailPoints['basecamp']['osm_url'] }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold">
+                                <x-icon name="external-link" class="w-4 h-4" /> Lihat di OpenStreetMap
+                            </a>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Koordinat dari jalur GPX; ketinggian dari GPX atau model elevasi Open-Meteo, bisa berbeda beberapa puluh meter. Konfirmasikan lokasi basecamp ke pengelola sebelum berangkat.</p>
+                    </div>
+                </section>
+
+                <!-- Kondisi Terkini (Open-Meteo) -->
+                <section id="kondisi-terkini" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden" aria-live="polite">
+                    <div class="p-4 sm:p-6 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="font-bold text-slate-800 flex items-center">
+                            <x-icon name="cloud" class="w-5 h-5 text-sky-500 mr-2 shrink-0" />
+                            Kondisi Terkini
+                        </h3>
+                        <span x-show="weather" x-cloak class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200" x-text="weather ? 'Diperbarui ' + weather.updated_label : ''"></span>
+                    </div>
+
+                    <div class="p-4 sm:p-6 space-y-4">
+                        <div x-show="!loading && !weather" x-cloak class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            Data cuaca tidak tersedia saat ini. Coba muat ulang halaman beberapa saat lagi.
+                        </div>
+
+                        <div x-show="loading || weather" class="grid sm:grid-cols-2 gap-4">
+                            @foreach(['basecamp' => 'Basecamp', 'summit' => 'Puncak'] as $side => $label)
+                            <div class="rounded-2xl border border-slate-100 bg-gradient-to-br from-sky-50 to-white p-4 min-w-0">
+                                <div class="flex items-baseline justify-between gap-2">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $label }}</p>
+                                    <p class="text-xs text-slate-500" x-text="ele(points.{{ $side }})"></p>
+                                </div>
+                                <div class="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
+                                    <span x-show="loading" class="inline-block h-9 w-20 rounded-lg bg-slate-200 animate-pulse"></span>
+                                    <p x-show="!loading" x-cloak class="text-4xl font-extrabold text-slate-800 leading-none" x-text="num(w('{{ $side }}', 'temperature_c')) + '°C'"></p>
+                                    <p x-show="!loading" x-cloak class="text-sm font-semibold text-slate-600 pb-0.5" x-text="w('{{ $side }}', 'weather_text') || ''"></p>
+                                </div>
+                                <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                                    @foreach([
+                                        'Terasa seperti' => "num(w('$side', 'apparent_temperature_c')) + '°C'",
+                                        'Angin' => "num(w('$side', 'wind_speed_kmh')) + ' km/jam' + (w('$side', 'wind_direction') ? ' dari ' + w('$side', 'wind_direction') : '')",
+                                        'Kelembapan' => "num(w('$side', 'humidity_pct')) + '%'",
+                                        'Curah hujan' => "num(w('$side', 'precipitation_mm'), 1) + ' mm'",
+                                    ] as $term => $expr)
+                                    <div class="min-w-0">
+                                        <dt class="text-[11px] text-slate-500">{{ $term }}</dt>
+                                        <dd class="font-semibold text-slate-800 break-words">
+                                            <span x-show="loading" class="inline-block h-4 w-16 rounded bg-slate-200 animate-pulse align-middle"></span>
+                                            <span x-show="!loading" x-cloak x-text="{{ $expr }}"></span>
+                                        </dd>
+                                    </div>
+                                    @endforeach
+                                </dl>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <p x-show="weather && weather.sunrise" x-cloak class="text-sm text-slate-600 flex items-center gap-2">
+                            <x-icon name="sun" class="w-4 h-4 text-amber-500 shrink-0" />
+                            <span x-text="weather ? 'Matahari terbit ' + weather.sunrise + ', terbenam ' + weather.sunset + ' WIB' : ''"></span>
+                        </p>
+
+                        <div x-show="safety" x-cloak class="rounded-2xl border p-4 text-sm"
+                             :class="safety && safety.level === 'caution' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'">
+                            <p class="font-bold flex items-center gap-2 mb-1">
+                                <x-icon name="exclamation" class="w-4 h-4 shrink-0" />
+                                <span x-text="safety && safety.level === 'caution' ? 'Perhatian' : 'Catatan keselamatan'"></span>
+                            </p>
+                            <ul class="space-y-1 list-disc pl-5">
+                                <template x-for="message in (safety ? safety.messages : [])" :key="message">
+                                    <li x-text="message"></li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <p class="text-[11px] text-slate-400">
+                            Data cuaca: <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="underline hover:text-slate-600">Open-Meteo</a>
+                            · Lokasi: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="underline hover:text-slate-600">OpenStreetMap Nominatim</a>.
+                            Prakiraan model, bukan pengamatan langsung di jalur.
+                        </p>
+                    </div>
+                </section>
+            </div>
+            @endif
+
             <!-- 4. REVIEWS SECTION -->
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-                <div class="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <div id="ulasan" class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 scroll-mt-24">
+                <div class="p-4 sm:p-6 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
                     <h3 class="font-bold text-slate-800 flex items-center">
-                        <span class="text-2xl mr-2">🌟</span> Ulasan Pengguna
+                        <x-icon name="star" class="w-6 h-6 text-amber-400 mr-2" /> Ulasan Pengguna
                     </h3>
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-slate-700 text-lg">{{ $route->average_rating }}/5</span>
@@ -183,17 +345,17 @@
                     </div>
                 </div>
 
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <!-- User Reviews -->
                     @if($route->comments->count() > 0)
                         <div class="space-y-4 mb-6">
                             @foreach($route->comments->take(3) as $comment)
                             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="font-semibold text-slate-700 text-sm">{{ $comment->user->name ?? 'Anonim' }}</span>
+                                <div class="flex flex-wrap items-center justify-between gap-x-2 mb-2">
+                                    <span class="font-semibold text-slate-700 text-sm break-words">{{ $comment->user->name ?? 'Anonim' }}</span>
                                     <span class="text-xs text-slate-500">{{ $comment->created_at->diffForHumans() }}</span>
                                 </div>
-                                <p class="text-slate-600 text-sm">{{ $comment->content }}</p>
+                                <p class="text-slate-600 text-sm break-words">{{ $comment->content }}</p>
                             </div>
                             @endforeach
                         </div>
@@ -208,23 +370,42 @@
                             @csrf
                             <div class="flex flex-col sm:flex-row gap-4">
                                 <div class="flex-shrink-0">
-                                    <div class="flex gap-1" x-data="{ rating: 0 }">
+                                    <div class="flex gap-1" x-data="{ rating: 0 }" role="radiogroup" aria-label="Rating">
                                         @for($i = 1; $i <= 5; $i++)
-                                        <label class="cursor-pointer">
-                                            <input type="radio" name="rating" value="{{ $i }}" class="sr-only" required>
-                                            <svg class="w-6 h-6 text-slate-300 hover:text-yellow-400 transition-colors star-rating" data-value="{{ $i }}" fill="currentColor" viewBox="0 0 20 20">
+                                        <label class="cursor-pointer p-0.5" title="{{ $i }} bintang">
+                                            <input type="radio" name="rating" value="{{ $i }}" class="sr-only peer" required @change="rating = {{ $i }}">
+                                            <svg class="w-7 h-7 sm:w-6 sm:h-6 hover:text-yellow-400 transition-colors star-rating peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-500 rounded" :class="rating >= {{ $i }} ? 'text-yellow-400' : 'text-slate-300'" data-value="{{ $i }}" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                             </svg>
                                         </label>
                                         @endfor
                                     </div>
                                 </div>
-                                <div class="flex-1 flex gap-2">
-                                    <input type="text" name="comment" class="w-full px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500" placeholder="Tulis pengalaman singkat...">
+                                <div class="flex-1 flex gap-2 min-w-0">
+                                    <input type="text" name="comment" maxlength="1000" class="w-full min-w-0 px-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-emerald-500 focus:border-emerald-500" placeholder="Tulis pengalaman singkat...">
                                     <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl whitespace-nowrap">Kirim</button>
                                 </div>
                             </div>
                         </form>
+                    </div>
+                    @else
+                    <!-- Guests: ask to log in first, then come back here -->
+                    <div class="mt-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0"><x-icon name="chat" class="w-5 h-5 text-emerald-600" /></div>
+                            <div class="min-w-0">
+                                <p class="font-bold text-slate-800">Masuk atau daftar dulu untuk memberi ulasan</p>
+                                <p class="text-sm text-slate-600 mt-0.5">Bagikan rating dan pengalamanmu di jalur ini. Setelah masuk, kamu kembali ke halaman ini.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <a href="{{ route('routes.review.login', $route) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">
+                                <x-icon name="login" class="w-4 h-4" /> Masuk
+                            </a>
+                            <a href="{{ route('routes.review.login', [$route, 'to' => 'register']) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-100 text-emerald-700 text-sm font-semibold">
+                                <x-icon name="user-add" class="w-4 h-4" /> Daftar
+                            </a>
+                        </div>
                     </div>
                     @endauth
                 </div>
@@ -236,12 +417,12 @@
         <!-- ============================== -->
         <!-- RIGHT COLUMN: SIDEBAR          -->
         <!-- ============================== -->
-        <div class="lg:col-span-4 space-y-6">
+        <div class="lg:col-span-4 space-y-6 min-w-0">
             
             <!-- A. LIKE & ACTION WIDGET -->
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6 text-center">
                 <div class="flex justify-center items-center gap-2 mb-4">
-                    <span class="text-3xl">❤️</span>
+                    <x-icon name="heart" class="w-8 h-8 text-rose-500" />
                     <span class="font-bold text-3xl text-slate-800">{{ $route->likes_count }}</span>
                     <span class="text-sm text-slate-500 mt-2 font-medium">likes</span>
                 </div>
@@ -251,20 +432,26 @@
                     <form action="{{ route('routes.like.toggle', $route) }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full py-3 rounded-2xl font-bold transition-all border-2 {{ $route->isLikedBy(Auth::id()) ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-200 hover:text-emerald-700 hover:bg-emerald-50' }}">
-                            {{ $route->isLikedBy(Auth::id()) ? 'Batal Suka' : 'Berikan Like 👍' }}
+                            <span class="inline-flex items-center justify-center gap-2">
+                                @if($route->isLikedBy(Auth::id()))
+                                    Batal Suka
+                                @else
+                                    <x-icon name="thumb-up" class="w-5 h-5" /> Berikan Like
+                                @endif
+                            </span>
                         </button>
                     </form>
                     @if(Auth::user()->isAdmin())
                     <form action="{{ route('routes.destroy', $route) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus rute ini?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="w-full py-2 bg-red-50 text-red-600 text-sm font-bold rounded-xl mt-2 hover:bg-red-100">
-                            🗑️ Hapus Rute
+                        <button type="submit" class="w-full py-2 bg-red-50 text-red-600 text-sm font-bold rounded-xl mt-2 hover:bg-red-100 inline-flex items-center justify-center gap-2">
+                            <x-icon name="trash" class="w-4 h-4" /> Hapus Rute
                         </button>
                     </form>
                     @endif
                     @else
-                    <a href="{{ route('login') }}" class="block w-full py-3 bg-slate-50 text-slate-700 rounded-2xl font-bold border border-slate-200 hover:bg-slate-100">
+                    <a href="{{ route('routes.review.login', $route) }}" class="block w-full py-3 bg-slate-50 text-slate-700 rounded-2xl font-bold border border-slate-200 hover:bg-slate-100">
                         Login untuk Suka
                     </a>
                     @endauth
@@ -331,7 +518,7 @@
                             @if($similar->route_coordinates && count($similar->route_coordinates) > 0)
                             <div id="similar-map-{{ $similar->id }}" class="w-full h-full opacity-80 group-hover:opacity-100"></div>
                             @else
-                            <div class="w-full h-full flex items-center justify-center text-xl bg-gradient-to-br from-emerald-100 to-teal-100">🏔️</div>
+                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-teal-100"><x-icon name="mountain" class="w-6 h-6 text-emerald-500" /></div>
                             @endif
                         </div>
                         
@@ -347,14 +534,14 @@
                     @endforeach
                     
                     <a href="{{ route('routes.similar', $route) }}" class="block w-full text-center py-2.5 mt-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-xl transition-colors">
-                        Lihat Semua Rekomendasi →
+                        <span class="inline-flex items-center gap-1">Lihat Semua Rekomendasi <x-icon name="arrow-right" class="w-3.5 h-3.5" /></span>
                     </a>
                 </div>
             </div>
             @endif
 
             <!-- C. BASECAMP & PRACTICAL INFO -->
-            @if($route->basecamp_name || $route->entry_fee || $route->facilities || $route->tips)
+            @if($route->basecamp_name || $route->contact_phone || $route->entry_fee || $route->facilities || $route->best_season || $route->tips)
             <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 <div class="p-6 border-b border-slate-100 bg-slate-50">
                     <h3 class="font-bold text-slate-800 flex items-center">
@@ -365,7 +552,7 @@
                 <div class="p-6 space-y-5">
                     @if($route->basecamp_name)
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-sm">⛺</div>
+                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5"><x-icon name="home" class="w-4 h-4 text-purple-600" /></div>
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Basecamp</p>
                             <p class="font-bold text-slate-800 text-sm">{{ $route->basecamp_name }}</p>
@@ -373,7 +560,7 @@
                                 <p class="text-xs text-slate-600 mt-0.5">{{ $route->basecamp_address }}</p>
                             @endif
                             @if($route->basecamp_lat && $route->basecamp_lng)
-                                <a href="https://www.google.com/maps?q={{ $route->basecamp_lat }},{{ $route->basecamp_lng }}" target="_blank" class="text-[10px] text-emerald-600 hover:underline mt-1 inline-block">🗺️ Buka di Google Maps →</a>
+                                <a href="https://www.google.com/maps?q={{ $route->basecamp_lat }},{{ $route->basecamp_lng }}" target="_blank" class="text-[10px] text-emerald-600 hover:underline mt-1 inline-flex items-center gap-1"><x-icon name="map" class="w-3 h-3" /> Buka di Google Maps <x-icon name="arrow-right" class="w-3 h-3" /></a>
                             @endif
                         </div>
                     </div>
@@ -381,7 +568,7 @@
 
                     @if($route->contact_phone)
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-sm">📞</div>
+                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5"><x-icon name="phone" class="w-4 h-4 text-green-600" /></div>
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Kontak</p>
                             <p class="font-bold text-slate-800 text-sm">{{ $route->contact_phone }}</p>
@@ -391,7 +578,7 @@
 
                     @if($route->entry_fee)
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-sm">💰</div>
+                        <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-0.5"><x-icon name="cash" class="w-4 h-4 text-yellow-600" /></div>
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Tiket Masuk</p>
                             <p class="font-black text-emerald-600 text-lg leading-tight">Rp {{ number_format($route->entry_fee, 0, ',', '.') }}</p>
@@ -401,7 +588,7 @@
 
                     @if($route->facilities)
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-sm">🚿</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5"><x-icon name="check-badge" class="w-4 h-4 text-blue-600" /></div>
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Fasilitas</p>
                             <p class="text-sm text-slate-700">{{ $route->facilities }}</p>
@@ -411,7 +598,7 @@
 
                     @if($route->best_season)
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-sm">🗓️</div>
+                        <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5"><x-icon name="calendar" class="w-4 h-4 text-orange-600" /></div>
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Musim Terbaik</p>
                             <p class="font-bold text-slate-800 text-sm">{{ $route->best_season }}</p>
@@ -422,7 +609,7 @@
                     @if($route->tips)
                     <div class="mt-4 pt-4 border-t border-slate-100">
                         <div class="bg-amber-50 rounded-xl p-4 border border-amber-100">
-                            <p class="text-xs font-bold text-amber-800 mb-1 flex items-center"><span class="mr-1">💡</span> Tips Penting</p>
+                            <p class="text-xs font-bold text-amber-800 mb-1 flex items-center"><x-icon name="light-bulb" class="w-4 h-4 mr-1 text-amber-600" /> Tips Penting</p>
                             <p class="text-xs text-amber-900 leading-relaxed">{{ $route->tips }}</p>
                         </div>
                     </div>
@@ -436,6 +623,50 @@
 </div>
 
 @push('scripts')
+@if($trailPoints)
+<script>
+// Alpine component for the basecamp/location/weather cards; data comes from
+// routes.conditions after the page has loaded (external APIs are cached server-side).
+window.routeConditions = function (url, points) {
+    return {
+        points: points,
+        location: null,
+        weather: null,
+        safety: null,
+        loading: true,
+        async load() {
+            try {
+                const res = await fetch(url, { headers: { Accept: 'application/json' } });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (data.points) this.points = data.points;
+                this.location = data.location;
+                this.weather = data.weather;
+                this.safety = data.safety;
+            } catch (e) {
+                console.warn('Kondisi jalur tidak dapat dimuat', e);
+            }
+            this.loading = false;
+        },
+        num(value, digits = 0) {
+            if (value === null || value === undefined) return '–';
+            return Number(value).toLocaleString('id-ID', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        },
+        coords(p) {
+            return p ? Number(p.lat).toFixed(5) + ', ' + Number(p.lng).toFixed(5) : '–';
+        },
+        ele(p) {
+            return p && p.elevation_m !== null && p.elevation_m !== undefined
+                ? '± ' + this.num(p.elevation_m) + ' mdpl'
+                : 'Ketinggian belum diketahui';
+        },
+        w(side, key) {
+            return this.weather && this.weather[side] ? this.weather[side][key] : null;
+        },
+    };
+};
+</script>
+@endif
 @if($similarRoutes->count() > 0)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -489,7 +720,7 @@ document.addEventListener('DOMContentLoaded', function() {
             color: '#fff',
             weight: 2,
             fillOpacity: 1
-        }).addTo(map).bindPopup('🏁 Start');
+        }).addTo(map).bindPopup('Start');
 
         // Add end marker (red)
         L.circleMarker(coords[coords.length - 1], {
@@ -498,7 +729,7 @@ document.addEventListener('DOMContentLoaded', function() {
             color: '#fff',
             weight: 2,
             fillOpacity: 1
-        }).addTo(map).bindPopup('🏔️ Finish');
+        }).addTo(map).bindPopup('Finish');
 
         map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
     }
