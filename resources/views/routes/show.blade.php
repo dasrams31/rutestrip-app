@@ -193,29 +193,12 @@
 
                     <div class="flex-1 min-h-[150px] flex flex-col">
                         <div x-show="loading" class="flex-1 rounded-2xl bg-slate-100 animate-pulse"></div>
-                        <template x-if="!loading && chart()">
-                            <svg :viewBox="'0 0 ' + chart().w + ' ' + chart().h" class="w-full h-auto" role="img"
-                                 :aria-label="'Profil elevasi dari ' + num(chart().min) + ' sampai ' + num(chart().max) + ' mdpl'">
-                                <defs>
-                                    <linearGradient id="elev-fill" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
-                                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.03"/>
-                                    </linearGradient>
-                                </defs>
-                                <template x-for="t in chart().ticks" :key="t.y">
-                                    <g>
-                                        <line :x1="chart().left" :x2="chart().w" :y1="t.y" :y2="t.y" stroke="#e2e8f0" stroke-dasharray="3 3"/>
-                                        <text :x="chart().left - 6" :y="t.y + 4" text-anchor="end" font-size="11" fill="#64748b" x-text="num(t.v)"></text>
-                                    </g>
-                                </template>
-                                <path :d="chart().area" fill="url(#elev-fill)"/>
-                                <path :d="chart().line" fill="none" stroke="#059669" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-                                <circle :cx="chart().start.x" :cy="chart().start.y" r="4.5" fill="#10b981" stroke="#fff" stroke-width="2"/>
-                                <circle :cx="chart().top.x" :cy="chart().top.y" r="4.5" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
-                                <text :x="chart().left" :y="chart().h - 2" font-size="11" fill="#64748b">0 km</text>
-                                <text :x="chart().w" :y="chart().h - 2" font-size="11" fill="#64748b" text-anchor="end" x-text="num(chart().km, 1) + ' km'"></text>
-                            </svg>
-                        </template>
+                        {{-- Built as an SVG string: Alpine directives don't work inside <svg> templates. --}}
+                        <div x-show="!loading && chart()" x-cloak x-html="chartSvg()"></div>
+                        <div class="flex items-center gap-4 mt-2 text-[11px] text-slate-500" x-show="!loading && chart()" x-cloak>
+                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Basecamp</span>
+                            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Titik tertinggi</span>
+                        </div>
                         <p x-show="!loading && !chart()" x-cloak class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                             Profil elevasi belum tersedia. Coba muat ulang halaman nanti.
                         </p>
@@ -753,6 +736,29 @@ window.routeConditions = function (url, points) {
                 top: { x: pts[topIdx][0], y: pts[topIdx][1] },
             };
             return this._chart;
+        },
+        chartSvg() {
+            const c = this.chart();
+            if (!c) return '';
+            const f = n => n.toFixed(1);
+            const grid = c.ticks.map(t =>
+                `<line x1="${c.left}" x2="${c.w}" y1="${f(t.y)}" y2="${f(t.y)}" stroke="#e2e8f0" stroke-dasharray="3 3"/>` +
+                `<text x="${c.left - 6}" y="${f(t.y + 4)}" text-anchor="end" font-size="11" fill="#64748b">${this.num(t.v)}</text>`
+            ).join('');
+            const label = `Profil elevasi dari ${this.num(c.min)} sampai ${this.num(c.max)} mdpl`;
+            return `<svg viewBox="0 0 ${c.w} ${c.h}" class="w-full h-auto" role="img" aria-label="${label}">
+                <defs><linearGradient id="elev-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#10b981" stop-opacity="0.03"/>
+                </linearGradient></defs>
+                ${grid}
+                <path d="${c.area}" fill="url(#elev-fill)"/>
+                <path d="${c.line}" fill="none" stroke="#059669" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle cx="${f(c.start.x)}" cy="${f(c.start.y)}" r="5" fill="#10b981" stroke="#fff" stroke-width="2"/>
+                <circle cx="${f(c.top.x)}" cy="${f(c.top.y)}" r="5" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+                <text x="${c.left}" y="${c.h - 2}" font-size="11" fill="#64748b">0 km</text>
+                <text x="${c.w - 2}" y="${c.h - 2}" font-size="11" fill="#64748b" text-anchor="end">${this.num(c.km, 1)} km</text>
+            </svg>`;
         },
     };
 };
