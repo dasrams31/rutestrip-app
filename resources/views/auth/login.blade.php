@@ -3,121 +3,60 @@
 @section('title', __('account.login.title'))
 
 @section('content')
-<div class="min-h-[70vh] flex items-center justify-center px-4">
-    <div class="w-full max-w-md">
-        <!-- Login Card -->
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-            <!-- Header - Green Theme for User -->
-            <div class="bg-mountain-gradient p-6 sm:p-8 text-center">
-                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                </div>
-                <h1 class="text-2xl font-bold text-white mb-2">{{ __('account.login.heading') }}</h1>
-                <p class="text-white/80 text-sm">{{ __('account.login.subtitle') }}</p>
-            </div>
+@component('partials.rs-auth-shell', [
+    'eyebrow' => __('account.login.subtitle'),
+    'title' => __('account.login.heading'),
+    'lead' => __('account.login.footer'),
+    'seed' => 11,
+])
+<div class="rs-card p-5 sm:p-8">
+    <form method="POST" action="{{ route('login.submit') }}" class="space-y-5">
+        @csrf
 
-            <!-- Form -->
-            <div class="p-5 sm:p-8">
-                @if(session('success'))
-                <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-                    {{ session('success') }}
-                </div>
-                @endif
-
-                <form method="POST" action="{{ route('login.submit') }}">
-                    @csrf
-
-                    <!-- Email -->
-                    <div class="mb-6">
-                        <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
-                            {{ __('account.login.email') }}
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-                                </svg>
-                            </div>
-                            <input type="email"
-                                   name="email"
-                                   id="email"
-                                   value="{{ old('email') }}"
-                                   class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('email') border-red-500 @enderror"
-                                   placeholder="email@example.com"
-                                   autocomplete="email"
-                                   required>
-                        </div>
-                        @error('email')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Password -->
-                    <div class="mb-6">
-                        <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
-                            {{ __('account.login.password') }}
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                            </div>
-                            <input type="password"
-                                   name="password"
-                                   id="password"
-                                   class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('password') border-red-500 @enderror"
-                                   placeholder="••••••••"
-                                   autocomplete="current-password"
-                                   required>
-                        </div>
-                        @error('password')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Remember Me -->
-                    <div class="mb-6">
-                        <label class="flex items-center">
-                            <input type="checkbox" name="remember" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500">
-                            <span class="ml-2 text-sm text-slate-600">{{ __('account.login.remember') }}</span>
-                        </label>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit"
-                            class="w-full py-4 bg-mountain-gradient text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
-                        <span class="flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                            </svg>
-                            {{ __('account.login.submit') }}
-                        </span>
-                    </button>
-                </form>
-
-                <!-- Links -->
-                <div class="mt-6 text-center space-y-2">
-                    <p class="text-sm text-slate-500">
-                        {{ __('account.login.no_account') }}
-                        <a href="{{ route('register') }}" class="text-emerald-600 hover:text-emerald-700 font-medium">{{ __('account.login.register') }}</a>
-                    </p>
-                    <a href="{{ route('admin.login') }}" class="text-sm text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1.5">
-                        <x-icon name="lock-closed" class="w-4 h-4" /> {{ __('account.login.admin_link') }}
-                    </a>
-                    <a href="{{ route('search.index') }}" class="text-sm text-slate-500 hover:text-slate-600 flex items-center justify-center gap-1.5">
-                        <x-icon name="arrow-left" class="w-4 h-4" /> {{ __('account.login.back_home') }}
-                    </a>
-                </div>
-            </div>
+        <div>
+            <label for="email" class="rs-label">{{ __('account.login.email') }}</label>
+            <input type="email" name="email" id="email" value="{{ old('email') }}"
+                   class="rs-input" placeholder="{{ __('nama@email.com') }}" autocomplete="email" inputmode="email" required
+                   @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+            @error('email')
+                <p id="email-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
         </div>
 
-        <!-- Info -->
-        <p class="mt-6 text-center text-sm text-slate-500">
-            {{ __('account.login.footer') }}
-        </p>
+        <div>
+            <label for="password" class="rs-label">{{ __('account.login.password') }}</label>
+            <input type="password" name="password" id="password"
+                   class="rs-input" autocomplete="current-password" required
+                   @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+            @error('password')
+                <p id="password-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
+        </div>
+
+        <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
+            <input type="checkbox" name="remember" value="1" class="rs-check" @checked(old('remember'))>
+            <span class="text-[0.9375rem]">{{ __('account.login.remember') }}</span>
+        </label>
+
+        <button type="submit" class="rs-sign w-full text-base">
+            <x-icon name="login" class="w-5 h-5" /> {{ __('account.login.submit') }}
+        </button>
+    </form>
+</div>
+
+<div class="mt-6 space-y-1 text-[0.9375rem]">
+    <p class="flex flex-wrap items-center gap-x-2 min-h-[44px]">
+        <span class="rs-muted">{{ __('account.login.no_account') }}</span>
+        <a href="{{ route('register') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] underline decoration-2 underline-offset-4 hover:text-[#053b30]">{{ __('account.login.register') }}</a>
+    </p>
+    <div class="flex flex-wrap gap-x-6 border-t rs-rule pt-2">
+        <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 min-h-[44px] rs-muted hover:text-[#053b30]">
+            <x-icon name="arrow-left" class="w-4 h-4" /> {{ __('account.login.back_home') }}
+        </a>
+        <a href="{{ route('admin.login') }}" class="inline-flex items-center gap-2 min-h-[44px] rs-muted hover:text-[#053b30]">
+            <x-icon name="lock-closed" class="w-4 h-4" /> {{ __('account.login.admin_link') }}
+        </a>
     </div>
 </div>
+@endcomponent
 @endsection

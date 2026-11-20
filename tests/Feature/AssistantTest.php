@@ -84,6 +84,14 @@ class AssistantTest extends TestCase
                 && str_contains($system, '10.32520/stmsi.v15i4.6087')
                 && str_contains($system, 'https://chat.example.test/chat')
                 && str_contains($system, route('routes.create'))
+                && str_contains($system, 'pemandu gunung senior')
+                && str_contains($system, 'Obrolan Pendaki')
+                // Evaluation results stay off the site.
+                && ! str_contains($system, 'Precision')
+                && ! str_contains($system, 'P@5')
+                && ! str_contains($system, 'MRR')
+                && ! str_contains($system, 'TF-IDF')
+                && ! str_contains($system, '0,60')
                 && array_column($r['contents'], 'role') === ['user', 'model', 'user']
                 && $r['contents'][2]['parts'][0]['text'] === 'Apa itu RuteStrip?'; // control char stripped
         });
@@ -221,6 +229,10 @@ class AssistantTest extends TestCase
             return str_contains($system, 'You are "RuteStrip Assistant"')
                 && str_contains($system, 'Answer in English')
                 && str_contains($system, "#{$route->id} Mt. Merbabu via Selo | Hard | 11.1 km | +1424 m | 4.6 h")
+                && str_contains($system, 'friendly senior mountain guide')
+                && ! str_contains($system, 'Precision')
+                && ! str_contains($system, 'TF-IDF')
+                && ! str_contains($system, '0.60')
                 && ! str_contains($system, 'Jawab dalam Bahasa Indonesia');
         });
 
@@ -230,36 +242,38 @@ class AssistantTest extends TestCase
             ->assertJsonPath('reply', fn ($reply) => str_starts_with($reply, 'Sorry, the RuteStrip Assistant cannot answer right now.'));
     }
 
-    public function test_guest_sees_the_sign_up_panel_and_the_assistant(): void
+    public function test_guest_sees_the_hiker_chat_sign_in_panel_and_the_assistant(): void
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('data-panel="chat-guest"', false)
-            ->assertSee('Buat akun dulu untuk memakai AI Chat')
-            ->assertSee(route('assistant.chat.login', ['to' => 'register', 'back' => '/']))
-            ->assertSee(route('assistant.chat.login', ['back' => '/']))
+            ->assertSee('data-panel="community-guest"', false)
+            ->assertSee('aria-label="Buka Obrolan Pendaki"', false)
+            ->assertSee('Masuk atau daftar dulu untuk ngobrol dengan sesama pendaki')
+            ->assertSee(route('community.login', ['to' => 'register', 'back' => '/']))
+            ->assertSee(route('community.login', ['back' => '/']))
             ->assertDontSee('?embed=1', false)
-            ->assertDontSee('data-panel="chat-app"', false)
+            ->assertDontSee('aria-label="Buka RuteStrip AI Chat"', false)
+            ->assertDontSee('data-panel="community"', false)
             ->assertSee('id="rs-assistant-panel"', false)
             ->assertSee('Asisten RuteStrip')
+            ->assertSee('Halo, pendaki.')
             ->assertSee('Apa itu RuteStrip?')
-            ->assertSee(route('assistant.ask'), false)
+            ->assertSee(json_encode(route('assistant.ask')), false)
             ->assertSee('rs-fab rs-fab-left  flex', false); // visible on mobile here
     }
 
-    public function test_logged_in_user_gets_the_embedded_chat_panel(): void
+    public function test_logged_in_user_gets_the_hiker_chat_not_the_ai_chat(): void
     {
         $this->actingAs(User::factory()->create())
             ->get('/?lang=en')
             ->assertOk()
-            ->assertSee('data-panel="chat-app"', false)
-            ->assertSee('src="https://chat.example.test/chat?embed=1&amp;lang=en"', false)
-            ->assertSee('href="https://chat.example.test/chat" target="_blank" rel="noopener"', false)
-            ->assertSee('Open in new tab')
+            ->assertSee('data-panel="community"', false)
+            ->assertSee('Hiker Chat')
+            ->assertDontSee('?embed=1', false)
+            ->assertDontSee('chat.example.test/chat?', false)
             ->assertSee('RuteStrip Assistant')
             ->assertSee('What is RuteStrip?')
-            ->assertDontSee('Create an account to use AI Chat')
-            ->assertDontSee('data-panel="chat-guest"', false);
+            ->assertDontSee('data-panel="community-guest"', false);
     }
 
     public function test_buttons_are_hidden_on_small_screens_on_form_pages(): void
@@ -268,26 +282,14 @@ class AssistantTest extends TestCase
         $this->get(route('login'))->assertOk()->assertSee('rs-fab rs-fab-right rs-fab-hide-sm', false);
     }
 
-    public function test_chat_login_link_brings_the_guest_back_to_the_page(): void
+    public function test_old_chat_login_link_still_brings_the_guest_back_to_the_page(): void
     {
-        $user = User::factory()->create(['password' => bcrypt('rahasia123')]);
-
+        // The link now opens "Obrolan Pendaki" again (#obrolan); see CommunityChatTest for the full flow.
         $this->get(route('assistant.chat.login', ['to' => 'register', 'back' => '/routes?page=2']))->assertRedirect(route('register'));
-        $this->get(route('assistant.chat.login', ['back' => '/routes?page=2']))->assertRedirect(route('login'));
+        $this->assertSame(url('/routes?page=2') . '#obrolan', session('url.intended'));
 
-        $this->post(route('login.submit'), ['email' => $user->email, 'password' => 'rahasia123'])
-            ->assertRedirect(url('/routes?page=2') . '#ai-chat');
-
-        // Logged in: straight back.
-        $this->get(route('assistant.chat.login', ['back' => '/search']))->assertRedirect(url('/search') . '#ai-chat');
-    }
-
-    public function test_chat_login_link_only_accepts_local_paths(): void
-    {
-        foreach (['//evil.example/x', '/\\evil.example', 'https://evil.example/', 'javascript:alert(1)'] as $back) {
-            $this->flushSession();
-            $this->get(route('assistant.chat.login', ['back' => $back]))->assertRedirect(route('login'));
-            $this->assertSame(url('/') . '#ai-chat', session('url.intended'), $back);
-        }
+        $this->flushSession();
+        $this->get(route('assistant.chat.login', ['back' => '//evil.example/x']))->assertRedirect(route('login'));
+        $this->assertSame(url('/') . '#obrolan', session('url.intended'));
     }
 }

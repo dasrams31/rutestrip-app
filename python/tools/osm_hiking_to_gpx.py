@@ -80,6 +80,8 @@ WAYS = [
     (["Jalur Pendakian Gunung Sindoro via Ndoroarum"], "Gunung Sindoro via Ndoroarum"),
     (["Jalur Pendakian Gunung Sindoro via Bedakah"], "Gunung Sindoro via Bedakah"),
     (["Jalur Pendakian Gunung Sumbing via Mangli"], "Gunung Sumbing via Mangli"),
+    (["Jalur Pendakian Gunung Sumbing via Butuh"], "Gunung Sumbing via Butuh"),
+    (["Jalur Pendakian Gunung Sumbing via Gerung 1"], "Gunung Sumbing via Gerung"),
     (["Jalur Pendakian Gunung Sumbing via Banaran"], "Gunung Sumbing via Banaran"),
     (["Jalur Pendakian Gunung Sumbing via Pagergunung/Cepit"], "Gunung Sumbing via Cepit"),
     (["Jalur Pendakian Gunung Ngliman Wilis via Kare"], "Gunung Liman via Kare"),

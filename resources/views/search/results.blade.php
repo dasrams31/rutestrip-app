@@ -2,293 +2,214 @@
 
 @section('title', __('Hasil Pencarian'))
 
+@php
+    $isEn = app()->getLocale() === 'en';
+    $num = fn ($value, int $decimals = 0) => number_format((float) $value, $decimals, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $hoursLabel = function ($hours) {
+        $hours = (float) $hours;
+        $h = (int) floor($hours);
+        $m = (int) round(($hours - $h) * 60);
+        if ($m === 60) { $h++; $m = 0; }
+        return __(':h j :m mnt', ['h' => $h, 'm' => $m]);
+    };
+    // Plain words instead of a percentage: how close a route is to what was asked.
+    $matchWord = fn (float $score) => match (true) {
+        $score >= 70 => __('Sangat cocok'),
+        $score >= 50 => __('Cocok'),
+        $score >= 30 => __('Lumayan cocok'),
+        default => __('Sedikit mirip'),
+    };
+    $difficultyLevel = fn ($level) => match ($level) { 'Mudah' => 1, 'Sedang' => 2, 'Sulit' => 3, default => 4 };
+    $intents = $intents ?? [];
+    $suggestions = [
+        __('Jalur landai untuk pemula'),
+        __('Pendakian singkat 2-3 jam'),
+        __('Jalur curam dan menantang'),
+    ];
+    $hasFlash = session('success') || session('warning') || (isset($errors) && $errors->any());
+@endphp
+
+@include('partials.rs-kit')
+
+@push('styles')
+<style>
+    .rs-more > summary { list-style: none; cursor: pointer; }
+    .rs-more > summary::-webkit-details-marker { display: none; }
+    .rs-more[open] .rs-more-icon { transform: rotate(180deg); }
+    .result-map .leaflet-control-container { display: none; }
+</style>
+@endpush
+
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Search Header -->
-    <div class="mb-8">
-        <a href="{{ route('search.index') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 group">
-            <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            {{ __('Kembali ke Pencarian') }}
-        </a>
-
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Hasil Rekomendasi') }}</h1>
-        <p class="text-slate-600 break-words">
-            {{ __('Pencarian:') }} <span class="font-semibold text-emerald-600">"{{ $query }}"</span>
-            @if(isset($searchTime))
-            <span class="ml-2 text-sm bg-slate-100 px-2 py-1 rounded text-slate-500 inline-flex items-center gap-1"><x-icon name="lightning-bolt" class="w-4 h-4 text-amber-500" /> {{ $searchTime }} ms</span>
+<div class="rs-app">
+    {{-- Header: what was asked, and a box to ask again. --}}
+    <section class="rs-on-dark relative overflow-hidden bg-rs-z9 text-white {{ $hasFlash ? 'mt-4' : '-mt-4' }}">
+        @include('partials.rs-contours', ['seed' => 5, 'tone' => 'dark', 'class' => 'absolute inset-0 w-full h-full pointer-events-none'])
+        <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-8 sm:pt-8 sm:pb-12">
+            <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 min-h-[44px] -ml-1 px-1 text-sm font-semibold text-[#a7f3d0] hover:text-white">
+                <x-icon name="arrow-left" class="w-4 h-4 shrink-0" /> <span>{{ __('Kembali ke beranda') }}</span>
+            </a>
+            <p class="mt-1 text-sm sm:text-base font-semibold text-[#a7f3d0]">{{ __('Hasil pencarian untuk') }}</p>
+            <h1 class="rs-display mt-1 text-[clamp(2rem,7.5vw,3.5rem)] leading-[0.95] [text-wrap:balance] max-w-4xl break-words">&ldquo;{{ $query }}&rdquo;</h1>
+            @if(!isset($message) && $results->isNotEmpty())
+            <p class="mt-3 max-w-2xl text-base sm:text-lg leading-relaxed text-[#d1fae5]">
+                {{ __($results->count() === 1 ? 'Ada 1 jalur yang cocok.' : 'Ini :count jalur yang paling cocok. Yang paling atas paling pas.', ['count' => $results->count()]) }}
+            </p>
             @endif
-        </p>
-    </div>
 
-    <!-- Search again (top) -->
-    <form action="{{ route('search.submit') }}" method="POST" class="mb-8 flex flex-col sm:flex-row gap-3 bg-white rounded-2xl p-4 shadow-lg border border-slate-100">
-        @csrf
-        <label for="query-top" class="sr-only">{{ __('Cari jalur pendakian') }}</label>
-        <input type="text"
-               id="query-top"
-               name="query"
-               value="{{ $query }}"
-               placeholder="{{ __('Cari lagi, misalnya: jalur landai untuk pemula') }}"
-               class="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-               required
-               minlength="3">
-        <button type="submit"
-                class="px-6 py-3 bg-mountain-gradient text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            {{ __('Cari') }}
-        </button>
-    </form>
-
-    @if(isset($message))
-    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-center space-x-4">
-        <div class="flex-shrink-0">
-            <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-        </div>
-        <div>
-            <h3 class="font-semibold text-amber-800">{{ __('Tidak Ada Data') }}</h3>
-            <p class="text-amber-700">{{ $message }}</p>
-        </div>
-    </div>
-    @elseif($results->isEmpty())
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-12 text-center">
-        <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <h3 class="text-xl font-semibold text-slate-600 mb-2">{{ __('Tidak Ditemukan') }}</h3>
-        <p class="text-slate-500">{{ __('Tidak ada jalur yang cocok dengan pencarian Anda.') }}</p>
-    </div>
-    @else
-    <!-- Results Count -->
-    <div class="mb-6">
-        <p class="text-slate-500">{{ __('Ditemukan') }} <span class="font-bold text-slate-700">{{ $results->count() }}</span> {{ __('jalur yang cocok') }}</p>
-    </div>
-
-    @if(!empty($notice))
-    <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
-        {{ $notice }}
-    </div>
-    @endif
-
-    <!-- Cosine Similarity Formula Explanation -->
-    <div class="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6 border border-indigo-100">
-        <div class="flex items-start sm:space-x-4">
-            <div class="hidden sm:flex w-12 h-12 bg-indigo-100 rounded-xl items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h3 class="text-base sm:text-lg font-bold text-indigo-800 mb-2">{{ __('Metode: SBERT + Cosine Similarity (Hybrid)') }}</h3>
-                <p class="text-sm text-slate-600 mb-3">
-                    {{ __('Tingkat kemiripan dihitung menggunakan rumus Cosine Similarity antara vektor query') }}
-                    <span class="font-mono bg-white px-1 rounded">Q</span> {{ __('dan vektor jalur') }}
-                    <span class="font-mono bg-white px-1 rounded">D</span>:
-                </p>
-                <div class="bg-white rounded-xl p-4 mb-3 text-center overflow-x-auto">
-                    <code class="text-sm sm:text-lg font-mono text-indigo-700 whitespace-nowrap">
-                        Sim(Q, D) = (Q · D) / (||Q|| × ||D||)
-                    </code>
+            <form action="{{ route('search.submit') }}" method="POST" role="search" class="mt-6 max-w-3xl" data-search-form>
+                @csrf
+                <label for="query-top" class="block text-sm font-semibold text-white mb-2">{{ __('Mau cari yang lain?') }}</label>
+                <div class="rs-on-light flex flex-col sm:flex-row gap-2 rounded-xl bg-white p-2">
+                    <div class="relative flex-1 min-w-0">
+                        <x-icon name="search" class="w-5 h-5 text-rs-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input type="text" id="query-top" name="query" value="{{ $query }}" required minlength="3" maxlength="500"
+                               autocomplete="off" enterkeyhint="search"
+                               placeholder="{{ __('Misalnya: jalur landai untuk pemula') }}"
+                               class="w-full min-h-[52px] pl-11 pr-3 rounded-lg border-0 bg-transparent text-rs-ink placeholder-[#5b6b64] text-base">
+                    </div>
+                    <button type="submit" data-search-submit class="rs-sign rs-swap place-items-center min-h-[52px] rounded-lg px-6 text-base font-bold">
+                        <span data-idle>{{ __('Cari lagi') }}</span>
+                        <span data-busy hidden>{{ __('Mencari jalur...') }}</span>
+                    </button>
                 </div>
-                <div class="grid sm:grid-cols-3 gap-3 text-xs">
-                    <div class="bg-white/60 rounded-lg p-2">
-                        <span class="font-semibold text-indigo-700">Q · D</span>
-                        <span class="text-slate-500"> = {{ __('Dot product vektor') }}</span>
-                    </div>
-                    <div class="bg-white/60 rounded-lg p-2">
-                        <span class="font-semibold text-indigo-700">||Q||</span>
-                        <span class="text-slate-500"> = {{ __('Magnitude vektor query') }}</span>
-                    </div>
-                    <div class="bg-white/60 rounded-lg p-2">
-                        <span class="font-semibold text-indigo-700">||D||</span>
-                        <span class="text-slate-500"> = {{ __('Magnitude vektor jalur') }}</span>
-                    </div>
-                </div>
-                <p class="text-xs text-slate-500 mt-3">
-                    <strong>{{ __('Model:') }}</strong> {{ __('SBERT (paraphrase-multilingual-MiniLM-L12-v2) menghasilkan vektor 384 dimensi') }}
-                </p>
-                <p class="text-xs text-slate-500 mt-1">
-                    <strong>{{ __('Skor kecocokan:') }}</strong> {{ __('gabungan cosine query dengan seluruh deskripsi jalur (40%) dan dengan aspek paling cocok seperti kemiringan, durasi, atau nama gunung (60%), lalu disesuaikan dengan statistik GPX bila query menyebut tingkat kesulitan/durasi, dan dengan nama gunung bila disebut.') }}
-                </p>
-            </div>
+                <p class="sr-only" role="status" aria-live="polite" data-search-status data-text="{{ __('Mencari jalur yang cocok, tunggu sebentar.') }}"></p>
+            </form>
         </div>
-    </div>
+    </section>
 
-    <!-- Results Grid -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-        @foreach($results as $index => $route)
-        @php
-            // Track preview: at most ~150 points, 5 decimals (~1 m), keeps the page light.
-            $trackPreview = [];
-            $rawCoords = is_array($route->route_coordinates) ? array_values($route->route_coordinates) : [];
-            $rawCount = count($rawCoords);
-            if ($rawCount >= 2) {
-                $keep = min($rawCount, 150);
-                $step = ($rawCount - 1) / ($keep - 1);
-                for ($i = 0; $i < $keep; $i++) {
-                    $pt = $rawCoords[(int) round($i * $step)];
-                    if (is_array($pt) && isset($pt[0], $pt[1]) && is_numeric($pt[0]) && is_numeric($pt[1])) {
-                        $trackPreview[] = [round((float) $pt[0], 5), round((float) $pt[1], 5)];
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        @if(isset($message))
+        {{-- No routes in the database at all. --}}
+        <div class="rs-card p-6 sm:p-10 text-center max-w-2xl mx-auto">
+            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ada jalur untuk dicari.') }}</p>
+            <p class="mt-2 text-rs-muted">{{ $message }}</p>
+            <a href="{{ route('routes.create') }}" class="rs-sign mt-6">{{ __('Upload file GPX') }}</a>
+        </div>
+        @elseif($results->isEmpty())
+        {{-- Nothing close enough to the question. --}}
+        <div class="rs-card p-6 sm:p-10 max-w-2xl mx-auto">
+            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ketemu jalur yang pas.') }}</p>
+            <p class="mt-2 text-rs-muted leading-relaxed">{{ __('Coba tulis dengan cara lain. Sebut nama gunung, berapa lama mau jalan, atau seberapa curam jalurnya.') }}</p>
+            <form action="{{ route('search.submit') }}" method="POST" class="mt-5 flex flex-wrap gap-2">
+                @csrf
+                @foreach($suggestions as $suggestion)
+                <button type="submit" name="query" value="{{ $suggestion }}" class="inline-flex items-center min-h-[44px] rounded-lg border border-rs-line bg-white px-3.5 text-sm font-semibold text-rs-z9 hover:border-rs-z7">{{ $suggestion }}</button>
+                @endforeach
+            </form>
+            <a href="{{ route('routes.index') }}" class="mt-5 inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline underline-offset-4">{{ __('Lihat semua jalur') }}</a>
+        </div>
+        @else
+        @if(!empty($notice))
+        <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 border-l-4 border-l-amber-600 px-4 py-3 text-sm text-amber-950 flex items-start gap-3" role="note">
+            <x-icon name="exclamation" class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
+            <p>{{ $notice }}</p>
+        </div>
+        @endif
+
+        <ol class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            @foreach($results as $index => $route)
+            @php
+                // Track preview: at most ~150 points, 5 decimals (~1 m), keeps the page light.
+                $trackPreview = [];
+                $rawCoords = is_array($route->route_coordinates) ? array_values($route->route_coordinates) : [];
+                $rawCount = count($rawCoords);
+                if ($rawCount >= 2) {
+                    $keep = min($rawCount, 150);
+                    $step = ($rawCount - 1) / ($keep - 1);
+                    for ($i = 0; $i < $keep; $i++) {
+                        $pt = $rawCoords[(int) round($i * $step)];
+                        if (is_array($pt) && isset($pt[0], $pt[1]) && is_numeric($pt[0]) && is_numeric($pt[1])) {
+                            $trackPreview[] = [round((float) $pt[0], 5), round((float) $pt[1], 5)];
+                        }
                     }
                 }
-            }
-        @endphp
-        <div class="mountain-card glass-card rounded-2xl overflow-hidden shadow-lg group min-w-0">
-            <!-- Card Header with Score: route track on an OSM map, gradient fallback -->
-            <div class="relative isolate bg-mountain-gradient p-5 sm:p-6 {{ count($trackPreview) >= 2 ? 'min-h-[13rem] flex flex-col justify-end' : '' }}">
-                @if(count($trackPreview) >= 2)
-                <div class="result-map absolute inset-0 -z-10 pointer-events-none" data-track='@json($trackPreview)' aria-hidden="true"></div>
-                <div class="absolute inset-0 -z-10 pointer-events-none bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/10"></div>
-                <span class="absolute bottom-1 right-2 text-[10px] leading-none text-white/60 pointer-events-none">&copy; OpenStreetMap</span>
-                @endif
-
-                <!-- Match Score Badge -->
-                <div class="absolute top-4 right-4">
-                    <div class="score-badge px-3 py-1 rounded-full text-white text-sm font-bold shadow-lg pulse-glow">
-                        {{ __(':score% cocok', ['score' => $route->similarity_score]) }}
-                    </div>
-                </div>
-
-                <!-- Rank Badge -->
-                <div class="absolute top-4 left-4">
-                    <div class="w-8 h-8 bg-slate-900/40 backdrop-blur-sm ring-1 ring-white/30 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        #{{ $index + 1 }}
-                    </div>
-                </div>
-
-                <div class="pt-8">
-                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-2 break-words drop-shadow">{{ $route->name }}</h3>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                        @if($route->difficulty_level === 'Mudah') bg-green-100 text-green-800
-                        @elseif($route->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-800
-                        @elseif($route->difficulty_level === 'Sulit') bg-orange-100 text-orange-800
-                        @else bg-red-100 text-red-800
-                        @endif">
-                        {{ __($route->difficulty_level) }}
-                    </span>
-                    @if($route->activeGpxVersion)
-                    <span class="inline-flex items-center mt-2 px-3 py-1 rounded-full text-xs font-bold
-                        @if($route->activeGpxVersion->verification_status === 'verified') bg-emerald-100 text-emerald-800
-                        @elseif($route->activeGpxVersion->verification_status === 'invalid') bg-red-100 text-red-800
-                        @else bg-amber-100 text-amber-800
-                        @endif">
-                        GPX {{ strtoupper($route->activeGpxVersion->verification_status) }}
-                    </span>
+                $score = (float) $route->similarity_score;
+                $level = $difficultyLevel($route->difficulty_level);
+                $grade = $num($route->average_grade_pct, 1) . '%';
+                $gain = $num($route->elevation_gain_m);
+                // One sentence on why it showed up, from the numbers the question was about.
+                $why = match (true) {
+                    (bool) array_intersect($intents, ['gentle', 'easy', 'hard']) => __('Kemiringan rata-rata :grade, total naik :gain m.', ['grade' => $grade, 'gain' => $gain]),
+                    in_array('short', $intents, true) => __('Sekitar :time jalan kaki sampai puncak.', ['time' => $hoursLabel($route->naismith_duration_hour)]),
+                    in_array('long', $intents, true) => __('Panjang jalurnya :km km.', ['km' => $num($route->distance_km, 1)]),
+                    default => null,
+                };
+                $gpxStatus = $route->activeGpxVersion?->verification_status;
+            @endphp
+            <li class="rs-card overflow-hidden flex flex-col min-w-0 relative group hover:border-rs-z7 transition-colors">
+                <div class="relative h-40 shrink-0 bg-rs-mist overflow-hidden">
+                    @if(count($trackPreview) >= 2)
+                    <div class="result-map absolute inset-0 pointer-events-none" data-track='@json($trackPreview)' aria-hidden="true"></div>
+                    <span class="absolute bottom-1 right-2 z-[1] text-[10px] leading-none text-rs-ink/70 bg-white/80 px-1 rounded pointer-events-none">&copy; OpenStreetMap</span>
+                    @else
+                    <div class="absolute inset-0 flex items-center justify-center text-rs-z7"><x-icon name="mountain" class="w-10 h-10" /></div>
                     @endif
+                    <span class="absolute top-3 left-3 z-[1] min-w-[2.5rem] h-10 px-2 rounded-lg bg-white border-2 border-rs-z9 rs-display rs-num text-2xl leading-none text-rs-z9 flex items-center justify-center">
+                        <span class="sr-only">{{ __('Urutan') }}</span>{{ $index + 1 }}
+                    </span>
                 </div>
+
+                <div class="p-5 flex-1 flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="rs-chip {{ $score >= 50 ? 'rs-chip-ok' : 'rs-chip-plain' }}" title="{{ __('Skor :score dari 100', ['score' => $num($score)]) }}">
+                            {{ $matchWord($score) }}<span class="sr-only">, {{ __('skor :score dari 100', ['score' => $num($score)]) }}</span>
+                        </span>
+                        <span class="inline-flex items-center gap-2 text-sm font-semibold text-rs-ink">
+                            <span class="rs-diff" aria-hidden="true">@for($i = 1; $i <= 4; $i++)<i class="{{ $i <= $level ? 'on' : '' }}"></i>@endfor</span>
+                            <span><span class="sr-only">{{ __('Tingkat kesulitan') }}:</span> {{ __($route->difficulty_level) }}</span>
+                        </span>
+                    </div>
+
+                    <h2 class="mt-3 rs-display uppercase text-[1.75rem] leading-none text-rs-z9 break-words">
+                        <a href="{{ route('routes.show', $route) }}" class="after:absolute after:inset-0 after:content-[''] group-hover:text-rs-z7">{{ $route->name }}</a>
+                    </h2>
+
+                    @if($gpxStatus && $gpxStatus !== 'verified')
+                    <p class="mt-2"><span class="rs-chip {{ $gpxStatus === 'invalid' ? 'rs-chip-bad' : 'rs-chip-warn' }}">{{ $gpxStatus === 'invalid' ? __('File GPX bermasalah') : __('File GPX belum diperiksa') }}</span></p>
+                    @endif
+
+                    @if($why)
+                    <p class="mt-3 text-sm text-rs-ink leading-relaxed">{{ $why }}</p>
+                    @elseif($route->narrative_text)
+                    <p class="mt-3 text-sm text-rs-muted leading-relaxed">{{ \Illuminate\Support\Str::limit($route->narrative_text, 130) }}</p>
+                    @endif
+
+                    <div class="mt-auto"></div>
+                    <dl class="mt-4 pt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-rs-line">
+                        <div><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $num($route->distance_km, 1) }} km</dd></div>
+                        <div><dt class="text-xs text-rs-muted">{{ __('Total naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $gain }} m</dd></div>
+                        <div><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $hoursLabel($route->naismith_duration_hour) }}</dd></div>
+                        <div><dt class="text-xs text-rs-muted">{{ __('Kemiringan rata-rata') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $grade }}</dd></div>
+                    </dl>
+                    <p class="mt-4 text-xs text-rs-muted truncate">{{ __('Diunggah oleh') }} <span class="font-semibold text-rs-ink">{{ $route->uploader_name }}</span></p>
+                </div>
+            </li>
+            @endforeach
+        </ol>
+
+        <details class="rs-more mt-10 max-w-3xl rounded-lg border border-rs-line bg-white">
+            <summary class="flex items-center justify-between gap-3 min-h-[48px] px-4 py-3 font-semibold text-rs-z9">
+                <span>{{ __('Cara kami mencocokkan (untuk yang penasaran)') }}</span>
+                <x-icon name="chevron-down" class="rs-more-icon w-5 h-5 shrink-0 transition-transform" />
+            </summary>
+            <div class="px-4 pb-4 text-sm text-rs-muted leading-relaxed space-y-2">
+                <p>{{ __('Label cocok berasal dari skor 0 sampai 100: Sangat cocok mulai 70, Cocok mulai 50, Lumayan cocok mulai 30.') }}</p>
+                <p>{{ __('Kalimatmu diubah menjadi 384 angka oleh model bahasa SBERT multibahasa (paraphrase-multilingual-MiniLM-L12-v2), lalu dibandingkan dengan gambaran setiap jalur memakai cosine similarity: 40% dari gambaran utuh dan 60% dari kalimat yang paling mirip.') }}</p>
+                <p>{{ __('Kata seperti landai, curam, singkat, atau panjang dicek ke statistik GPX dengan bobot 45%. Nama gunung atau basecamp yang disebut dihitung dengan bobot 35%.') }}</p>
+                @isset($searchTime)
+                <p>{{ __('Pencarian ini selesai dalam :ms milidetik.', ['ms' => $num($searchTime)]) }}</p>
+                @endisset
             </div>
-
-            <!-- Card Body with Stats -->
-            <div class="p-5 sm:p-6">
-                <p class="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500" title="{{ __('Pengunggah jalur') }}">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                    {{ __('Diunggah oleh') }} <span class="font-semibold text-slate-700">{{ $route->uploader_name }}</span>
-                </p>
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
-                    <!-- Distance -->
-                    <div class="bg-slate-50 rounded-xl p-3 text-center">
-                        <div class="flex items-center justify-center mb-1">
-                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                        </div>
-                        <p class="text-lg font-bold text-slate-800">{{ $route->formatted_distance }}</p>
-                        <p class="text-xs text-slate-500">{{ __('Jarak') }}</p>
-                    </div>
-
-                    <!-- Duration -->
-                    <div class="bg-slate-50 rounded-xl p-3 text-center">
-                        <div class="flex items-center justify-center mb-1">
-                            <svg class="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <p class="text-lg font-bold text-slate-800">{{ $route->formatted_duration }}</p>
-                        <p class="text-xs text-slate-500">{{ __('Waktu') }}</p>
-                    </div>
-
-                    <!-- Elevation -->
-                    <div class="bg-slate-50 rounded-xl p-3 text-center">
-                        <div class="flex items-center justify-center mb-1">
-                            <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
-                            </svg>
-                        </div>
-                        <p class="text-lg font-bold text-slate-800">{{ number_format($route->elevation_gain_m) }}m</p>
-                        <p class="text-xs text-slate-500">{{ __('Elevasi') }}</p>
-                    </div>
-
-                    <!-- Grade -->
-                    <div class="bg-slate-50 rounded-xl p-3 text-center">
-                        <div class="flex items-center justify-center mb-1">
-                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                            </svg>
-                        </div>
-                        <p class="text-lg font-bold text-slate-800">{{ $route->formatted_grade }}</p>
-                        <p class="text-xs text-slate-500">{{ __('Grade') }}</p>
-                    </div>
-                </div>
-
-                <!-- SBERT Narrative Description -->
-                @if($route->narrative_text)
-                <div class="mb-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
-                    <div class="flex items-start space-x-2">
-                        <svg class="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        <div>
-                            <p class="text-xs font-semibold text-purple-700 mb-1">{{ __('Deskripsi AI (SBERT)') }}</p>
-                            <p class="text-sm text-slate-600 leading-relaxed">{{ Str::limit($route->narrative_text, 150) }}</p>
-                        </div>
-                    </div>
-                </div>
-                @endif
-
-                <!-- Cosine Similarity Score -->
-                <div class="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                            <span class="text-sm font-medium text-emerald-700">{{ __('Skor Kecocokan') }}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-lg font-bold text-emerald-600">{{ number_format($route->similarity_score / 100, 4) }}</span>
-                            <span class="text-xs text-emerald-500 ml-1">({{ $route->similarity_score }}%)</span>
-                        </div>
-                    </div>
-                    @isset($route->cosine_value)
-                    <p class="mt-1 text-xs text-emerald-600">{{ __('Cosine dokumen :doc · aspek :aspect', ['doc' => number_format($route->cosine_value, 4), 'aspect' => number_format($route->aspect_cosine ?? $route->cosine_value, 4)]) }}</p>
-                    @endisset
-                    <!-- Similarity Bar -->
-                    <div class="mt-2 h-2 bg-emerald-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500"
-                             style="width: {{ min($route->similarity_score, 100) }}%"></div>
-                    </div>
-                </div>
-
-                <!-- View Details Button -->
-                <a href="{{ route('routes.show', $route) }}"
-                   class="block w-full py-3 text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium rounded-xl transition-colors">
-                    {{ __('Lihat Detail') }}
-                </a>
-            </div>
-        </div>
-        @endforeach
+        </details>
+        @endif
     </div>
-    @endif
-
 </div>
 
 @push('scripts')
 <script>
-// Static track previews in the result card headers. Maps are created only when
-// a card scrolls near the viewport, so ten results never init at once.
+// Static track previews in the result cards. Maps are created only when a card
+// scrolls near the viewport, so ten results never start at once.
 (function () {
     var nodes = document.querySelectorAll('.result-map[data-track]');
     if (!nodes.length || typeof L === 'undefined') return;
@@ -306,12 +227,10 @@
             tap: false, inertia: false, zoomSnap: 0.25
         });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 17 }).addTo(map);
-        L.polyline(coords, { color: '#ffffff', weight: 7, opacity: 0.75, lineCap: 'round', lineJoin: 'round' }).addTo(map);
-        var line = L.polyline(coords, { color: '#059669', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(map);
-        L.circleMarker(coords[0], { radius: 4, color: '#ffffff', weight: 2, fillColor: '#059669', fillOpacity: 1 }).addTo(map);
-        L.circleMarker(coords[coords.length - 1], { radius: 4, color: '#ffffff', weight: 2, fillColor: '#f59e0b', fillOpacity: 1 }).addTo(map);
-        // Extra bottom padding keeps the track above the title overlay.
-        map.fitBounds(line.getBounds(), { paddingTopLeft: [28, 56], paddingBottomRight: [28, 84] });
+        L.polyline(coords, { color: '#ffffff', weight: 7, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        var line = L.polyline(coords, { color: '#047857', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        L.circleMarker(coords[0], { radius: 5, color: '#ffffff', weight: 2, fillColor: '#053b30', fillOpacity: 1 }).addTo(map);
+        map.fitBounds(line.getBounds(), { paddingTopLeft: [56, 20], paddingBottomRight: [20, 20] });
     }
 
     if (!('IntersectionObserver' in window)) {

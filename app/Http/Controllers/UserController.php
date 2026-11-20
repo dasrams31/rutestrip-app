@@ -66,7 +66,7 @@ class UserController extends Controller
 
         if ($favorite) {
             $favorite->delete();
-            return back()->with('success', 'Rute dihapus dari favorit.');
+            return back()->with('success', __('Jalur dihapus dari favoritmu.'));
         }
 
         Favorite::create([
@@ -74,7 +74,7 @@ class UserController extends Controller
             'hiking_route_id' => $route->id,
         ]);
 
-        return back()->with('success', 'Rute ditambahkan ke favorit!');
+        return back()->with('success', __('Jalur disimpan ke favoritmu.'));
     }
 
     /**

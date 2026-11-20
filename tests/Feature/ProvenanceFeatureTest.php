@@ -44,7 +44,7 @@ class ProvenanceFeatureTest extends TestCase
 
         $this->get(route('routes.index', ['provenance_filter' => 'verified']))
             ->assertOk()
-            ->assertSee('Filter Provenance')
+            ->assertSee('Status file GPX')
             ->assertSee($route->name);
     }
 

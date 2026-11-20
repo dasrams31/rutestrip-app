@@ -7,7 +7,7 @@
  * - POST, auth, API, admin and cross-origin requests are not touched at all.
  * Bump VERSION when the cached files change; older caches are deleted on activate.
  */
-const VERSION = 'rutestrip-v1';
+const VERSION = 'rutestrip-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [
     OFFLINE_URL,

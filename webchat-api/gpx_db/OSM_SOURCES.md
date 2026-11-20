@@ -112,3 +112,4 @@ Data jalur (c) OpenStreetMap contributors, dilisensikan di bawah Open Database L
 | Gunung Patuha via Cipanganten.gpx | [19011966](https://www.openstreetmap.org/relation/19011966) | Gunung Patuha via Cipanganten |
 | Gunung Cikuray via Bayongbong Cintanagara.gpx | [19012230](https://www.openstreetmap.org/relation/19012230) | Gunung Cikuray via Bayongbong Cintanagara |
 | Puncak Upas via Benteng Belanda.gpx | [19358748](https://www.openstreetmap.org/relation/19358748) | Puncak Upas via Benteng Belanda |
+| Gunung Sumbing via Gerung.gpx | way [254446583](https://www.openstreetmap.org/way/254446583) +0 | Jalur Pendakian Gunung Sumbing via Gerung 1 |

@@ -77,6 +77,9 @@ Route::get('/arsitektur', function () {
     return view('architecture');
 })->name('architecture');
 
+// Cookie policy (linked from the cookie notice and the footer).
+Route::view('/kebijakan-cookie', 'legal.cookies')->name('cookies.policy');
+
 // User Authentication (Guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -161,10 +164,24 @@ Route::post('/routes/{route}/like', [RouteController::class, 'toggleLike'])
     ->name('routes.like.toggle');
 
 // ---------------------------------------------------------------------------
-// Floating widgets (components/floating-assistants): "Asisten RuteStrip" Q&A
-// chatbot for everyone (POST JSON {message, history} -> {reply}; CSRF, rate
-// limited per IP in the controller) and the guest "Daftar / Masuk" link of the
-// embedded AI Chat panel, which brings the visitor back to the page afterwards.
+// Floating widgets (components/floating-assistants):
+// - right: "Asisten RuteStrip" Q&A chatbot for everyone (POST JSON
+//   {message, history} -> {reply}; CSRF, rate limited per IP in the controller);
+// - left: "Obrolan Pendaki", community chat between logged-in hikers (JSON,
+//   auth, guests get 401; limits in CommunityChatController). The guest
+//   "Daftar / Masuk" link brings the visitor back to the page afterwards;
+//   /assistant/chat/login is the old address of that link.
 // ---------------------------------------------------------------------------
 Route::post('/assistant', [\App\Http\Controllers\AssistantController::class, 'ask'])->name('assistant.ask');
-Route::get('/assistant/chat/login', [\App\Http\Controllers\AssistantController::class, 'chatLogin'])->name('assistant.chat.login');
+Route::get('/komunitas/masuk', [\App\Http\Controllers\CommunityChatController::class, 'login'])->name('community.login');
+Route::get('/assistant/chat/login', [\App\Http\Controllers\CommunityChatController::class, 'login'])->name('assistant.chat.login');
+// Throttle prefixes keep these counters apart from other "throttle:x,y" routes
+// (without a prefix every such route shares one counter per user).
+Route::prefix('komunitas/chat')->name('community.chat.')->middleware('auth')
+    ->controller(\App\Http\Controllers\CommunityChatController::class)->group(function () {
+        Route::get('/', 'index')->middleware('throttle:90,1,cc-read')->name('index');
+        Route::get('/latest', 'latest')->middleware('throttle:30,1,cc-latest')->name('latest');
+        Route::post('/', 'store')->name('store');
+        Route::delete('/{message}', 'destroy')->whereNumber('message')->middleware('throttle:30,1,cc-delete')->name('destroy');
+        Route::post('/{message}/report', 'report')->whereNumber('message')->middleware('throttle:20,1,cc-report')->name('report');
+    });

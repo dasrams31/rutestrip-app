@@ -31,7 +31,7 @@ class SusResponseController extends Controller
         ]));
 
         return redirect()->route('evaluation.sus.create')
-            ->with('success', 'Terima kasih. Jawaban SUS tersimpan dengan skor ' . number_format($score, 2) . '.');
+            ->with('success', __('Terima kasih, jawabanmu sudah kami simpan.'));
     }
 
     private function questions(): array

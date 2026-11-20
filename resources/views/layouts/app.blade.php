@@ -12,7 +12,7 @@
     @php
         $seoTitle = trim($__env->yieldContent('title', 'RuteStrip')) . ' - RuteStrip';
         $seoDescription = trim($__env->yieldContent('meta_description'))
-            ?: __('RuteStrip: cari dan bandingkan jalur pendakian gunung di Pulau Jawa dari data GPX: jarak, total tanjakan, estimasi waktu Naismith, kemiringan, dan peta jalur. Rekomendasi rute dengan SBERT.');
+            ?: __('RuteStrip: cari jalur pendakian gunung di Pulau Jawa dengan bahasa sehari-hari, lalu bandingkan jarak, total tanjakan, estimasi waktu, dan peta jalurnya dari file GPX asli.');
         // Same URL for both languages; the English version is ?lang=en (hreflang below).
         $seoBaseUrl = trim($__env->yieldContent('canonical')) ?: url()->current();
         $seoWithLang = fn (string $url, string $lang) => $lang === 'id'
@@ -83,15 +83,25 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/images/icons/favicon-32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#047857">
+    <meta name="theme-color" content="#053b30">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="RuteStrip">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <script>
+        // Install prompt (Chrome/Edge on Android and desktop): keep the event for our own
+        // small banner at the bottom (see #rs-install), which is shown later and only once in a while.
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            window.__rsInstallEvent = e;
+            window.dispatchEvent(new Event('rs:installable'));
+        });
+    </script>
 
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Alpine.js for dropdown -->
+    <!-- Alpine.js (menus, panels, likes, route conditions) -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Leaflet.js for maps -->
@@ -103,6 +113,18 @@
             theme: {
                 extend: {
                     colors: {
+                        // DESIGN.md palette: zamrud (logo green) on map paper, kuning fajar as the one accent.
+                        rs: {
+                            ink: '#14231d',
+                            muted: '#4b5d55',
+                            z9: '#053b30',
+                            z8: '#0b4a3c',
+                            z7: '#047857',
+                            mist: '#eef4ef',
+                            paper: '#f6f4ec',
+                            line: '#dedbcd',
+                            sun: '#FCD34D',
+                        },
                         primary: {
                             50: '#ecfdf5',
                             100: '#d1fae5',
@@ -130,75 +152,63 @@
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['"Barlow Condensed"', '"Roboto Condensed"', '"Arial Narrow"', 'sans-serif'],
                     },
                     backgroundImage: {
                         'mountain-gradient': 'linear-gradient(135deg, #065f46 0%, #0f766e 50%, #115e59 100%)',
-                        'hero-pattern': 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
                     }
                 }
             }
         }
     </script>
 
-    <!-- Google Fonts -->
+    <!-- Fonts: Inter for text; Barlow Condensed (SIL OFL) for headings, drawn from road and trail signs (DESIGN.md). -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=optional" rel="stylesheet">
 
     <style>
+        :root {
+            --rs-ink: #14231d; --rs-muted: #4b5d55; --rs-z9: #053b30; --rs-z8: #0b4a3c; --rs-z7: #047857;
+            --rs-paper: #f6f4ec; --rs-line: #dedbcd; --rs-sun: #FCD34D;
+            /* Height taken by the bottom banner (cookie notice or install prompt); floating buttons sit above it. */
+            --rs-banner-h: 0px;
+        }
         [x-cloak] { display: none !important; }
 
         * {
             font-family: 'Inter', system-ui, sans-serif;
         }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
+        /* Headings: condensed and bold like a trail sign. */
+        .rs-display, .rs-display * { font-family: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed, 'Inter', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.005em; }
+        .rs-num { font-variant-numeric: tabular-nums; }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        /* Kuning fajar = the next step (search, upload, confirm). Bordered like a trail sign. */
+        .rs-sign { background: var(--rs-sun); color: var(--rs-z9); border: 2px solid var(--rs-z9); }
+        .rs-sign:hover { background: #fde68a; }
 
-        .mountain-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        /* Keyboard focus: dark ring on light surfaces, white ring on zamrud surfaces. */
+        :focus-visible { outline: 3px solid var(--rs-z9); outline-offset: 2px; }
+        .rs-on-dark :focus-visible { outline-color: #fff; }
+        .rs-on-dark .rs-on-light :focus-visible { outline-color: var(--rs-z9); }
 
-        .mountain-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
+        /* Busy state of search buttons: both labels share one grid cell so the width never jumps. */
+        .rs-swap { display: inline-grid; }
+        .rs-swap > * { grid-area: 1 / 1; }
+        .rs-swap > [hidden] { display: block; visibility: hidden; }
 
-        .floating {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .pulse-glow {
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
-        }
-
-        .score-badge {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
+        /* Older helpers still used by some pages. */
+        .glass-card { background: #fff; border: 1px solid var(--rs-line); }
+        .gradient-text { color: var(--rs-z9); }
+        .mountain-card { transition: border-color .2s ease; }
+        .floating, .pulse-glow { animation: none; }
+        .score-badge { background: var(--rs-z7); }
 
         /* Leaflet panes/controls use z-index 400-1000; keep them inside the map so they
            never paint over the fixed navbar (z-50) or the mobile tab bar (z-40). */
-        .leaflet-container { isolation: isolate; }
+        .leaflet-container { isolation: isolate; font: inherit; }
 
         /* Anchors (#ulasan) and focused fields scroll into view below the fixed navbar. */
         html { scroll-padding-top: 5rem; }
@@ -206,19 +216,34 @@
         /* Notched phones in landscape (viewport-fit=cover): keep content out of the cutout. */
         .safe-x { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
 
-        /* Mobile tab bar: keep page content and the footer clear of it. */
+        /* Mobile tab bar and the bottom banner: keep page content and the footer clear of both. */
         .tabbar-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        body { padding-bottom: var(--rs-banner-h); }
         @media (max-width: 767.98px) {
-            body.has-tabbar { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+            body.has-tabbar { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + var(--rs-banner-h)); }
             html { scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
         }
+
+        /* Bottom banner dock: above the tab bar on phones, a centred card on wider screens. */
+        .rs-dock { position: fixed; z-index: 45; left: .75rem; right: .75rem; bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px)); }
+        @media (min-width: 768px) {
+            .rs-dock { left: 50%; right: auto; bottom: 1rem; width: min(46rem, calc(100% - 2rem)); transform: translateX(-50%); }
+        }
+        .rs-dock > [hidden] { display: none; }
+        @media (prefers-reduced-motion: no-preference) {
+            .rs-dock > :not([hidden]) { animation: rs-rise .3s ease-out; }
+            @keyframes rs-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+        }
         @media print {
-            body.has-tabbar { padding-bottom: 0; }
+            body, body.has-tabbar { padding-bottom: 0; }
+            .rs-dock { display: none; }
         }
     </style>
     @stack('styles')
 </head>
-<body class="has-tabbar safe-x min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50">
+<body class="has-tabbar safe-x min-h-screen bg-rs-paper text-rs-ink">
+    <a href="#konten" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-rs-z9">{{ __('Langsung ke isi halaman') }}</a>
+
     <!-- Navigation -->
     @php
         $webchatUrl = config('services.webchat.url');
@@ -243,13 +268,13 @@
         ])) : [];
     @endphp
     <nav x-data="{ mobileOpen: false }" @keydown.escape.window="mobileOpen = false" @click.outside="mobileOpen = false"
-         class="fixed top-0 left-0 right-0 z-50 safe-x bg-white/90 backdrop-blur-xl border-b border-emerald-100/60 shadow-sm print:static">
+         class="fixed top-0 left-0 right-0 z-50 safe-x bg-white border-b border-rs-line print:static">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 gap-3">
                 <!-- Logo -->
-                <a href="{{ route('search.index') }}" class="flex items-center gap-2.5 group min-w-0">
-                    <img src="/images/logo.svg" alt="" width="40" height="40" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow flex-shrink-0">
-                    <span class="text-lg sm:text-xl font-bold gradient-text">RuteStrip</span>
+                <a href="{{ route('search.index') }}" class="flex items-center gap-2.5 min-w-0 rounded-lg">
+                    <img src="/images/logo.svg" alt="" width="40" height="40" class="w-9 h-9 rounded-lg flex-shrink-0">
+                    <span class="rs-display uppercase text-2xl leading-none text-rs-z9">RuteStrip</span>
                 </a>
 
                 <!-- Desktop links -->
@@ -257,36 +282,37 @@
                     @foreach($navLinks as $link)
                     <a href="{{ $link['href'] }}"
                        @if($link['active']) aria-current="page" @endif
-                       class="px-3.5 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2
-                              {{ $link['active'] ? 'bg-emerald-100 text-emerald-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-                        <x-icon :name="$link['icon']" class="w-4 h-4" />
+                       class="relative px-3.5 h-11 rounded-lg text-[15px] font-semibold transition-colors inline-flex items-center gap-2
+                              {{ $link['active'] ? 'text-rs-z9' : 'text-rs-muted hover:text-rs-z9 hover:bg-rs-paper' }}">
+                        <x-icon :name="$link['icon']" class="w-4 h-4 hidden xl:block" />
                         <span>{{ $link['label'] }}</span>
+                        @if($link['active'])<span class="absolute left-3.5 right-3.5 -bottom-[11px] h-[3px] rounded-sm bg-rs-z7" aria-hidden="true"></span>@endif
                     </a>
                     @endforeach
 
                     <!-- Upload Dropdown -->
-                    <div class="relative ml-1" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                    <div class="relative ml-2" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
-                                class="px-4 py-2 bg-mountain-gradient text-white rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-shadow inline-flex items-center gap-2
-                                       {{ $uploadActive ? 'ring-2 ring-emerald-300 ring-offset-2' : '' }}">
-                            <x-icon name="plus" class="w-4 h-4" />
+                                class="h-11 px-4 bg-rs-z9 text-white rounded-lg text-sm font-semibold hover:bg-rs-z8 transition-colors inline-flex items-center gap-2
+                                       {{ $uploadActive ? 'ring-2 ring-rs-z7 ring-offset-2' : '' }}">
+                            <x-icon name="upload" class="w-4 h-4" />
                             <span>{{ __('Upload GPX') }}</span>
                             <x-icon name="chevron-down" class="w-3.5 h-3.5 transition-transform" x-bind:class="{ 'rotate-180': open }" />
                         </button>
                         <div x-show="open" x-cloak x-transition.origin.top.right
-                             class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden">
-                            <a href="{{ route('routes.create') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors">
-                                <x-icon name="document-add" class="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                             class="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-lg border border-rs-line overflow-hidden">
+                            <a href="{{ route('routes.create') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-rs-paper transition-colors">
+                                <x-icon name="document-add" class="w-5 h-5 text-rs-z7 flex-shrink-0" />
                                 <span>
-                                    <span class="block text-sm font-medium text-slate-700">{{ __('Upload Single') }}</span>
-                                    <span class="block text-xs text-slate-500">{{ __('Satu file GPX') }}</span>
+                                    <span class="block text-sm font-semibold text-rs-ink">{{ __('Satu file GPX') }}</span>
+                                    <span class="block text-xs text-rs-muted">{{ __('Dari satu pendakian') }}</span>
                                 </span>
                             </a>
-                            <a href="{{ route('routes.batch') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition-colors border-t border-slate-100">
-                                <x-icon name="upload" class="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                            <a href="{{ route('routes.batch') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-rs-paper transition-colors border-t border-rs-line">
+                                <x-icon name="upload" class="w-5 h-5 text-rs-z7 flex-shrink-0" />
                                 <span>
-                                    <span class="block text-sm font-medium text-slate-700">{{ __('Batch Upload') }}</span>
-                                    <span class="block text-xs text-slate-500">{{ __('Banyak file sekaligus') }}</span>
+                                    <span class="block text-sm font-semibold text-rs-ink">{{ __('Banyak file sekaligus') }}</span>
+                                    <span class="block text-xs text-rs-muted">{{ __('Beberapa jalur dalam satu kali unggah') }}</span>
                                 </span>
                             </a>
                         </div>
@@ -294,40 +320,40 @@
 
                     <x-lang-switch class="ml-2" />
 
-                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
+                    <div class="w-px h-6 bg-rs-line mx-2"></div>
 
                     @auth
                     <!-- User menu -->
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
-                                class="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors">
-                            <span class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold flex items-center justify-center">{{ $navInitial }}</span>
-                            <span class="text-sm font-medium text-slate-700 max-w-[9rem] truncate" title="{{ $navUser->name }}">{{ $navShortName }}</span>
-                            <x-icon name="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform" x-bind:class="{ 'rotate-180': open }" />
+                                class="flex items-center gap-2 pl-1 pr-2.5 h-11 rounded-lg border border-rs-line bg-white hover:border-rs-z7 transition-colors">
+                            <span class="w-8 h-8 rounded-md bg-rs-z7 text-white text-sm font-bold flex items-center justify-center">{{ $navInitial }}</span>
+                            <span class="text-sm font-semibold text-rs-ink max-w-[6rem] xl:max-w-[9rem] truncate" title="{{ $navUser->name }}">{{ $navShortName }}</span>
+                            <x-icon name="chevron-down" class="w-3.5 h-3.5 text-rs-muted transition-transform" x-bind:class="{ 'rotate-180': open }" />
                         </button>
                         <div x-show="open" x-cloak x-transition.origin.top.right
-                             class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-2">
-                            <div class="px-4 py-2.5 border-b border-slate-100">
-                                <p class="text-sm font-semibold text-slate-800 truncate">{{ $navUser->name }}</p>
-                                <p class="text-xs text-slate-500 truncate">{{ $navUser->email }}</p>
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-rs-line py-2">
+                            <div class="px-4 py-2.5 border-b border-rs-line">
+                                <p class="text-sm font-semibold text-rs-ink truncate">{{ $navUser->name }}</p>
+                                <p class="text-xs text-rs-muted truncate">{{ $navUser->email }}</p>
                             </div>
                             @foreach($accountLinks as $link)
-                            <a href="{{ $link['href'] }}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"><x-icon :name="$link['icon']" class="w-4 h-4 text-slate-400" />{{ $link['label'] }}</a>
+                            <a href="{{ $link['href'] }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-rs-ink hover:bg-rs-paper"><x-icon :name="$link['icon']" class="w-4 h-4 text-rs-muted" />{{ $link['label'] }}</a>
                             @endforeach
                             @if($navUser->isAdmin())
-                            <div class="border-t border-slate-100 my-1"></div>
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-sm text-purple-700 hover:bg-purple-50"><x-icon name="shield-check" class="w-4 h-4" />{{ __('Admin Panel') }}</a>
+                            <div class="border-t border-rs-line my-1"></div>
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-rs-ink hover:bg-rs-paper"><x-icon name="shield-check" class="w-4 h-4 text-rs-z7" />{{ __('Admin Panel') }}</a>
                             @endif
-                            <div class="border-t border-slate-100 my-1"></div>
+                            <div class="border-t border-rs-line my-1"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"><x-icon name="logout" class="w-4 h-4" />{{ __('Keluar') }}</button>
+                                <button type="submit" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-[#9f1239] hover:bg-rose-50"><x-icon name="logout" class="w-4 h-4" />{{ __('Keluar') }}</button>
                             </form>
                         </div>
                     </div>
                     @else
-                    <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">{{ __('Masuk') }}</a>
-                    <a href="{{ route('register') }}" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">{{ __('Daftar') }}</a>
+                    <a href="{{ route('login') }}" class="px-3.5 h-11 inline-flex items-center rounded-lg text-sm font-semibold text-rs-ink hover:bg-rs-paper">{{ __('Masuk') }}</a>
+                    <a href="{{ route('register') }}" class="px-4 h-11 inline-flex items-center rounded-lg text-sm font-semibold text-rs-z7 border-2 border-rs-z7 hover:bg-rs-mist">{{ __('Daftar') }}</a>
                     @endauth
                 </div>
 
@@ -335,13 +361,13 @@
                 <div class="flex items-center gap-2 lg:hidden">
                     <x-lang-switch class="hidden min-[400px]:inline-flex" />
                     @auth
-                    <a href="{{ route('user.dashboard') }}" class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold flex items-center justify-center" aria-label="{{ __('Dashboard') }} {{ $navUser->name }}">{{ $navInitial }}</a>
+                    <a href="{{ route('user.dashboard') }}" class="w-10 h-10 rounded-lg bg-rs-z7 text-white text-sm font-bold flex items-center justify-center" aria-label="{{ __('Dashboard') }} {{ $navUser->name }}">{{ $navInitial }}</a>
                     @endauth
                     <button type="button" @click="mobileOpen = !mobileOpen" :aria-expanded="mobileOpen" aria-controls="mobile-menu"
-                            class="w-10 h-10 inline-flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 border border-slate-200">
-                        <span class="sr-only">{{ __('Buka menu') }}</span>
-                        <x-icon name="menu" class="w-6 h-6" x-show="!mobileOpen" />
-                        <x-icon name="x" class="w-6 h-6" x-show="mobileOpen" x-cloak />
+                            class="h-11 pl-2.5 pr-3 inline-flex items-center gap-1.5 rounded-lg text-rs-ink border border-rs-line hover:bg-rs-paper text-sm font-semibold">
+                        <x-icon name="menu" class="w-5 h-5" x-show="!mobileOpen" />
+                        <x-icon name="x" class="w-5 h-5" x-show="mobileOpen" x-cloak />
+                        <span>{{ __('Menu') }}</span>
                     </button>
                 </div>
             </div>
@@ -349,56 +375,56 @@
 
         <!-- Mobile menu panel -->
         <div id="mobile-menu" x-show="mobileOpen" x-cloak x-transition.opacity
-             class="lg:hidden border-t border-slate-100 bg-white max-h-[calc(100vh-4rem)] supports-[height:100dvh]:max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain shadow-lg">
+             class="lg:hidden border-t border-rs-line bg-white max-h-[calc(100vh-4rem)] supports-[height:100dvh]:max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain shadow-lg">
             <div class="px-4 py-3 space-y-1">
                 <div class="flex items-center justify-between px-3 pb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 inline-flex items-center gap-1.5"><x-icon name="translate" class="w-4 h-4" />{{ __('Bahasa') }}</span>
+                    <span class="text-sm font-semibold text-rs-muted inline-flex items-center gap-1.5"><x-icon name="translate" class="w-4 h-4" />{{ __('Bahasa') }}</span>
                     <x-lang-switch />
                 </div>
                 @foreach($navLinks as $link)
                 <a href="{{ $link['href'] }}" @if($link['active']) aria-current="page" @endif
-                   class="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium {{ $link['active'] ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50' }}">
-                    <x-icon :name="$link['icon']" class="w-5 h-5 {{ $link['active'] ? 'text-emerald-600' : 'text-slate-400' }}" />
+                   class="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold {{ $link['active'] ? 'bg-rs-mist text-rs-z9' : 'text-rs-ink hover:bg-rs-paper' }}">
+                    <x-icon :name="$link['icon']" class="w-5 h-5 {{ $link['active'] ? 'text-rs-z7' : 'text-rs-muted' }}" />
                     {{ $link['label'] }}
                 </a>
                 @endforeach
 
-                <p class="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">{{ __('Upload GPX') }}</p>
+                <p class="px-3 pt-3 pb-1 text-sm font-semibold text-rs-muted">{{ __('Upload GPX') }}</p>
                 <div class="grid grid-cols-2 gap-2">
-                    <a href="{{ route('routes.create') }}" class="flex items-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium {{ request()->routeIs('routes.create') ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-700 hover:bg-emerald-50' }}">
-                        <x-icon name="document-add" class="w-5 h-5 text-emerald-600 flex-shrink-0" /> {{ __('Single') }}
+                    <a href="{{ route('routes.create') }}" class="flex items-center gap-2 px-3 py-3 rounded-lg border text-sm font-semibold {{ request()->routeIs('routes.create') ? 'border-rs-z7 bg-rs-mist text-rs-z9' : 'border-rs-line text-rs-ink hover:bg-rs-paper' }}">
+                        <x-icon name="document-add" class="w-5 h-5 text-rs-z7 flex-shrink-0" /> {{ __('Satu file') }}
                     </a>
-                    <a href="{{ route('routes.batch') }}" class="flex items-center gap-2 px-3 py-3 rounded-xl border text-sm font-medium {{ request()->routeIs('routes.batch') ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-700 hover:bg-indigo-50' }}">
-                        <x-icon name="upload" class="w-5 h-5 text-indigo-600 flex-shrink-0" /> {{ __('Batch') }}
+                    <a href="{{ route('routes.batch') }}" class="flex items-center gap-2 px-3 py-3 rounded-lg border text-sm font-semibold {{ request()->routeIs('routes.batch') ? 'border-rs-z7 bg-rs-mist text-rs-z9' : 'border-rs-line text-rs-ink hover:bg-rs-paper' }}">
+                        <x-icon name="upload" class="w-5 h-5 text-rs-z7 flex-shrink-0" /> {{ __('Banyak file') }}
                     </a>
                 </div>
             </div>
 
-            <div class="border-t border-slate-100 px-4 py-3">
+            <div class="border-t border-rs-line px-4 py-3">
                 @auth
                 <div class="flex items-center gap-3 px-3 py-2">
-                    <span class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold flex items-center justify-center flex-shrink-0">{{ $navInitial }}</span>
+                    <span class="w-10 h-10 rounded-lg bg-rs-z7 text-white font-bold flex items-center justify-center flex-shrink-0">{{ $navInitial }}</span>
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-800 truncate">{{ $navUser->name }}</p>
-                        <p class="text-xs text-slate-500 truncate">{{ $navUser->email }}</p>
+                        <p class="text-sm font-semibold text-rs-ink truncate">{{ $navUser->name }}</p>
+                        <p class="text-xs text-rs-muted truncate">{{ $navUser->email }}</p>
                     </div>
                 </div>
                 <div class="mt-1 space-y-1">
                     @foreach($accountLinks as $link)
-                    <a href="{{ $link['href'] }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-700 hover:bg-slate-50"><x-icon :name="$link['icon']" class="w-5 h-5 text-slate-400" />{{ $link['label'] }}</a>
+                    <a href="{{ $link['href'] }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-rs-ink hover:bg-rs-paper"><x-icon :name="$link['icon']" class="w-5 h-5 text-rs-muted" />{{ $link['label'] }}</a>
                     @endforeach
                     @if($navUser->isAdmin())
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-purple-700 hover:bg-purple-50"><x-icon name="shield-check" class="w-5 h-5" />{{ __('Admin Panel') }}</a>
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-rs-ink hover:bg-rs-paper"><x-icon name="shield-check" class="w-5 h-5 text-rs-z7" />{{ __('Admin Panel') }}</a>
                     @endif
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-600 hover:bg-red-50"><x-icon name="logout" class="w-5 h-5" />{{ __('Keluar') }}</button>
+                        <button type="submit" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-[#9f1239] hover:bg-rose-50"><x-icon name="logout" class="w-5 h-5" />{{ __('Keluar') }}</button>
                     </form>
                 </div>
                 @else
                 <div class="grid grid-cols-2 gap-2">
-                    <a href="{{ route('login') }}" class="px-4 py-3 rounded-xl text-center text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50">{{ __('Masuk') }}</a>
-                    <a href="{{ route('register') }}" class="px-4 py-3 rounded-xl text-center text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700">{{ __('Daftar') }}</a>
+                    <a href="{{ route('login') }}" class="px-4 py-3 rounded-lg text-center text-sm font-semibold text-rs-ink border border-rs-line hover:bg-rs-paper">{{ __('Masuk') }}</a>
+                    <a href="{{ route('register') }}" class="px-4 py-3 rounded-lg text-center text-sm font-semibold text-white bg-rs-z7 hover:bg-rs-z9">{{ __('Daftar') }}</a>
                 </div>
                 @endauth
             </div>
@@ -406,49 +432,36 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="pt-20 min-h-screen print:pt-0">
+    <main id="konten" class="pt-20 min-h-screen print:pt-0">
         <!-- Flash Messages -->
         @if(session('success'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center space-x-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <p class="text-emerald-700 font-medium">{{ session('success') }}</p>
+            <div class="bg-white border border-rs-line border-l-4 border-l-rs-z7 rounded-lg p-4 flex items-start gap-3" role="status">
+                <x-icon name="check" class="w-5 h-5 text-rs-z7 flex-shrink-0 mt-0.5" />
+                <p class="text-rs-ink font-medium">{{ session('success') }}</p>
             </div>
         </div>
         @endif
 
         @if(session('warning'))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center space-x-3">
-                <div class="flex-shrink-0">
-                    <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <p class="text-amber-700 font-medium">{{ session('warning') }}</p>
+            <div class="bg-amber-50 border border-amber-200 border-l-4 border-l-amber-500 rounded-lg p-4 flex items-start gap-3" role="status">
+                <x-icon name="exclamation" class="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                <p class="text-amber-900 font-medium">{{ session('warning') }}</p>
             </div>
         </div>
         @endif
 
-        @if($errors->any())
+        {{-- The landing shows a search error right under its search box instead. --}}
+        @if($errors->any() && ! (request()->routeIs('home', 'search.index') && $errors->keys() === ['query']))
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0">
-                        <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <ul class="text-red-700 font-medium">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+            <div class="bg-rose-50 border border-rose-200 border-l-4 border-l-[#9f1239] rounded-lg p-4 flex items-start gap-3" role="alert">
+                <x-icon name="exclamation" class="w-5 h-5 text-[#9f1239] flex-shrink-0 mt-0.5" />
+                <ul class="text-[#881337] font-medium space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         </div>
         @endif
@@ -459,127 +472,83 @@
     <!-- Footer -->
     @php
         $paper = [
-            'authors' => 'R. D. P. Wijaya & A. N. Rahman',
-            'year' => '2026',
-            'title' => 'Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity',
-            'journal' => 'SISTEMASI: Jurnal Sistem Informasi',
-            'issue' => 'Vol. 15 No. 4, pp. 1241–1256',
+            'cite' => 'R. D. P. Wijaya & A. N. Rahman, SISTEMASI Vol. 15 No. 4, 2026',
             'url' => 'https://sistemasi.ftik.unisi.ac.id/index.php/stmsi/article/view/6087',
             'doi' => '10.32520/stmsi.v15i4.6087',
         ];
+        $footerLinks = [
+            [route('search.index'), __('Cari Rute')],
+            [route('routes.index'), __('Semua Rute')],
+            [$webchatUrl, __('RuteStrip AI Chat')],
+            [route('routes.create'), __('Upload GPX')],
+            [route('architecture'), __('Cara kerja sistem')],
+            [route('cookies.policy'), __('Kebijakan cookie')],
+        ];
     @endphp
-    <footer class="bg-gradient-to-b from-slate-900 to-slate-950 text-white pt-16 pb-8 mt-20 print:hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Main Footer Content -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 mb-12">
-                <!-- Brand Section -->
-                <div class="sm:col-span-2 lg:col-span-4">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <img src="/images/logo.svg" alt="RuteStrip" width="48" height="48" class="w-12 h-12 rounded-xl shadow-lg">
-                        <span class="text-2xl font-bold">RuteStrip</span>
-                    </div>
-                    <p class="text-slate-400 text-sm leading-relaxed mb-6 max-w-md">
-                        {{ __('Sistem rekomendasi rute pendakian gunung dengan content-based filtering, SBERT, dan cosine similarity.') }}
+    <footer class="rs-on-dark relative overflow-hidden bg-rs-z9 text-[#d1fae5] mt-20 print:hidden">
+        {{-- Contour lines as the top edge of the footer (the site motif, drawn once here). --}}
+        <svg class="block w-full h-8 sm:h-10 text-[#a7f3d0]" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <g fill="none" stroke="currentColor" stroke-opacity=".28" vector-effect="non-scaling-stroke">
+                <path d="M-20 14 C 200 2, 380 30, 620 16 S 1040 0, 1240 18 S 1400 26, 1460 12" stroke-width="1.2"/>
+                <path d="M-20 28 C 220 16, 400 44, 640 30 S 1060 14, 1250 32 S 1410 40, 1460 26" stroke-width="2"/>
+                <path d="M-20 42 C 240 30, 420 58, 660 44 S 1080 28, 1260 46 S 1420 54, 1460 40" stroke-width="1.2"/>
+            </g>
+        </svg>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 sm:pt-10">
+            <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
+                <div class="lg:col-span-5">
+                    <a href="{{ route('search.index') }}" class="inline-flex items-center gap-3 rounded-lg">
+                        <img src="/images/logo.svg" alt="" width="40" height="40" class="w-10 h-10 rounded-lg">
+                        <span class="rs-display uppercase text-3xl leading-none text-white">RuteStrip</span>
+                    </a>
+                    <p class="mt-3 text-sm leading-relaxed max-w-sm">
+                        {{ __('Cari jalur pendakian gunung di Pulau Jawa dengan bahasa sehari-hari, lalu bandingkan jarak, tanjakan, dan waktunya dari file GPX asli.') }}
                     </p>
-                    <!-- Social Links -->
-                    <div class="flex flex-wrap items-center gap-3">
-                        <a href="https://github.com/RamsNotes31" target="_blank" rel="noopener" aria-label="GitHub RuteStrip" title="GitHub RuteStrip"
-                           class="w-10 h-10 bg-slate-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-colors duration-300 group">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <div class="mt-4 flex items-center gap-2">
+                        <a href="https://github.com/RamsNotes31" target="_blank" rel="noopener" aria-label="GitHub RuteStrip"
+                           class="w-11 h-11 rounded-lg border border-white/20 hover:border-white/60 flex items-center justify-center transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                             </svg>
                         </a>
-                        <a href="https://instagram.com/ramadanadipa_" target="_blank" rel="noopener" aria-label="Instagram RuteStrip" title="Instagram RuteStrip"
-                           class="w-10 h-10 bg-slate-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors duration-300 group">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <a href="https://instagram.com/ramadanadipa_" target="_blank" rel="noopener" aria-label="Instagram RuteStrip"
+                           class="w-11 h-11 rounded-lg border border-white/20 hover:border-white/60 flex items-center justify-center transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                             </svg>
                         </a>
-                        <a href="https://t.me/rutestrip_hikingbot" target="_blank" rel="noopener" aria-label="{{ __('Bot Telegram RuteStrip') }}" title="{{ __('Bot Telegram RuteStrip') }}"
-                           class="w-10 h-10 bg-slate-800 hover:bg-sky-500 rounded-lg flex items-center justify-center transition-colors duration-300 group">
-                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <a href="https://t.me/rutestrip_hikingbot" target="_blank" rel="noopener" aria-label="{{ __('Bot Telegram RuteStrip') }}"
+                           class="w-11 h-11 rounded-lg border border-white/20 hover:border-white/60 flex items-center justify-center transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                             </svg>
                         </a>
-                        <x-lang-switch :dark="true" class="ml-1" />
                     </div>
                 </div>
 
-                <!-- Navigation Links -->
-                <div class="lg:col-span-2">
-                    <h3 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <x-icon name="map" class="w-5 h-5 mr-2 text-emerald-400" />
-                        {{ __('Navigasi') }}
-                    </h3>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="{{ route('search.index') }}" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ __('Cari Rute') }}</a></li>
-                        <li><a href="{{ route('routes.index') }}" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ __('Semua Rute') }}</a></li>
-                        <li><a href="{{ $webchatUrl }}" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ __('RuteStrip AI Chat') }}</a></li>
-                        <li><a href="{{ route('routes.create') }}" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ __('Upload GPX') }}</a></li>
-                        <li><a href="{{ route('architecture') }}" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ __('Arsitektur Sistem') }}</a></li>
-                    </ul>
-                </div>
-
-                <!-- Features -->
-                <div class="lg:col-span-2">
-                    <h3 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <x-icon name="map" class="w-5 h-5 mr-2 text-emerald-400" />
-                        {{ __('Fitur Unggulan') }}
-                    </h3>
-                    <ul class="space-y-3 text-sm">
-                        @foreach([__('Rekomendasi AI dengan SBERT'), __('Analisis File GPX Otomatis'), __('Visualisasi Peta Interaktif'), __('Kalkulasi Naismith Time'), __('Rating & Review Rute')] as $feature)
-                        <li class="flex items-start text-slate-400">
-                            <x-icon name="check" class="w-4 h-4 text-emerald-400 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>{{ $feature }}</span>
-                        </li>
+                <nav class="lg:col-span-4" aria-label="{{ __('Tautan di kaki halaman') }}">
+                    <h2 class="text-sm font-semibold text-white">{{ __('Jelajahi') }}</h2>
+                    <ul class="mt-1 grid grid-cols-2 gap-x-4 text-sm">
+                        @foreach($footerLinks as [$href, $label])
+                        <li><a href="{{ $href }}" class="inline-flex items-center min-h-[44px] hover:text-white hover:underline underline-offset-4">{{ $label }}</a></li>
                         @endforeach
                     </ul>
-                </div>
+                </nav>
 
-                <!-- Research -->
-                <div class="sm:col-span-2 lg:col-span-4">
-                    <h3 class="text-base font-semibold text-white mb-4 flex items-center">
-                        <x-icon name="academic-cap" class="w-5 h-5 mr-2 text-emerald-400" />
-                        {{ __('Penelitian') }}
-                    </h3>
-                    <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p class="text-sm text-slate-300 leading-relaxed">
-                            {{ __('RuteStrip dipublikasikan sebagai artikel penelitian di :journal (SINTA 3).', ['journal' => 'Jurnal Sistemasi']) }}
-                        </p>
-                        <p class="mt-3 text-xs text-slate-400 leading-relaxed">
-                            {{ $paper['authors'] }} ({{ $paper['year'] }}).
-                            <a href="{{ $paper['url'] }}" target="_blank" rel="noopener" class="text-slate-200 hover:text-emerald-300 underline decoration-slate-600 underline-offset-2"><cite class="not-italic">{{ $paper['title'] }}</cite></a>.
-                            <span class="italic">{{ $paper['journal'] }}</span>, {{ $paper['issue'] }}.
-                        </p>
-                        <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                            <a href="{{ $paper['url'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 px-3 py-1.5 font-semibold text-white">
-                                <x-icon name="document-text" class="w-3.5 h-3.5" />{{ __('Baca artikel') }}
-                            </a>
-                            <a href="https://doi.org/{{ $paper['doi'] }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 hover:border-slate-500 px-3 py-1.5 font-mono text-slate-300">
-                                DOI {{ $paper['doi'] }}
-                            </a>
-                        </div>
-                    </div>
+                <div class="lg:col-span-3">
+                    <h2 class="text-sm font-semibold text-white">{{ __('Publikasi') }}</h2>
+                    <p class="mt-3 text-sm leading-relaxed">
+                        <a href="{{ $paper['url'] }}" target="_blank" rel="noopener" class="underline decoration-white/40 underline-offset-4 hover:decoration-white hover:text-white">{{ $paper['cite'] }}<span class="sr-only"> {{ __('(tab baru)') }}</span></a>,
+                        SINTA 3,
+                        <a href="https://doi.org/{{ $paper['doi'] }}" target="_blank" rel="noopener" class="[overflow-wrap:anywhere] underline decoration-white/40 underline-offset-4 hover:decoration-white hover:text-white">DOI {{ $paper['doi'] }}<span class="sr-only"> {{ __('(tab baru)') }}</span></a>
+                    </p>
                 </div>
             </div>
 
-            <!-- Bottom Bar -->
-            <div class="border-t border-slate-800 pt-8">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap justify-center md:justify-start gap-x-4 gap-y-2 text-sm text-slate-400">
-                        <a href="{{ route('architecture') }}" class="hover:text-emerald-400 transition-colors duration-200">{{ __('Arsitektur') }}</a>
-                        <span class="text-slate-700" aria-hidden="true">•</span>
-                        <a href="{{ route('routes.index') }}" class="hover:text-emerald-400 transition-colors duration-200">{{ __('Database Rute') }}</a>
-                        <span class="text-slate-700" aria-hidden="true">•</span>
-                        <a href="{{ route('search.index') }}" class="hover:text-emerald-400 transition-colors duration-200">{{ __('Pencarian') }}</a>
-                    </div>
-                    <p class="text-sm text-slate-400">{{ __('Dibuat untuk pendaki Indonesia') }}</p>
-                </div>
-                <p class="text-center text-slate-500 text-sm mt-6">
-                    &copy; {{ date('Y') }} RuteStrip - {{ __('Sistem Rekomendasi Rute Pendakian dengan AI.') }} {{ __('Hak cipta dilindungi.') }}
-                </p>
-                <p class="text-center text-slate-500 text-xs mt-2">
-                    {{ __('Sebagian data jalur') }} &copy; <a href="https://www.openstreetmap.org/copyright" class="underline hover:text-slate-300" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL); {{ __('elevasi: NASA SRTM.') }}
+            <div class="mt-8 pt-6 border-t border-white/15 flex flex-col md:flex-row md:items-start md:justify-between gap-2 text-xs text-[#b7cfc4]">
+                <p>&copy; {{ date('Y') }} RuteStrip. {{ __('Dibuat untuk pendaki Indonesia') }}.</p>
+                <p>
+                    {{ __('Sebagian data jalur') }} &copy; <a href="https://www.openstreetmap.org/copyright" class="underline hover:text-white" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL); {{ __('elevasi: NASA SRTM.') }}
                 </p>
             </div>
         </div>
@@ -597,17 +566,17 @@
                 : ['href' => route('login'), 'label' => __('Masuk'), 'icon' => 'user-circle', 'active' => request()->routeIs('login', 'register')],
         ];
     @endphp
-    <nav class="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] tabbar-safe safe-x"
+    <nav class="md:hidden print:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-rs-line tabbar-safe safe-x"
          aria-label="{{ __('Navigasi utama') }}">
         <ul class="grid grid-cols-5 h-16">
             @foreach($tabs as $tab)
             <li class="min-w-0">
                 <a href="{{ $tab['href'] }}" @if($tab['active']) aria-current="page" @endif
-                   class="relative h-full flex flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium leading-none transition-colors
-                          {{ $tab['active'] ? 'text-emerald-700' : 'text-slate-500 hover:text-slate-800' }}">
-                    @if($tab['active'])<span class="absolute top-0 inset-x-4 h-0.5 rounded-full bg-emerald-600" aria-hidden="true"></span>@endif
+                   class="relative h-full flex flex-col items-center justify-center gap-1 px-1 text-[11px] font-semibold leading-none transition-colors
+                          {{ $tab['active'] ? 'text-rs-z9' : 'text-rs-muted hover:text-rs-z9' }}">
+                    @if($tab['active'])<span class="absolute top-0 inset-x-4 h-[3px] rounded-b-sm bg-rs-z7" aria-hidden="true"></span>@endif
                     @if(!empty($tab['highlight']))
-                    <span class="w-9 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
+                    <span class="w-10 h-7 rounded-md bg-rs-z7 text-white flex items-center justify-center">
                         <x-icon :name="$tab['icon']" class="w-[18px] h-[18px]" />
                     </span>
                     @else
@@ -620,6 +589,38 @@
         </ul>
     </nav>
 
+    {{-- Bottom banners: at most one at a time (cookie notice first, install prompt on a later page).
+         While one is open, --rs-banner-h holds the space it takes so floating buttons can move above it. --}}
+    @php
+        $installBlocked = request()->routeIs('login', 'register', 'admin.login', 'routes.create', 'routes.batch', 'routes.versions.create');
+    @endphp
+    <div id="rs-banner-dock" class="rs-dock" data-no-install="{{ $installBlocked ? '1' : '0' }}">
+        <section id="rs-cookie" hidden aria-label="{{ __('Pemberitahuan cookie') }}"
+                 class="rounded-xl border-2 border-rs-z9 bg-white px-3 py-2.5 sm:px-5 sm:py-3 shadow-lg flex items-center gap-3 sm:gap-5">
+            <p class="text-sm text-rs-ink leading-snug flex-1 min-w-0">
+                {{ __('Kami hanya memakai cookie yang dibutuhkan situs, seperti untuk login dan bahasa.') }}
+                <a href="{{ route('cookies.policy') }}" class="font-semibold text-rs-z7 underline underline-offset-2 whitespace-nowrap">{{ __('Detail cookie') }}</a>
+            </p>
+            <button type="button" data-cookie-ok class="rs-sign shrink-0 min-h-[44px] rounded-lg px-4 text-sm font-bold">{{ __('Mengerti') }}</button>
+        </section>
+
+        <section id="rs-install" hidden aria-label="{{ __('Pasang aplikasi RuteStrip') }}"
+                 class="rounded-xl border-2 border-rs-z9 bg-white p-3 sm:px-5 sm:py-3 shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+                <img src="/images/icons/icon-192.png" alt="" width="44" height="44" class="w-10 h-10 rounded-lg shrink-0">
+                <div class="min-w-0">
+                    <p class="font-semibold text-rs-ink">{{ __('Pasang RuteStrip di HP') }}</p>
+                    <p class="text-sm text-rs-muted leading-snug" data-install-text>{{ __('Buka jalur dari layar utama, tanpa mengetik alamat.') }}</p>
+                    <p class="text-sm text-rs-muted leading-snug" data-ios-text hidden>{{ __('Ketuk Bagikan lalu Tambah ke Layar Utama.') }}</p>
+                </div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+                <button type="button" data-install-yes class="rs-sign flex-1 sm:flex-none min-h-[44px] rounded-lg px-5 text-sm font-bold">{{ __('Pasang') }}</button>
+                <button type="button" data-install-no class="flex-1 sm:flex-none min-h-[44px] rounded-lg px-4 text-sm font-semibold text-rs-z9 border border-rs-line hover:bg-rs-paper">{{ __('Nanti') }}</button>
+            </div>
+        </section>
+    </div>
+
     @include('components.floating-assistants')
     @stack('scripts')
     <script>
@@ -628,6 +629,106 @@
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
         }
+
+        // Search forms: loading text while the routes are ranked, and no double submits.
+        // The submitter itself is not disabled, so an example button still sends its own value.
+        (function () {
+            var forms = document.querySelectorAll('[data-search-form]');
+            var setBusy = function (form, busy) {
+                form.setAttribute('aria-busy', busy ? 'true' : 'false');
+                form.querySelectorAll('[data-search-submit]').forEach(function (btn) {
+                    var idle = btn.querySelector('[data-idle]'), wait = btn.querySelector('[data-busy]');
+                    if (idle && wait) { idle.hidden = busy; wait.hidden = !busy; }
+                });
+                var status = form.querySelector('[data-search-status]');
+                if (status) status.textContent = busy ? status.dataset.text : '';
+            };
+            forms.forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    if (form.dataset.busy) { e.preventDefault(); return; }
+                    form.dataset.busy = '1';
+                    setBusy(form, true);
+                });
+            });
+            window.addEventListener('pageshow', function () {
+                forms.forEach(function (form) { delete form.dataset.busy; setBusy(form, false); });
+            });
+        })();
+
+        // Bottom banners. Cookie notice until "Mengerti" (rs_cookie_ok, 1 year). Install prompt:
+        // never in the installed app, never on login/upload pages, not in the first 5 seconds,
+        // not on the same page view as the cookie notice, and 14 days of quiet after "Nanti".
+        (function () {
+            var root = document.documentElement;
+            var dock = document.getElementById('rs-banner-dock');
+            if (!dock) return;
+            var cookieBox = document.getElementById('rs-cookie');
+            var installBox = document.getElementById('rs-install');
+            var DAY = 864e5, QUIET = 'rs_install_dismissed', IOS_SEEN = 'rs_install_ios_hint';
+            var store = {
+                get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set: function (k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
+            };
+            var sync = function () {
+                var open = !cookieBox.hidden || !installBox.hidden;
+                root.style.setProperty('--rs-banner-h', open ? (dock.offsetHeight + 8) + 'px' : '0px');
+            };
+            if ('ResizeObserver' in window) new ResizeObserver(sync).observe(dock);
+            window.addEventListener('resize', sync);
+            var show = function (box) { box.hidden = false; sync(); };
+            var hide = function (box) { box.hidden = true; sync(); };
+
+            var cookieOpen = !/(?:^|;\s*)rs_cookie_ok=1(?:;|$)/.test(document.cookie);
+            if (cookieOpen) show(cookieBox);
+            cookieBox.querySelector('[data-cookie-ok]').addEventListener('click', function () {
+                document.cookie = 'rs_cookie_ok=1; Max-Age=31536000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+                hide(cookieBox);
+            });
+
+            var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+            var quietUntil = (+store.get(QUIET) || 0) + 14 * DAY;
+            if (cookieOpen || standalone || dock.dataset.noInstall === '1' || Date.now() < quietUntil) return;
+
+            var ua = navigator.userAgent;
+            var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            var iosSafari = ios && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
+            var mode = null, waited = false;
+            var maybeShow = function () {
+                if (!waited || !installBox.hidden || !cookieBox.hidden) return;
+                if (window.__rsInstallEvent) {
+                    mode = 'prompt';
+                } else if (iosSafari && !store.get(IOS_SEEN)) {
+                    mode = 'ios';
+                    store.set(IOS_SEEN, Date.now());
+                    installBox.querySelector('[data-install-text]').hidden = true;
+                    installBox.querySelector('[data-ios-text]').hidden = false;
+                    installBox.querySelector('[data-install-yes]').hidden = true;
+                } else {
+                    return;
+                }
+                show(installBox);
+            };
+            setTimeout(function () { waited = true; maybeShow(); }, 5000);
+            window.addEventListener('rs:installable', maybeShow);
+
+            installBox.querySelector('[data-install-yes]').addEventListener('click', function () {
+                var e = window.__rsInstallEvent;
+                hide(installBox);
+                if (!e) return;
+                window.__rsInstallEvent = null;
+                Promise.resolve(e.prompt()).then(function () { return e.userChoice; }).then(function (choice) {
+                    if (!choice || choice.outcome !== 'accepted') store.set(QUIET, Date.now());
+                }).catch(function () {});
+            });
+            installBox.querySelector('[data-install-no]').addEventListener('click', function () {
+                store.set(QUIET, Date.now());
+                hide(installBox);
+            });
+            window.addEventListener('appinstalled', function () {
+                store.set(QUIET, Date.now());
+                hide(installBox);
+            });
+        })();
     </script>
 </body>
 </html>

@@ -30,7 +30,12 @@ class LocaleTest extends TestCase
             'naismith_duration_hour' => 5.9,
             'average_grade_pct'      => 12.8,
             'narrative_text'         => 'Total kenaikan elevasi 1424 meter dengan ketinggian dari 1811m hingga 3128m.',
-            'route_coordinates'      => [[-7.4884, 110.4475], [-7.47, 110.444], [-7.4545, 110.44]],
+            // A winding 48-point track: the landing only features tracks that do not
+            // draw as a straight line or an up-and-back line (SearchController).
+            'route_coordinates'      => array_map(
+                fn($i) => [round(-7.4884 + 0.0007 * $i, 5), round(110.4475 - 0.012 * sin($i / 47 * M_PI), 5)],
+                range(0, 47)
+            ),
         ]);
     }
 
@@ -116,7 +121,7 @@ class LocaleTest extends TestCase
 
         $this->get('/?lang=en')->assertOk()
             ->assertSee('trails with GPX data')
-            ->assertSee('Research')
+            ->assertSee('Publication')
             ->assertSee('Mt. Merbabu via Selo');
     }
 

@@ -2,130 +2,123 @@
 
 @section('title', __('Rute Serupa') . ' - ' . $route->name)
 
-@section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header -->
-    <div class="mb-8">
-        <a href="{{ route('routes.show', $route) }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 group">
-            <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            {{ __('Kembali ke :name', ['name' => $route->name]) }}
-        </a>
+@php
+    $isEn = app()->getLocale() === 'en';
+    $num = fn ($value, int $decimals = 0) => number_format((float) $value, $decimals, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $hoursLabel = function ($hours) {
+        $hours = (float) $hours;
+        $h = (int) floor($hours);
+        $m = (int) round(($hours - $h) * 60);
+        if ($m === 60) { $h++; $m = 0; }
+        return __(':h j :m mnt', ['h' => $h, 'm' => $m]);
+    };
+    $difficultyLevel = fn ($level) => match ($level) { 'Mudah' => 1, 'Sedang' => 2, 'Sulit' => 3, default => 4 };
+    $similarWord = fn (float $score) => match (true) {
+        $score >= 85 => __('Sangat mirip'),
+        $score >= 70 => __('Mirip'),
+        default => __('Agak mirip'),
+    };
+    // Track drawn as SVG (no map tiles needed for a list of up to 20 routes).
+    $trackPath = function ($coords, int $w = 320, int $h = 160, int $pad = 16) {
+        $coords = is_array($coords) ? array_values(array_filter($coords, fn ($p) => is_array($p) && isset($p[0], $p[1]))) : [];
+        $n = count($coords);
+        if ($n < 2) return null;
+        $step = max(1, (int) ceil($n / 100));
+        $track = [];
+        foreach ($coords as $i => $p) if ($i % $step === 0 || $i === $n - 1) $track[] = [(float) $p[0], (float) $p[1]];
+        $lats = array_column($track, 0); $lngs = array_column($track, 1);
+        $kx = cos(deg2rad((min($lats) + max($lats)) / 2));
+        $spanX = max((max($lngs) - min($lngs)) * $kx, 1e-6); $spanY = max(max($lats) - min($lats), 1e-6);
+        $scale = min(($w - 2 * $pad) / $spanX, ($h - 2 * $pad) / $spanY);
+        $ox = ($w - $spanX * $scale) / 2; $oy = ($h - $spanY * $scale) / 2;
+        $pts = array_map(fn ($p) => [round($ox + ($p[1] - min($lngs)) * $kx * $scale, 1), round($oy + (max($lats) - $p[0]) * $scale, 1)], $track);
+        return ['d' => collect($pts)->map(fn ($p, $i) => ($i ? 'L' : 'M') . $p[0] . ' ' . $p[1])->implode(' '), 'start' => $pts[0]];
+    };
+@endphp
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 break-words">{{ __('Rute Serupa dengan :name', ['name' => $route->name]) }}</h1>
-        <p class="text-slate-600">
-            {{ __('Ditemukan') }} <span class="font-semibold text-emerald-600">{{ $similarRoutes->count() }}</span> {{ __('rute dengan kemiripan > 30%') }}
-        </p>
+@include('partials.rs-kit')
 
-        <!-- Formula -->
-        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg inline-block">
-            <p class="text-sm text-amber-800">
-                <strong>{{ __('Formula:') }}</strong> Cosine Similarity = (A · B) / (||A|| × ||B||)
-            </p>
-        </div>
-    </div>
-
-    @if($similarRoutes->count() > 0)
-    <!-- Similar Routes Grid -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach($similarRoutes as $similar)
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-slate-100 hover:shadow-xl transition-all">
-            <!-- Map Preview -->
-            @if($similar->route_coordinates && count($similar->route_coordinates) > 0)
-            <div id="map-{{ $similar->id }}" class="w-full h-40 bg-slate-200"></div>
-            @else
-            <div class="w-full h-40 bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                <x-icon name="mountain" class="w-10 h-10 text-emerald-500" />
-            </div>
-            @endif
-
-            <div class="p-5">
-                <!-- Similarity Badge -->
-                <div class="flex items-center justify-between mb-3">
-                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-bold rounded-full">
-                        {{ __(':score% cocok', ['score' => $similar->similarity_score]) }}
-                    </span>
-                    <span class="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
-                        cos={{ $similar->cosine_value }}
-                    </span>
-                </div>
-
-                <!-- Route Name -->
-                <h3 class="font-bold text-lg text-slate-800 mb-2 break-words">{{ $similar->name }}</h3>
-
-                <!-- Description -->
-                @if($similar->narrative_text || $similar->manual_description)
-                <p class="text-sm text-slate-600 mb-3 line-clamp-2">
-                    {{ Str::limit($similar->manual_description ?: $similar->narrative_text, 100) }}
-                </p>
-                @endif
-
-                <!-- Stats -->
-                <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-                    <div class="bg-slate-50 p-2 rounded-lg">
-                        <p class="text-xs text-slate-500">{{ __('Jarak') }}</p>
-                        <p class="font-semibold text-slate-700">{{ $similar->formatted_distance }}</p>
-                    </div>
-                    <div class="bg-slate-50 p-2 rounded-lg">
-                        <p class="text-xs text-slate-500">{{ __('Elevasi') }}</p>
-                        <p class="font-semibold text-slate-700">{{ number_format($similar->elevation_gain_m) }}m</p>
-                    </div>
-                    <div class="bg-slate-50 p-2 rounded-lg">
-                        <p class="text-xs text-slate-500">{{ __('Grade') }}</p>
-                        <p class="font-semibold text-slate-700">{{ $similar->formatted_grade }}</p>
-                    </div>
-                </div>
-
-                <!-- Difficulty & Button -->
-                <div class="flex items-center justify-between">
-                    <span class="text-sm px-2 py-1 rounded
-                        @if($similar->difficulty_level === 'Mudah') bg-green-100 text-green-700
-                        @elseif($similar->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-700
-                        @elseif($similar->difficulty_level === 'Sulit') bg-orange-100 text-orange-700
-                        @else bg-red-100 text-red-700
-                        @endif">
-                        {{ __($similar->difficulty_level) }}
-                    </span>
-
-                    <a href="{{ route('routes.show', $similar) }}"
-                       class="px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors">
-                        {{ __('Lihat Detail') }}
-                    </a>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-    @else
-    <div class="text-center py-16 bg-white rounded-2xl shadow-lg">
-        <x-icon name="search" class="w-14 h-14 mx-auto mb-4 text-slate-300" />
-        <h3 class="text-xl font-semibold text-slate-700 mb-2">{{ __('Tidak Ada Rute Serupa') }}</h3>
-        <p class="text-slate-500">{{ __('Tidak ditemukan rute dengan kemiripan > 30%') }}</p>
-    </div>
-    @endif
-</div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    @foreach($similarRoutes as $similar)
-    @if($similar->route_coordinates && count($similar->route_coordinates) > 0)
-    (function() {
-        var coords = @json($similar->route_coordinates);
-        if (coords && coords.length > 0) {
-            var map = L.map('map-{{ $similar->id }}', {
-                zoomControl: false, dragging: false, scrollWheelZoom: false,
-                doubleClickZoom: false, touchZoom: false
-            });
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-            var poly = L.polyline(coords, { color: '#10b981', weight: 3, opacity: 0.9 }).addTo(map);
-            map.fitBounds(poly.getBounds(), { padding: [10, 10] });
-        }
-    })();
-    @endif
-    @endforeach
-});
-</script>
+@push('styles')
+<style>
+    .rs-more > summary { list-style: none; cursor: pointer; }
+    .rs-more > summary::-webkit-details-marker { display: none; }
+    .rs-more[open] .rs-more-icon { transform: rotate(180deg); }
+</style>
 @endpush
+
+@section('content')
+<div class="rs-app">
+    @include('partials.rs-head', [
+        'back' => ['href' => route('routes.show', $route), 'label' => __('Kembali ke :name', ['name' => $route->name])],
+        'eyebrow' => __('Jalur yang mirip dengan'),
+        'title' => $route->name,
+        'lead' => $similarRoutes->count() > 0
+            ? __($similarRoutes->count() === 1 ? 'Ada 1 jalur yang jarak, tanjakan, dan suasananya mirip.' : 'Ada :count jalur yang jarak, tanjakan, dan suasananya mirip. Yang paling mirip di atas.', ['count' => $similarRoutes->count()])
+            : null,
+        'seed' => $route->id % 29 + 3,
+    ])
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        @if($similarRoutes->count() > 0)
+        <ol class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            @foreach($similarRoutes as $similar)
+            @php
+                $geo = $trackPath($similar->route_coordinates);
+                $level = $difficultyLevel($similar->difficulty_level);
+                $score = (float) $similar->similarity_score;
+            @endphp
+            <li class="rs-card overflow-hidden flex flex-col min-w-0 relative group hover:border-rs-z7 transition-colors">
+                <div class="h-32 bg-rs-mist flex items-center justify-center">
+                    @if($geo)
+                    <svg viewBox="0 0 320 160" class="w-full h-full" aria-hidden="true" focusable="false">
+                        <path d="{{ $geo['d'] }}" fill="none" stroke="#047857" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+                        <circle cx="{{ $geo['start'][0] }}" cy="{{ $geo['start'][1] }}" r="5" fill="#fff" stroke="#047857" stroke-width="3"/>
+                    </svg>
+                    @else
+                    <x-icon name="mountain" class="w-10 h-10 text-rs-z7" />
+                    @endif
+                </div>
+                <div class="p-5 flex-1 flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span class="rs-chip {{ $score >= 70 ? 'rs-chip-ok' : 'rs-chip-plain' }}" title="{{ __('Skor :score dari 100', ['score' => $num($score)]) }}">{{ $similarWord($score) }}</span>
+                        <span class="inline-flex items-center gap-2 font-semibold text-rs-ink">
+                            <span class="rs-diff" aria-hidden="true">@for($i = 1; $i <= 4; $i++)<i class="{{ $i <= $level ? 'on' : '' }}"></i>@endfor</span>
+                            <span><span class="sr-only">{{ __('Tingkat kesulitan') }}:</span> {{ __($similar->difficulty_level) }}</span>
+                        </span>
+                    </div>
+                    <h2 class="mt-3 rs-display uppercase text-[1.75rem] leading-none text-rs-z9 break-words">
+                        <a href="{{ route('routes.show', $similar) }}" class="after:absolute after:inset-0 after:content-[''] group-hover:text-rs-z7">{{ $similar->name }}</a>
+                    </h2>
+                    @if($similar->description || $similar->narrative_text)
+                    <p class="mt-2 text-sm text-rs-muted line-clamp-2">{{ \Illuminate\Support\Str::limit($similar->description ?: $similar->narrative_text, 110) }}</p>
+                    @endif
+                    <div class="mt-auto"></div>
+                    <dl class="mt-4 pt-4 grid grid-cols-3 gap-3 border-t border-rs-line">
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $num($similar->distance_km, 1) }} km</dd></div>
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Total naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $num($similar->elevation_gain_m) }} m</dd></div>
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $hoursLabel($similar->naismith_duration_hour) }}</dd></div>
+                    </dl>
+                </div>
+            </li>
+            @endforeach
+        </ol>
+
+        <details class="rs-more mt-10 max-w-3xl rounded-lg border border-rs-line bg-white">
+            <summary class="flex items-center justify-between gap-3 min-h-[48px] px-4 py-3 font-semibold text-rs-z9">
+                <span>{{ __('Bagaimana kemiripan dihitung') }}</span>
+                <x-icon name="chevron-down" class="rs-more-icon w-5 h-5 shrink-0 transition-transform" />
+            </summary>
+            <div class="px-4 pb-4 text-sm text-rs-muted leading-relaxed space-y-2">
+                <p>{{ __('Gambaran setiap jalur diubah menjadi 384 angka oleh model bahasa SBERT, lalu dibandingkan dengan cosine similarity, (A · B) / (|A| x |B|). Skornya 0 sampai 100: Sangat mirip mulai 85, Mirip mulai 70. Jalur dengan skor 30 ke bawah tidak ditampilkan.') }}</p>
+            </div>
+        </details>
+        @else
+        <div class="rs-card p-6 sm:p-10 text-center max-w-2xl mx-auto">
+            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ada jalur yang mirip.') }}</p>
+            <p class="mt-2 text-rs-muted">{{ __('Jalur ini cukup berbeda dari jalur lain di database, atau ringkasannya belum dibuat.') }}</p>
+            <a href="{{ route('routes.index') }}" class="rs-btn-ghost mt-5">{{ __('Lihat semua jalur') }}</a>
+        </div>
+        @endif
+    </div>
+</div>
 @endsection

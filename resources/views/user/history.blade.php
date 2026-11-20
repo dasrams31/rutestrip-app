@@ -3,61 +3,48 @@
 @section('title', __('Riwayat Pencarian'))
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-8">
-        <div class="min-w-0">
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="search" class="w-7 h-7 text-emerald-600 shrink-0" /> {{ __('Riwayat Pencarian') }}</h1>
-            <p class="text-slate-600">{{ __('Semua pencarian yang pernah Anda lakukan') }}</p>
-        </div>
-        <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1 py-2"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
-    </div>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'back' => ['href' => route('user.dashboard'), 'label' => __('Kembali ke dashboard')],
+        'title' => __('Riwayat pencarian'),
+        'lead' => __('Semua yang pernah kamu cari. Ketuk salah satu untuk mencarinya lagi.'),
+        'width' => 'max-w-4xl',
+        'seed' => 89,
+    ])
 
-    @if($histories->count() > 0)
-    <div class="bg-white rounded-2xl shadow-lg overflow-x-auto border border-slate-100">
-        <table class="w-full">
-            <thead class="bg-slate-50">
-                <tr>
-                    <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-slate-600">{{ __('Query') }}</th>
-                    <th class="px-3 sm:px-6 py-4 text-center text-sm font-semibold text-slate-600">{{ __('Hasil') }}</th>
-                    <th class="px-4 sm:px-6 py-4 text-right text-sm font-semibold text-slate-600">{{ __('Waktu') }}</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                @foreach($histories as $history)
-                <tr class="hover:bg-slate-50">
-                    <td class="px-4 sm:px-6 py-4 min-w-[8rem]">
-                        <a href="{{ route('search.index') }}?q={{ urlencode($history->query) }}"
-                           class="text-emerald-600 hover:underline font-medium [overflow-wrap:anywhere]">
-                            {{ $history->query }}
-                        </a>
-                    </td>
-                    <td class="px-3 sm:px-6 py-4 text-center">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 whitespace-nowrap">
-                            {{ __(':count rute', ['count' => $history->results_count]) }}
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
+        @if($histories->count() > 0)
+        <ul class="rs-card divide-y divide-[#ece9de]">
+            @foreach($histories as $history)
+            <li>
+                <form action="{{ route('search.submit') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="query" value="{{ $history->query }}">
+                    <button type="submit" class="w-full text-left flex items-start sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 min-w-0 hover:bg-[#faf9f4] group">
+                        <x-icon name="search" class="w-5 h-5 mt-0.5 sm:mt-0 text-[#047857] shrink-0" />
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-semibold text-[#053b30] [overflow-wrap:anywhere] group-hover:underline underline-offset-4">{{ $history->query }}</span>
+                            <span class="block mt-0.5 text-sm rs-muted">{{ __(':count rute', ['count' => $history->results_count]) }} · {{ $history->created_at->diffForHumans() }}</span>
                         </span>
-                    </td>
-                    <td class="px-4 sm:px-6 py-4 text-right text-sm text-slate-500">
-                        {{ $history->created_at->diffForHumans() }}
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                        <span class="hidden sm:inline text-sm font-semibold text-[#047857] shrink-0">{{ __('Cari lagi') }}</span>
+                    </button>
+                </form>
+            </li>
+            @endforeach
+        </ul>
 
-    <div class="mt-6">
-        {{ $histories->links() }}
+        <div class="mt-6">
+            {{ $histories->links() }}
+        </div>
+        @else
+        <div class="rs-card p-6 sm:p-10">
+            <x-icon name="search" class="w-8 h-8 text-[#047857]" />
+            <h2 class="rs-display mt-3 uppercase text-3xl leading-none text-[#053b30]">{{ __('Belum ada riwayat pencarian') }}</h2>
+            <p class="mt-2 rs-muted">{{ __('Coba tulis "jalur landai untuk pemula" di halaman cari.') }}</p>
+            <a href="{{ route('search.index') }}" class="rs-sign mt-5">{{ __('Mulai cari jalur') }}</a>
+        </div>
+        @endif
     </div>
-    @else
-    <div class="text-center py-16 bg-white rounded-2xl shadow-lg">
-        <svg class="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <p class="text-slate-500 mb-4">{{ __('Belum ada riwayat pencarian') }}</p>
-        <a href="{{ route('search.index') }}" class="inline-block px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">
-            {{ __('Mulai Cari Rute') }}
-        </a>
-    </div>
-    @endif
 </div>
 @endsection

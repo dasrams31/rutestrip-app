@@ -1,242 +1,105 @@
 @extends('layouts.app')
 
 @section('title', __('Arsitektur Sistem'))
+@section('meta_description', __('Cara RuteStrip menyarankan jalur pendakian: file GPX dibaca, diringkas jadi kalimat, lalu dicocokkan dengan permintaanmu memakai SBERT dan cosine similarity.'))
+
+@php
+    $paperUrl = 'https://sistemasi.ftik.unisi.ac.id/index.php/stmsi/article/view/6087';
+    $steps = [
+        [
+            'title' => __('File GPX dibaca'),
+            'text' => __('Dari titik-titik di file GPX kami hitung jarak, total tanjakan, kemiringan rata-rata, dan estimasi waktu dengan rumus Naismith. Koordinatnya dipakai untuk menggambar peta.'),
+            'term' => __('Ekstraksi fitur GPX'),
+        ],
+        [
+            'title' => __('Angka jadi kalimat'),
+            'text' => __('Angka-angka itu ditulis ulang jadi ringkasan jalur dalam kalimat biasa, lalu digabung dengan cerita dari pengunggah: vegetasi, sumber air, pemandangan.'),
+            'term' => __('Narasi jalur'),
+        ],
+        [
+            'title' => __('Kalimat dirapikan'),
+            'text' => __('Tautan dan karakter aneh dibuang, semua huruf jadi kecil, kata sambung yang tidak penting dibuang. Kata seperti "tidak" dan kata sifat tetap dipertahankan, dan kata tidak dipotong ke kata dasarnya.'),
+            'term' => __('Cleaning, case folding, stopword selektif, tanpa stemming'),
+        ],
+        [
+            'title' => __('Kalimat jadi deretan angka'),
+            'text' => __('Setiap ringkasan diubah jadi 384 angka yang mewakili maknanya, jadi "landai" dan "tidak curam" bisa dianggap mirip walau hurufnya beda.'),
+            'term' => 'SBERT · paraphrase-multilingual-MiniLM-L12-v2',
+        ],
+        [
+            'title' => __('Dicocokkan dengan permintaanmu'),
+            'text' => __('Kalimat yang kamu tulis diubah dengan cara yang sama, lalu dibandingkan dengan setiap jalur. Yang maknanya paling dekat tampil paling atas.'),
+            'term' => 'Cosine similarity · Top-N',
+        ],
+    ];
+    $stack = [
+        ['name' => 'Laravel 12', 'role' => __('Situs, akun, dan penyimpanan data jalur')],
+        ['name' => 'Python 3.11', 'role' => __('Membaca GPX dan membuat embedding')],
+        ['name' => 'Sentence Transformers (SBERT)', 'role' => __('Model bahasa untuk mengukur kemiripan makna')],
+        ['name' => 'Leaflet.js + OpenStreetMap', 'role' => __('Peta jalur interaktif')],
+    ];
+@endphp
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
-    <div class="text-center mb-12">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-4">{{ __('Arsitektur Sistem Rekomendasi') }}</h1>
-        <p class="text-slate-600 max-w-2xl mx-auto">
-            {{ __('Content-Based Filtering dengan SBERT dan Cosine Similarity') }}
-        </p>
-    </div>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'eyebrow' => __('Cara kerja RuteStrip'),
+        'title' => __('Dari file GPX sampai saran jalur.'),
+        'lead' => __('Untuk yang penasaran dengan dapurnya. Intinya sederhana: kalimatmu dicocokkan dengan ringkasan setiap jalur.'),
+        'seed' => 97,
+    ])
 
-    <!-- Architecture Diagram -->
-    <div class="bg-white rounded-3xl shadow-xl p-5 sm:p-8 mb-8 border border-slate-100">
-        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center justify-center gap-2"><x-icon name="chart-bar" class="w-5 h-5 text-emerald-600" /> {{ __('Diagram Alur Sistem') }}</h2>
-
-        <div class="flex flex-col lg:flex-row items-center justify-center gap-4 overflow-x-auto py-4">
-            <!-- Step 1: Input -->
-            <div class="flex flex-col items-center">
-                <div class="w-32 h-24 bg-blue-100 rounded-xl flex items-center justify-center border-2 border-blue-300">
-                    <div class="text-center">
-                        <svg class="w-8 h-8 text-blue-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <span class="text-xs font-medium text-blue-800">{{ __('File GPX') }}</span>
-                    </div>
-                </div>
-                <span class="text-xs text-slate-500 mt-2">Input</span>
-            </div>
-
-            <svg class="w-6 h-6 text-slate-400 transform rotate-90 lg:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-
-            <!-- Step 2: Preprocessing -->
-            <div class="flex flex-col items-center">
-                <div class="w-40 h-24 bg-purple-100 rounded-xl flex items-center justify-center border-2 border-purple-300">
-                    <div class="text-center px-2">
-                        <svg class="w-8 h-8 text-purple-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span class="text-xs font-medium text-purple-800">Preprocessing</span>
-                        <span class="text-[10px] text-purple-600 block">Cleaning, Lowercase</span>
-                    </div>
-                </div>
-                <span class="text-xs text-slate-500 mt-2">Data Processing</span>
-            </div>
-
-            <svg class="w-6 h-6 text-slate-400 transform rotate-90 lg:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-
-            <!-- Step 3: Feature Extraction -->
-            <div class="flex flex-col items-center">
-                <div class="w-44 h-24 bg-emerald-100 rounded-xl flex items-center justify-center border-2 border-emerald-300">
-                    <div class="text-center px-2">
-                        <svg class="w-8 h-8 text-emerald-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        <span class="text-xs font-medium text-emerald-800">SBERT Embedding</span>
-                        <span class="text-[10px] text-emerald-600 block">{{ __('384 dimensi') }}</span>
-                    </div>
-                </div>
-                <span class="text-xs text-slate-500 mt-2">Feature Extraction</span>
-            </div>
-
-            <svg class="w-6 h-6 text-slate-400 transform rotate-90 lg:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-
-            <!-- Step 4: Similarity -->
-            <div class="flex flex-col items-center">
-                <div class="w-40 h-24 bg-amber-100 rounded-xl flex items-center justify-center border-2 border-amber-300">
-                    <div class="text-center px-2">
-                        <svg class="w-8 h-8 text-amber-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        </svg>
-                        <span class="text-xs font-medium text-amber-800">Cosine Similarity</span>
-                        <span class="text-[10px] text-amber-600 block">Q·D / (||Q||×||D||)</span>
-                    </div>
-                </div>
-                <span class="text-xs text-slate-500 mt-2">Similarity</span>
-            </div>
-
-            <svg class="w-6 h-6 text-slate-400 transform rotate-90 lg:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-
-            <!-- Step 5: Output -->
-            <div class="flex flex-col items-center">
-                <div class="w-36 h-24 bg-rose-100 rounded-xl flex items-center justify-center border-2 border-rose-300">
-                    <div class="text-center px-2">
-                        <svg class="w-8 h-8 text-rose-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                        <span class="text-xs font-medium text-rose-800">Top-N Ranking</span>
-                        <span class="text-[10px] text-rose-600 block">{{ __('Rekomendasi') }}</span>
-                    </div>
-                </div>
-                <span class="text-xs text-slate-500 mt-2">Output</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Component Details -->
-    <div class="grid md:grid-cols-2 gap-6 mb-8">
-        <!-- Data Collection -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">1. Data Collection & Fusion</h3>
-            </div>
-            <ul class="text-sm text-slate-600 space-y-2">
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Ekstraksi fitur dari GPX (jarak, elevasi, grade, durasi Naismith)') }}
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:grid lg:grid-cols-12 lg:gap-12">
+        {{-- Steps on a winding trail line with summit markers, the landing's "Cara kerja" motif. --}}
+        <section class="lg:col-span-7" aria-labelledby="steps-title">
+            <h2 id="steps-title" class="rs-display uppercase text-[clamp(2rem,7vw,3rem)] leading-none text-[#053b30]">{{ __('Lima tahap') }}</h2>
+            <ol class="mt-6 relative border-l-2 border-dashed border-[#7c8c84] ml-2 space-y-8">
+                @foreach($steps as $step)
+                <li class="relative pl-7 sm:pl-9">
+                    <svg class="absolute -left-[10px] top-1 w-[18px] h-[18px]" viewBox="0 0 26 22" aria-hidden="true"><path d="M13 2 L24 20 H2 Z" fill="{{ $loop->last ? '#053b30' : '#fff' }}" stroke="#053b30" stroke-width="2.5" stroke-linejoin="round"/></svg>
+                    <p class="text-sm font-semibold text-[#047857]">{{ __('Tahap :n', ['n' => $loop->iteration]) }}</p>
+                    <h3 class="rs-display uppercase text-2xl sm:text-3xl leading-none mt-1">{{ $step['title'] }}</h3>
+                    <p class="mt-2 max-w-xl leading-relaxed">{{ $step['text'] }}</p>
+                    <p class="mt-2 text-sm rs-muted">{{ __('Istilah teknis:') }} <span class="font-semibold text-[#14231d] [overflow-wrap:anywhere]">{{ $step['term'] }}</span></p>
                 </li>
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Deskripsi manual (vegetasi, sumber air, panorama)') }}
-                </li>
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Koordinat rute untuk visualisasi peta') }}
-                </li>
-            </ul>
-        </div>
+                @endforeach
+            </ol>
+        </section>
 
-        <!-- Preprocessing -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">2. Text Preprocessing</h3>
-            </div>
-            <ul class="text-sm text-slate-600 space-y-2">
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Data Cleaning (regex: URL, karakter non-ASCII)') }}
-                </li>
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Case Folding (lowercase)
-                </li>
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Stopword Removal Selektif (pertahankan negasi & kata sifat)') }}
-                </li>
-                <li class="flex items-start">
-                    <x-icon name="x" class="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('No Stemming (SBERT sensitif konteks)') }}
-                </li>
-            </ul>
-        </div>
-
-        <!-- SBERT -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">3. SBERT Embedding</h3>
-            </div>
-            <ul class="text-sm text-slate-600 space-y-2">
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Model:') }} <code class="bg-slate-100 px-1 rounded">paraphrase-multilingual-MiniLM-L12-v2</code>
-                </li>
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Dimensi embedding: 384') }}
-                </li>
-                <li class="flex items-start">
-                    <x-icon name="check" class="w-4 h-4 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                    {{ __('Support bahasa Indonesia') }}
-                </li>
-            </ul>
-        </div>
-
-        <!-- Cosine Similarity -->
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center mr-3">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">4. Cosine Similarity</h3>
-            </div>
-            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100 mb-3">
-                <p class="text-center font-mono text-lg text-amber-800">
-                    Sim(Q, D) = (Q · D) / (||Q|| × ||D||)
+        <aside class="lg:col-span-5 mt-12 lg:mt-0 space-y-10">
+            <section class="rs-card p-5 sm:p-7" aria-labelledby="formula-title">
+                <h2 id="formula-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ __('Rumus pencocokannya') }}</h2>
+                <p class="mt-4 rounded-lg bg-[#053b30] text-white px-4 py-4 text-center font-semibold text-base sm:text-lg [overflow-wrap:anywhere]">
+                    Sim(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)
                 </p>
-            </div>
-            <ul class="text-sm text-slate-600 space-y-1">
-                <li><strong>Q</strong> = {{ __('Query embedding (pencarian pengguna)') }}</li>
-                <li><strong>D</strong> = {{ __('Document embedding (jalur)') }}</li>
-                <li><strong>{{ __('Rentang') }}</strong> = {{ __('-1 sampai 1 (1 = identik)') }}</li>
-            </ul>
-        </div>
-    </div>
+                <dl class="mt-4 space-y-2 text-[0.9375rem]">
+                    <div class="flex gap-3"><dt class="font-semibold w-6 shrink-0">Q</dt><dd>{{ __('deretan angka dari kalimat yang kamu tulis') }}</dd></div>
+                    <div class="flex gap-3"><dt class="font-semibold w-6 shrink-0">D</dt><dd>{{ __('deretan angka dari ringkasan satu jalur') }}</dd></div>
+                    <div class="flex gap-3"><dt class="font-semibold w-6 shrink-0">Sim</dt><dd>{{ __('dari -1 sampai 1; makin dekat ke 1, makin mirip maknanya') }}</dd></div>
+                </dl>
+            </section>
 
-    <!-- Tech Stack -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
-        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center justify-center gap-2"><x-icon name="cog" class="w-5 h-5 text-emerald-600" /> Technology Stack</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="mb-2 flex justify-center"><x-icon name="code" class="w-7 h-7 text-emerald-600" /></div>
-                <div class="font-medium text-slate-800">Laravel 12</div>
-                <div class="text-xs text-slate-500">Backend Framework</div>
-            </div>
-            <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="mb-2 flex justify-center"><x-icon name="terminal" class="w-7 h-7 text-emerald-600" /></div>
-                <div class="font-medium text-slate-800">Python 3.11</div>
-                <div class="text-xs text-slate-500">ML Processing</div>
-            </div>
-            <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="mb-2 flex justify-center"><x-icon name="chip" class="w-7 h-7 text-emerald-600" /></div>
-                <div class="font-medium text-slate-800">SBERT</div>
-                <div class="text-xs text-slate-500">Sentence Transformers</div>
-            </div>
-            <div class="text-center p-4 bg-slate-50 rounded-xl">
-                <div class="mb-2 flex justify-center"><x-icon name="map" class="w-7 h-7 text-emerald-600" /></div>
-                <div class="font-medium text-slate-800">Leaflet.js</div>
-                <div class="text-xs text-slate-500">Map Visualization</div>
-            </div>
-        </div>
+            <section aria-labelledby="stack-title">
+                <h2 id="stack-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ __('Dibangun dengan') }}</h2>
+                <dl class="mt-4 rs-card divide-y divide-[#ece9de]">
+                    @foreach($stack as $item)
+                    <div class="px-5 py-3.5">
+                        <dt class="font-semibold">{{ $item['name'] }}</dt>
+                        <dd class="text-sm rs-muted">{{ $item['role'] }}</dd>
+                    </div>
+                    @endforeach
+                </dl>
+            </section>
+
+            <section class="border-l-4 border-[#047857] pl-5" aria-labelledby="paper-title">
+                <h2 id="paper-title" class="font-semibold">{{ __('Mau baca lebih dalam?') }}</h2>
+                <p class="mt-1 rs-muted">{{ __('Metode ini ditulis lengkap di artikel jurnal Sistemasi.') }}</p>
+                <a href="{{ $paperUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 min-h-[44px] font-semibold text-[#047857] underline decoration-2 underline-offset-4 hover:text-[#053b30]">
+                    {{ __('Baca artikelnya') }} <x-icon name="external-link" class="w-4 h-4" />
+                </a>
+            </section>
+        </aside>
     </div>
 </div>
 @endsection

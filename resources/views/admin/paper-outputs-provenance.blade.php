@@ -1,386 +1,226 @@
 @extends('layouts.app')
 
-@section('title', 'Paper Outputs Provenance')
+@section('title', __('Tabel paper provenance GPX'))
+
+@php
+    $isEn = app()->getLocale() === 'en';
+    $n = fn ($v, int $d = 0) => number_format((float) $v, $d, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $counts = [
+        [__('versi GPX'), $n($totalVersions), null],
+        [__('log pemeriksaan'), $n($totalVerificationLogs), null],
+        [__('baris integritas'), $n($integrityRows), null],
+        [__('baris pemulihan versi'), $n($recoveryRows), null],
+        [__('skenario black box'), $n($blackBoxRows), null],
+        [__('jawaban SUS'), $n($susRows), __('rata-rata skor :score', ['score' => $n($averageSusScore, 2)])],
+        [__('query evaluasi rekomendasi'), $n($recommendationQueryRows), 'P@5 ' . number_format($averagePrecisionAt5, 4) . ' · P@10 ' . number_format($averagePrecisionAt10, 4)],
+    ];
+    $tables = [
+        'before-after' => __('Tabel Before vs After Provenance'),
+        'snapshots' => __('Evaluation Results Snapshots'),
+        'integrity' => __('Tabel Integrity Verification'),
+        'black-box' => __('Tabel Black Box Testing'),
+        'sus' => __('Tabel SUS Usability Score'),
+        'precision' => __('Tabel Precision@5 dan Precision@10'),
+    ];
+    $statusChip = fn (?string $s) => match (strtolower((string) $s)) {
+        'verified', 'pass' => 'rs-chip-ok',
+        'invalid', 'fail', 'failed' => 'rs-chip-bad',
+        default => 'rs-chip-warn',
+    };
+@endphp
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <a href="{{ route('admin.evaluation.provenance') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 font-medium gap-1.5">
-            <x-icon name="arrow-left" class="w-4 h-4" /> Kembali ke Evaluasi Provenance
-        </a>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'back' => ['href' => route('admin.evaluation.provenance'), 'label' => __('Kembali ke evaluasi provenance')],
+        'eyebrow' => __('Tabel untuk naskah'),
+        'title' => __('Tabel paper provenance GPX'),
+        'lead' => __('Pratinjau tabel siap salin untuk bab hasil dan pembahasan, lengkap dengan unduhan CSV mentahnya.'),
+        'width' => 'max-w-7xl',
+        'seed' => 113,
+    ])
 
-        <div class="bg-gradient-to-r from-slate-800 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-            <p class="text-emerald-100 text-sm font-semibold mb-2">SINTA 3 Paper Outputs</p>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">Tabel Paper GPX Provenance</h1>
-            <p class="text-slate-100 max-w-3xl">
-                Download tabel CSV yang siap dipakai untuk bagian hasil dan pembahasan paper: version control, integrity verification, version recovery, dan ringkasan evaluasi.
-            </p>
-        </div>
-    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10">
+        <section aria-label="{{ __('Jumlah data') }}">
+            <dl class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-px bg-[#ece9de] rs-card overflow-hidden">
+                @foreach($counts as [$label, $value, $note])
+                <div class="flex flex-col-reverse justify-end bg-white p-4 min-w-0">
+                    <dt class="mt-1 text-sm rs-muted">{{ $label }}@if($note)<span class="block text-xs mt-0.5 [overflow-wrap:anywhere]">{{ $note }}</span>@endif</dt>
+                    <dd class="rs-display rs-num text-3xl leading-none text-[#053b30]">{{ $value }}</dd>
+                </div>
+                @endforeach
+            </dl>
+        </section>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <p class="text-sm text-slate-500 mb-1">GPX Versions</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $totalVersions }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <p class="text-sm text-slate-500 mb-1">Verification Logs</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $totalVerificationLogs }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <p class="text-sm text-slate-500 mb-1">Integrity Rows</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $integrityRows }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <p class="text-sm text-slate-500 mb-1">Recovery Rows</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $recoveryRows }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:col-span-4">
-            <p class="text-sm text-slate-500 mb-1">Black Box Test Rows</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $blackBoxRows }}</p>
-            <p class="text-xs text-slate-500 mt-2">Jumlah skenario pengujian black box untuk fitur utama sistem.</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:col-span-4">
-            <p class="text-sm text-slate-500 mb-1">SUS Responses</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $susRows }}</p>
-            <p class="text-xs text-slate-500 mt-2">Rata-rata SUS Score: {{ number_format($averageSusScore, 2) }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:col-span-4">
-            <p class="text-sm text-slate-500 mb-1">Recommendation Evaluation Queries</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $recommendationQueryRows }}</p>
-            <p class="text-xs text-slate-500 mt-2">Average Precision@5: {{ number_format($averagePrecisionAt5, 4) }} | Average Precision@10: {{ number_format($averagePrecisionAt10, 4) }}</p>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">Preview Tabel Final BAB Hasil</h2>
-                <p class="text-sm text-slate-500 mt-1">Tabel HTML siap screenshot/copy untuk naskah, melengkapi CSV mentah.</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
+        {{-- Toolbar: snapshot + print, and a jump list for this long page. --}}
+        <div class="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 print:hidden">
+            <nav aria-label="{{ __('Lompat ke tabel') }}">
+                <ul class="flex flex-wrap gap-2">
+                    @foreach($tables as $id => $label)
+                    <li><a href="#{{ $id }}" class="inline-flex items-center min-h-[44px] px-3 rounded-lg border rs-rule bg-white text-sm font-semibold hover:border-[#7c8c84]">{{ $label }}</a></li>
+                    @endforeach
+                </ul>
+            </nav>
+            <div class="flex flex-wrap gap-2 shrink-0">
                 <form method="POST" action="{{ route('admin.paper-outputs.provenance.capture-evaluation-snapshot') }}">
                     @csrf
-                    <button class="px-4 py-2 rounded-xl bg-indigo-700 text-white font-bold hover:bg-indigo-800">Capture Snapshot</button>
+                    <button type="submit" class="rs-sign rs-btn-sm">{{ __('Simpan snapshot evaluasi') }}</button>
                 </form>
-                <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800">Print Tabel</button>
+                <button type="button" onclick="window.print()" class="rs-btn-ghost rs-btn-sm">{{ __('Cetak tabel') }}</button>
             </div>
         </div>
 
-        <h3 class="font-bold text-slate-800 mb-3">Tabel Before vs After Provenance</h3>
-        <div class="overflow-x-auto mb-6">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">Aspect</th>
-                        <th class="px-3 py-3 text-left border-b">Before</th>
-                        <th class="px-3 py-3 text-left border-b">After</th>
-                        <th class="px-3 py-3 text-left border-b">Contribution</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($beforeAfterRows as $row)
-                    <tr>
-                        <td class="px-3 py-3 font-bold text-slate-800">{{ $row['aspect'] }}</td>
-                        <td class="px-3 py-3">{{ $row['before'] }}</td>
-                        <td class="px-3 py-3">{{ $row['after'] }}</td>
-                        <td class="px-3 py-3">{{ $row['contribution'] }}</td>
-                    </tr>
+        {{-- 1. Before vs after --}}
+        <section id="before-after" class="mt-10 scroll-mt-24" aria-labelledby="before-after-title">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="before-after-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ $tables['before-after'] }}</h2>
+                <a href="{{ route('admin.paper-outputs.provenance.export-before-after') }}" class="rs-btn-ghost rs-btn-sm print:hidden">{{ __('Unduh CSV') }}</a>
+            </div>
+            <div class="mt-3 rs-card overflow-hidden"><div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead><tr><th>{{ __('Aspek') }}</th><th>{{ __('Sebelum') }}</th><th>{{ __('Sesudah') }}</th><th>{{ __('Kontribusi') }}</th></tr></thead>
+                    <tbody>
+                        @foreach($beforeAfterRows as $row)
+                        <tr><td class="font-semibold min-w-[9rem]">{{ $row['aspect'] }}</td><td class="min-w-[12rem]">{{ $row['before'] }}</td><td class="min-w-[12rem]">{{ $row['after'] }}</td><td class="min-w-[12rem]">{{ $row['contribution'] }}</td></tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div></div>
+        </section>
+
+        {{-- 2. Evaluation snapshots --}}
+        <section id="snapshots" class="mt-10 scroll-mt-24" aria-labelledby="snapshots-title">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="snapshots-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ $tables['snapshots'] }}</h2>
+                <a href="{{ route('admin.paper-outputs.provenance.export-evaluation-results') }}" class="rs-btn-ghost rs-btn-sm print:hidden">{{ __('Unduh CSV') }}</a>
+            </div>
+            <div class="mt-3 rs-card overflow-hidden"><div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead><tr><th>{{ __('Metrik') }}</th><th>{{ __('Nilai') }}</th><th>{{ __('Ukuran dataset') }}</th><th>{{ __('Disimpan') }}</th></tr></thead>
+                    <tbody>
+                        @forelse($latestEvaluationResults as $result)
+                        <tr><td class="font-semibold min-w-[12rem]">{{ $result->metric_name }}</td><td class="rs-num">{{ number_format($result->metric_value, 4) }}</td><td class="rs-num">{{ $result->dataset_size }}</td><td class="whitespace-nowrap rs-muted">{{ $result->captured_at?->translatedFormat('j M Y, H:i') }}</td></tr>
+                        @empty
+                        <tr><td colspan="4" class="text-center py-6 rs-muted">{{ __('Belum ada snapshot. Tekan "Simpan snapshot evaluasi" di atas.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div></div>
+        </section>
+
+        {{-- 3. Integrity --}}
+        <section id="integrity" class="mt-10 scroll-mt-24" aria-labelledby="integrity-title">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="integrity-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ $tables['integrity'] }}</h2>
+                <a href="{{ route('admin.paper-outputs.provenance.export-integrity') }}" class="rs-btn-ghost rs-btn-sm print:hidden">{{ __('Unduh CSV') }}</a>
+            </div>
+            <div class="mt-3 rs-card overflow-hidden"><div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead><tr><th>{{ __('Jalur') }}</th><th>{{ __('Versi') }}</th><th>{{ __('Sumber') }}</th><th>{{ __('Status') }}</th><th>{{ __('Waktu') }}</th></tr></thead>
+                    <tbody>
+                        @forelse($finalIntegrityRows as $log)
+                        <tr><td class="min-w-[11rem]">{{ $log->gpxVersion?->route?->name }}</td><td class="rs-num">v{{ $log->gpxVersion?->version_number }}</td><td>{{ strtoupper($log->source) }}</td><td><span class="rs-chip {{ $statusChip($log->status) }}">{{ strtoupper($log->status) }}</span></td><td class="whitespace-nowrap rs-muted">{{ $log->verified_at?->translatedFormat('j M Y, H:i') }}</td></tr>
+                        @empty
+                        <tr><td colspan="5" class="text-center py-6 rs-muted">{{ __('Belum ada log integritas.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div></div>
+        </section>
+
+        {{-- 4. Black box --}}
+        <section id="black-box" class="mt-10 scroll-mt-24" aria-labelledby="black-box-title">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="black-box-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ $tables['black-box'] }}</h2>
+                <a href="{{ route('admin.paper-outputs.provenance.export-black-box-testing') }}" class="rs-btn-ghost rs-btn-sm print:hidden">{{ __('Unduh CSV') }}</a>
+            </div>
+            <div class="mt-3 rs-card overflow-hidden"><div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead><tr><th>ID</th><th>{{ __('Fitur') }}</th><th>{{ __('Skenario') }}</th><th>{{ __('Harapan') }}</th><th>{{ __('Hasil') }}</th><th>{{ __('Status') }}</th></tr></thead>
+                    <tbody>
+                        @forelse($finalBlackBoxRows as $row)
+                        <tr><td class="font-semibold whitespace-nowrap">{{ $row->test_case_id }}</td><td class="min-w-[9rem]">{{ $row->feature }}</td><td class="min-w-[12rem]">{{ $row->scenario }}</td><td class="min-w-[12rem]">{{ $row->expected_result }}</td><td class="min-w-[12rem]">{{ $row->actual_result }}</td><td><span class="rs-chip {{ $statusChip($row->status) }}">{{ strtoupper($row->status) }}</span></td></tr>
+                        @empty
+                        <tr><td colspan="6" class="text-center py-6 rs-muted">{{ __('Belum ada data black box testing.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div></div>
+        </section>
+
+        {{-- 5. SUS --}}
+        <section id="sus" class="mt-10 scroll-mt-24" aria-labelledby="sus-title">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="sus-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ $tables['sus'] }}</h2>
+                <div class="flex flex-wrap gap-2 print:hidden">
+                    <a href="{{ route('evaluation.sus.create') }}" class="rs-btn-ghost rs-btn-sm">{{ __('Buka form SUS') }}</a>
+                    <a href="{{ route('admin.paper-outputs.provenance.export-sus-responses') }}" class="rs-btn-ghost rs-btn-sm">{{ __('Unduh CSV') }}</a>
+                </div>
+            </div>
+            <div class="mt-3 rs-card overflow-hidden"><div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead><tr><th>{{ __('Responden') }}</th><th>{{ __('Peran') }}</th><th>{{ __('Skor') }}</th><th>{{ __('Dikirim') }}</th><th>{{ __('Catatan') }}</th></tr></thead>
+                    <tbody>
+                        @forelse($finalSusRows as $response)
+                        <tr><td class="min-w-[9rem]">{{ $response->respondent_name ?: __('Anonim') }}</td><td>{{ $response->respondent_role ?: '-' }}</td><td class="rs-num font-semibold">{{ number_format($response->score, 2) }}</td><td class="whitespace-nowrap rs-muted">{{ $response->submitted_at?->translatedFormat('j M Y, H:i') }}</td><td class="min-w-[12rem] [overflow-wrap:anywhere]">{{ $response->notes ?: '-' }}</td></tr>
+                        @empty
+                        <tr><td colspan="5" class="text-center py-6 rs-muted">{{ __('Belum ada jawaban SUS.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div></div>
+        </section>
+
+        {{-- 6. Precision@K --}}
+        <section id="precision" class="mt-10 scroll-mt-24" aria-labelledby="precision-title">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <h2 id="precision-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ $tables['precision'] }}</h2>
+                <a href="{{ route('admin.paper-outputs.provenance.export-recommendation-precision') }}" class="rs-btn-ghost rs-btn-sm print:hidden">{{ __('Unduh CSV') }}</a>
+            </div>
+            <div class="mt-3 rs-card overflow-hidden"><div class="rs-table-wrap">
+                <table class="rs-table">
+                    <thead><tr><th>Query</th><th>{{ __('ID jalur relevan') }}</th><th>{{ __('5 hasil teratas') }}</th><th>P@5</th><th>P@10</th></tr></thead>
+                    <tbody>
+                        @forelse($finalRecommendationRows as $row)
+                        <tr><td class="min-w-[10rem]">{{ $row['query'] }}</td><td><code class="text-xs [overflow-wrap:anywhere]">{{ implode(', ', $row['relevant_route_ids']) }}</code></td><td class="min-w-[14rem]">{{ implode(', ', array_slice($row['top_5_route_names'], 0, 5)) }}</td><td class="rs-num font-semibold">{{ number_format($row['precision_at_5'], 4) }}</td><td class="rs-num font-semibold">{{ number_format($row['precision_at_10'], 4) }}</td></tr>
+                        @empty
+                        <tr><td colspan="5" class="text-center py-6 rs-muted">{{ __('Belum ada query evaluasi rekomendasi. Pastikan jalur sudah punya embedding SBERT.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div></div>
+        </section>
+
+        {{-- CSVs without a preview table here --}}
+        <section class="mt-12 lg:grid lg:grid-cols-12 lg:gap-8 print:hidden" aria-labelledby="more-title">
+            <div class="lg:col-span-7">
+                <h2 id="more-title" class="rs-display uppercase text-2xl sm:text-3xl leading-none text-[#053b30]">{{ __('Unduhan lain') }}</h2>
+                <ul class="mt-3 rs-card divide-y divide-[#ece9de]">
+                    @foreach([
+                        [route('admin.evaluation.provenance.export-versions'), __('Tabel versi GPX'), __('Versi per jalur, status aktif, hash, pengunggah, catatan perubahan.')],
+                        [route('admin.paper-outputs.provenance.export-version-recovery'), __('Tabel pemulihan versi'), __('Bukti bahwa memulihkan versi lama mengganti versi aktif.')],
+                        [route('admin.evaluation.provenance.export-summary'), __('Ringkasan evaluasi'), __('Hash Verification Accuracy dan Version Recovery Accuracy.')],
+                    ] as [$href, $label, $note])
+                    <li>
+                        <a href="{{ $href }}" class="flex items-center gap-4 px-5 py-3.5 hover:bg-[#faf9f4] min-w-0">
+                            <x-icon name="document-text" class="w-5 h-5 text-[#047857] shrink-0" />
+                            <span class="min-w-0"><span class="block font-semibold">{{ $label }} (CSV)</span><span class="block text-sm rs-muted">{{ $note }}</span></span>
+                        </a>
+                    </li>
                     @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        <h3 class="font-bold text-slate-800 mb-3">Evaluation Results Snapshots</h3>
-        <div class="overflow-x-auto mb-6">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">Metric</th>
-                        <th class="px-3 py-3 text-left border-b">Value</th>
-                        <th class="px-3 py-3 text-left border-b">Dataset Size</th>
-                        <th class="px-3 py-3 text-left border-b">Captured</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($latestEvaluationResults as $result)
-                    <tr>
-                        <td class="px-3 py-3 font-bold text-slate-800">{{ $result->metric_name }}</td>
-                        <td class="px-3 py-3">{{ number_format($result->metric_value, 4) }}</td>
-                        <td class="px-3 py-3">{{ $result->dataset_size }}</td>
-                        <td class="px-3 py-3">{{ $result->captured_at?->format('d M Y H:i') }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="4" class="px-3 py-6 text-center text-slate-500">Belum ada snapshot evaluation_results. Klik Capture Snapshot.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <h3 class="font-bold text-slate-800 mb-3">Tabel Integrity Verification</h3>
-        <div class="overflow-x-auto mb-6">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">Rute</th>
-                        <th class="px-3 py-3 text-left border-b">Versi</th>
-                        <th class="px-3 py-3 text-left border-b">Sumber</th>
-                        <th class="px-3 py-3 text-left border-b">Status</th>
-                        <th class="px-3 py-3 text-left border-b">Waktu</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($finalIntegrityRows as $log)
-                    <tr>
-                        <td class="px-3 py-3">{{ $log->gpxVersion?->route?->name }}</td>
-                        <td class="px-3 py-3">v{{ $log->gpxVersion?->version_number }}</td>
-                        <td class="px-3 py-3">{{ strtoupper($log->source) }}</td>
-                        <td class="px-3 py-3 font-bold">{{ strtoupper($log->status) }}</td>
-                        <td class="px-3 py-3">{{ $log->verified_at?->format('d M Y H:i') }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">Belum ada log integrity.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <h3 class="font-bold text-slate-800 mb-3">Tabel Black Box Testing</h3>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">ID</th>
-                        <th class="px-3 py-3 text-left border-b">Feature</th>
-                        <th class="px-3 py-3 text-left border-b">Scenario</th>
-                        <th class="px-3 py-3 text-left border-b">Expected</th>
-                        <th class="px-3 py-3 text-left border-b">Actual</th>
-                        <th class="px-3 py-3 text-left border-b">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($finalBlackBoxRows as $row)
-                    <tr>
-                        <td class="px-3 py-3 font-bold text-slate-800">{{ $row->test_case_id }}</td>
-                        <td class="px-3 py-3">{{ $row->feature }}</td>
-                        <td class="px-3 py-3">{{ $row->scenario }}</td>
-                        <td class="px-3 py-3">{{ $row->expected_result }}</td>
-                        <td class="px-3 py-3">{{ $row->actual_result }}</td>
-                        <td class="px-3 py-3 font-bold {{ $row->status === 'pass' ? 'text-emerald-700' : 'text-red-700' }}">{{ strtoupper($row->status) }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="6" class="px-3 py-6 text-center text-slate-500">Belum ada data black box testing.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <h3 class="font-bold text-slate-800 mb-3 mt-6">Tabel SUS Usability Score</h3>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">Respondent</th>
-                        <th class="px-3 py-3 text-left border-b">Role</th>
-                        <th class="px-3 py-3 text-left border-b">Score</th>
-                        <th class="px-3 py-3 text-left border-b">Submitted</th>
-                        <th class="px-3 py-3 text-left border-b">Notes</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($finalSusRows as $response)
-                    <tr>
-                        <td class="px-3 py-3">{{ $response->respondent_name ?: 'Anonymous' }}</td>
-                        <td class="px-3 py-3">{{ $response->respondent_role ?: '-' }}</td>
-                        <td class="px-3 py-3 font-bold {{ $response->score >= 70 ? 'text-emerald-700' : 'text-amber-700' }}">{{ number_format($response->score, 2) }}</td>
-                        <td class="px-3 py-3">{{ $response->submitted_at?->format('d M Y H:i') }}</td>
-                        <td class="px-3 py-3">{{ $response->notes ?: '-' }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">Belum ada jawaban SUS.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <h3 class="font-bold text-slate-800 mb-3 mt-6">Tabel Precision@5 dan Precision@10</h3>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">Query</th>
-                        <th class="px-3 py-3 text-left border-b">Relevant Routes</th>
-                        <th class="px-3 py-3 text-left border-b">Top-5 Results</th>
-                        <th class="px-3 py-3 text-left border-b">Precision@5</th>
-                        <th class="px-3 py-3 text-left border-b">Precision@10</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($finalRecommendationRows as $row)
-                    <tr>
-                        <td class="px-3 py-3">{{ $row['query'] }}</td>
-                        <td class="px-3 py-3"><code class="text-xs">{{ implode(', ', $row['relevant_route_ids']) }}</code></td>
-                        <td class="px-3 py-3">{{ implode(', ', array_slice($row['top_5_route_names'], 0, 5)) }}</td>
-                        <td class="px-3 py-3 font-bold text-blue-700">{{ number_format($row['precision_at_5'], 4) }}</td>
-                        <td class="px-3 py-3 font-bold text-blue-700">{{ number_format($row['precision_at_10'], 4) }}</td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">Belum ada query evaluasi rekomendasi. Pastikan route memiliki SBERT embedding.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Before vs After</h2>
-                    <p class="text-sm text-slate-500 mt-1">Perbandingan kontribusi sistem sebelum dan sesudah provenance untuk naskah paper.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">Contribution</span>
+                </ul>
             </div>
-            <a href="{{ route('admin.paper-outputs.provenance.export-before-after') }}" class="inline-flex items-center px-5 py-3 bg-amber-600 text-white rounded-2xl font-bold hover:bg-amber-700 transition-colors">
-                Download Before After CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Evaluation Results Snapshot</h2>
-                    <p class="text-sm text-slate-500 mt-1">Export hasil metrik yang sudah disimpan sebagai snapshot eksperimen.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">Snapshot</span>
+            <div class="lg:col-span-5 mt-8 lg:mt-0 border-l-4 border-[#047857] pl-5 self-start">
+                <h2 class="font-semibold">{{ __('Log pemeriksaan per jalur') }}</h2>
+                <p class="mt-1 rs-muted">{{ __('Buka halaman riwayat file GPX sebuah jalur, lalu unduh log pemeriksaannya dari sana.') }}</p>
+                @if($sampleRouteId)
+                <a href="{{ route('routes.provenance', $sampleRouteId) }}" class="mt-2 inline-flex items-center min-h-[44px] font-semibold text-[#047857] underline decoration-2 underline-offset-4">{{ __('Buka contoh: jalur #:id', ['id' => $sampleRouteId]) }}</a>
+                @else
+                <p class="mt-2 text-sm rs-muted">{{ __('Belum ada jalur dengan riwayat file.') }}</p>
+                @endif
             </div>
-            <a href="{{ route('admin.paper-outputs.provenance.export-evaluation-results') }}" class="inline-flex items-center px-5 py-3 bg-indigo-700 text-white rounded-2xl font-bold hover:bg-indigo-800 transition-colors">
-                Download Evaluation Results CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel GPX Versions</h2>
-                    <p class="text-sm text-slate-500 mt-1">Daftar versi GPX per rute, status aktif, hash, uploader, dan change log.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Dataset</span>
-            </div>
-            <a href="{{ route('admin.evaluation.provenance.export-versions') }}" class="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors">
-                Download GPX Versions CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Verification Logs</h2>
-                    <p class="text-sm text-slate-500 mt-1">Log lengkap verifikasi hash lokal untuk setiap versi GPX pada satu rute.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">Audit</span>
-            </div>
-            <p class="text-sm text-slate-500 mb-4">Gunakan tombol export di halaman provenance per rute untuk log spesifik rute.</p>
-            @if($sampleRouteId)
-            <a href="{{ route('routes.provenance', $sampleRouteId) }}" class="inline-flex items-center px-5 py-3 bg-slate-700 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors">
-                Buka Contoh Provenance Route {{ $sampleRouteId }}
-            </a>
-            @else
-            <span class="inline-flex items-center px-5 py-3 bg-slate-100 text-slate-500 rounded-2xl font-bold">
-                Belum ada route provenance
-            </span>
-            @endif
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Integrity Verification</h2>
-                    <p class="text-sm text-slate-500 mt-1">Format paper untuk membuktikan hash verification menghasilkan status verified atau invalid.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">Integrity</span>
-            </div>
-            <a href="{{ route('admin.paper-outputs.provenance.export-integrity') }}" class="inline-flex items-center px-5 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition-colors">
-                Download Integrity Table CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Version Recovery</h2>
-                    <p class="text-sm text-slate-500 mt-1">Format paper untuk membuktikan restore versi GPX berhasil mengubah active version.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Recovery</span>
-            </div>
-            <a href="{{ route('admin.paper-outputs.provenance.export-version-recovery') }}" class="inline-flex items-center px-5 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-colors">
-                Download Version Recovery CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Evaluation Summary</h2>
-                    <p class="text-sm text-slate-500 mt-1">Ringkasan metrik untuk Hash Verification Accuracy dan Version Recovery Accuracy.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">Summary</span>
-            </div>
-            <a href="{{ route('admin.evaluation.provenance.export-summary') }}" class="inline-flex items-center px-5 py-3 bg-purple-600 text-white rounded-2xl font-bold hover:bg-purple-700 transition-colors">
-                Download Evaluation Summary CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Black Box Testing</h2>
-                    <p class="text-sm text-slate-500 mt-1">Format paper untuk pengujian fungsional fitur rekomendasi, provenance, dan export.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Black Box</span>
-            </div>
-            <a href="{{ route('admin.paper-outputs.provenance.export-black-box-testing') }}" class="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-colors">
-                Download Black Box Testing CSV
-            </a>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel SUS Score</h2>
-                    <p class="text-sm text-slate-500 mt-1">Format paper untuk evaluasi usability menggunakan System Usability Scale.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">Usability</span>
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <a href="{{ route('evaluation.sus.create') }}" class="inline-flex items-center px-5 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-colors">
-                    Isi Form SUS
-                </a>
-                <a href="{{ route('admin.paper-outputs.provenance.export-sus-responses') }}" class="inline-flex items-center px-5 py-3 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 transition-colors">
-                    Download SUS CSV
-                </a>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
-            <div class="flex items-start justify-between gap-4 mb-4">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Tabel Precision@K</h2>
-                    <p class="text-sm text-slate-500 mt-1">Format paper untuk evaluasi akurasi ranking rekomendasi berbasis ground truth query.</p>
-                </div>
-                <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">Recommendation</span>
-            </div>
-            <a href="{{ route('admin.paper-outputs.provenance.export-recommendation-precision') }}" class="inline-flex items-center px-5 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors">
-                Download Precision@K CSV
-            </a>
-        </div>
-    </div>
-
-    <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6">
-        <h2 class="text-lg font-bold text-amber-900 mb-2">Catatan Penggunaan Paper</h2>
-        <p class="text-sm text-amber-800 leading-relaxed">
-            Untuk tabel verification logs spesifik rute, buka halaman provenance rute lalu gunakan tombol Export Verification CSV. Untuk tabel global paper, gunakan export di halaman ini dan halaman evaluasi provenance.
-        </p>
+        </section>
     </div>
 </div>
 @endsection

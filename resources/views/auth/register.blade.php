@@ -3,123 +3,99 @@
 @section('title', __('account.register.title'))
 
 @section('content')
-<div class="min-h-[70vh] flex items-center justify-center px-4">
-    <div class="w-full max-w-md">
-        <!-- Register Card -->
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-            <!-- Header -->
-            <div class="bg-mountain-gradient p-6 sm:p-8 text-center">
-                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                </div>
-                <h1 class="text-2xl font-bold text-white mb-2">{{ __('account.register.title') }}</h1>
-                <p class="text-white/80 text-sm">{{ __('account.register.subtitle') }}</p>
-            </div>
+@component('partials.rs-auth-shell', [
+    'eyebrow' => __('account.register.title'),
+    'title' => __('account.register.heading'),
+    'lead' => __('account.register.subtitle'),
+    'seed' => 23,
+])
+<div class="rs-card p-5 sm:p-8">
+    <form method="POST" action="{{ route('register.submit') }}" class="space-y-5">
+        @csrf
 
-            <!-- Form -->
-            <div class="p-5 sm:p-8">
-                @if(session('success'))
-                <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-                    {{ session('success') }}
-                </div>
-                @endif
-
-                <form method="POST" action="{{ route('register.submit') }}">
-                    @csrf
-
-                    <!-- Name -->
-                    <div class="mb-5">
-                        <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('account.register.name') }}</label>
-                        <input type="text" name="name" id="name" value="{{ old('name') }}"
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('name') border-red-500 @enderror"
-                               placeholder="{{ __('account.register.name_placeholder') }}" autocomplete="name" required>
-                        @error('name')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Email -->
-                    <div class="mb-5">
-                        <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('account.register.email') }}</label>
-                        <input type="email" name="email" id="email" value="{{ old('email') }}"
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('email') border-red-500 @enderror"
-                               placeholder="email@example.com" autocomplete="email" required>
-                        @error('email')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Password -->
-                    <div class="mb-5">
-                        <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('account.register.password') }}</label>
-                        <input type="password" name="password" id="password"
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('password') border-red-500 @enderror"
-                               placeholder="{{ __('account.register.password_placeholder') }}" autocomplete="new-password" minlength="8" required>
-                        @error('password')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Confirm Password -->
-                    <div class="mb-6">
-                        <label for="password_confirmation" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('account.register.password_confirmation') }}</label>
-                        <input type="password" name="password_confirmation" id="password_confirmation"
-                               class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                               placeholder="{{ __('account.register.confirmation_placeholder') }}" autocomplete="new-password" minlength="8" required>
-                    </div>
-
-                    <!-- Honeypot: hidden from people, bots that fill every field are rejected -->
-                    <div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
-                        <label for="website">Website</label>
-                        <input type="text" name="website" id="website" value="" tabindex="-1" autocomplete="off">
-                    </div>
-
-                    <!-- Anti-robot check (self-hosted ALTCHA proof-of-work) -->
-                    <div class="mb-6">
-                        <altcha-widget class="rs-altcha" challenge="{{ route('altcha.challenge') }}" language="{{ app()->getLocale() === 'en' ? 'en' : 'id' }}" auto="onfocus"></altcha-widget>
-                        @error('altcha')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit"
-                            class="w-full py-4 bg-mountain-gradient text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
-                        {{ __('account.register.submit') }}
-                    </button>
-                </form>
-
-                <!-- Login Link -->
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-slate-500">
-                        {{ __('account.register.has_account') }}
-                        <a href="{{ route('login') }}" class="text-emerald-600 hover:text-emerald-700 font-medium">
-                            {{ __('account.register.login') }}
-                        </a>
-                    </p>
-                </div>
-            </div>
+        <div>
+            <label for="name" class="rs-label">{{ __('account.register.name') }}</label>
+            <input type="text" name="name" id="name" value="{{ old('name') }}" maxlength="255"
+                   class="rs-input" placeholder="{{ __('account.register.name_placeholder') }}" autocomplete="name" required
+                   @error('name') aria-invalid="true" aria-describedby="name-error" @enderror>
+            @error('name')
+                <p id="name-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
         </div>
-    </div>
+
+        <div>
+            <label for="email" class="rs-label">{{ __('account.register.email') }}</label>
+            <input type="email" name="email" id="email" value="{{ old('email') }}" maxlength="255"
+                   class="rs-input" placeholder="{{ __('nama@email.com') }}" autocomplete="email" inputmode="email" required
+                   @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+            @error('email')
+                <p id="email-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
+        </div>
+
+        <div>
+            <label for="password" class="rs-label">{{ __('account.register.password') }}</label>
+            <input type="password" name="password" id="password"
+                   class="rs-input" autocomplete="new-password" minlength="8" required
+                   aria-describedby="password-hint @error('password') password-error @enderror"
+                   @error('password') aria-invalid="true" @enderror>
+            <p id="password-hint" class="rs-hint">{{ __('account.register.password_placeholder') }}</p>
+            @error('password')
+                <p id="password-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
+        </div>
+
+        <div>
+            <label for="password_confirmation" class="rs-label">{{ __('account.register.password_confirmation') }}</label>
+            <input type="password" name="password_confirmation" id="password_confirmation"
+                   class="rs-input" placeholder="{{ __('account.register.confirmation_placeholder') }}" autocomplete="new-password" minlength="8" required>
+        </div>
+
+        {{-- Honeypot: hidden from people, bots that fill every field are rejected --}}
+        <div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+            <label for="website">Website</label>
+            <input type="text" name="website" id="website" value="" tabindex="-1" autocomplete="off">
+        </div>
+
+        {{-- Anti-robot check (self-hosted ALTCHA proof-of-work, runs in the browser) --}}
+        <div>
+            <p class="rs-label" id="altcha-label">{{ __('account.register.robot_label') }}</p>
+            <altcha-widget class="rs-altcha" challenge="{{ route('altcha.challenge') }}" language="{{ app()->getLocale() === 'en' ? 'en' : 'id' }}" auto="onfocus" aria-describedby="altcha-hint"></altcha-widget>
+            <p id="altcha-hint" class="rs-hint">{{ __('account.register.robot_hint') }}</p>
+            @error('altcha')
+                <p class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
+        </div>
+
+        <button type="submit" class="rs-sign w-full text-base">
+            <x-icon name="user-add" class="w-5 h-5" /> {{ __('account.register.submit') }}
+        </button>
+    </form>
 </div>
+
+<p class="mt-6 flex flex-wrap items-center gap-x-2 min-h-[44px] text-[0.9375rem]">
+    <span class="rs-muted">{{ __('account.register.has_account') }}</span>
+    <a href="{{ route('login') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] underline decoration-2 underline-offset-4 hover:text-[#053b30]">{{ __('account.register.login') }}</a>
+</p>
+@endcomponent
 @endsection
 
-@push('head')
+@push('styles')
 <style>
     .rs-altcha {
         display: block;
         min-height: 4.5rem;
         --altcha-max-width: 100%;
-        --altcha-border-radius: 0.75rem;
-        --altcha-border-color: #e2e8f0;
-        --altcha-color-primary: #059669;
+        --altcha-border-radius: 8px;
+        --altcha-border-width: 1.5px;
+        --altcha-border-color: #7c8c84;
+        --altcha-color-base: #ffffff;
+        --altcha-color-primary: #047857;
         --altcha-color-primary-content: #ffffff;
-        --altcha-color-success: #059669;
+        --altcha-color-success: #047857;
         --altcha-color-success-content: #ffffff;
-        --altcha-color-base-content: #334155;
-        --altcha-checkbox-outline-color: #10b981;
+        --altcha-color-base-content: #14231d;
+        --altcha-checkbox-outline-color: #053b30;
     }
 </style>
 @endpush

@@ -1,607 +1,304 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Dashboard')
+@section('title', __('Panel admin'))
+
+@php
+    $isEn = app()->getLocale() === 'en';
+    $n = fn ($v, int $d = 0) => number_format((float) $v, $d, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $integrityTotal = max(array_sum($chartStats['integrity']), 1);
+    $integrity = [
+        ['key' => 'verified', 'label' => __('Hash cocok'), 'value' => $chartStats['integrity']['verified'], 'bar' => '#047857', 'chip' => 'rs-chip-ok'],
+        ['key' => 'invalid', 'label' => __('Isi berubah'), 'value' => $chartStats['integrity']['invalid'], 'bar' => '#b91c1c', 'chip' => 'rs-chip-bad'],
+        ['key' => 'failed', 'label' => __('Gagal diperiksa'), 'value' => $chartStats['integrity']['failed'], 'bar' => '#b45309', 'chip' => 'rs-chip-warn'],
+    ];
+    $latestRoute = $routes->count() > 0 ? $routes->first() : null;
+    $toolGroups = [
+        __('Dataset') => array_values(array_filter([
+            ['href' => route('admin.export.csv'), 'label' => __('Unduh dataset lengkap (CSV)'), 'note' => __('Semua kolom, termasuk metadata dan embedding.'), 'icon' => 'document-text'],
+            ['href' => route('admin.export.embeddings'), 'label' => __('Unduh embedding saja (CSV)'), 'note' => __('Satu baris per jalur, 384 kolom dimensi.'), 'icon' => 'chip'],
+            ['href' => route('routes.create'), 'label' => __('Upload satu GPX'), 'note' => __('Tambah jalur, hash, dan versi pertama.'), 'icon' => 'document-add'],
+            ['href' => route('routes.batch'), 'label' => __('Upload GPX sekaligus'), 'note' => __('Banyak file dalam satu kali kirim.'), 'icon' => 'upload'],
+            ['href' => route('routes.index'), 'label' => __('Daftar jalur publik'), 'note' => __('Lihat jalur seperti pengunjung melihatnya.'), 'icon' => 'map'],
+        ])),
+        __('Penelitian') => array_values(array_filter([
+            ['href' => route('admin.evaluation.provenance'), 'label' => __('Evaluasi provenance GPX'), 'note' => __('Ringkasan versi, verifikasi hash, dan pemulihan.'), 'icon' => 'shield-check'],
+            ['href' => route('admin.paper-outputs.provenance'), 'label' => __('Tabel untuk naskah'), 'note' => __('Pratinjau tabel dan unduhan CSV.'), 'icon' => 'clipboard-list'],
+            ['href' => route('admin.paper-readiness'), 'label' => __('Cek kesiapan dataset'), 'note' => __(':passed dari :total kriteria terpenuhi.', ['passed' => $paperReadiness['passed'], 'total' => $paperReadiness['total']]), 'icon' => 'check-badge'],
+            ['href' => route('evaluation.sus.create'), 'label' => __('Kuesioner SUS'), 'note' => __('Form kegunaan untuk responden.'), 'icon' => 'users'],
+            $latestRoute ? ['href' => route('routes.provenance', $latestRoute), 'label' => __('Contoh riwayat file GPX'), 'note' => \Illuminate\Support\Str::limit($latestRoute->name, 40), 'icon' => 'clock'] : null,
+        ])),
+    ];
+    $downloads = [
+        ['href' => route('admin.evaluation.provenance.export-versions'), 'label' => __('Versi GPX')],
+        ['href' => route('admin.paper-outputs.provenance.export-integrity'), 'label' => __('Integritas')],
+        ['href' => route('admin.paper-outputs.provenance.export-version-recovery'), 'label' => __('Pemulihan versi')],
+        ['href' => route('admin.evaluation.provenance.export-summary'), 'label' => __('Ringkasan evaluasi')],
+        ['href' => route('admin.paper-outputs.provenance.export-black-box-testing'), 'label' => __('Black box')],
+        ['href' => route('admin.paper-outputs.provenance.export-sus-responses'), 'label' => __('Jawaban SUS')],
+        ['href' => route('admin.paper-readiness.export'), 'label' => __('Kesiapan dataset')],
+    ];
+    $bulkStatus = fn ($s) => match ($s) {
+        'completed' => ['label' => __('Selesai'), 'chip' => 'rs-chip-ok'],
+        'completed_with_errors' => ['label' => __('Selesai, ada yang gagal'), 'chip' => 'rs-chip-warn'],
+        'failed' => ['label' => __('Gagal'), 'chip' => 'rs-chip-bad'],
+        'running' => ['label' => __('Berjalan'), 'chip' => 'rs-chip-plain'],
+        default => ['label' => __('Antre'), 'chip' => 'rs-chip-plain'],
+    };
+    $embeddingData = $routes->getCollection()->mapWithKeys(fn ($r) => [$r->id => [
+        'narrative' => $r->narrative_text,
+        'embedding' => $r->sbert_embedding,
+    ]]);
+@endphp
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Admin Dashboard</h1>
-        <p class="text-slate-600">Kelola dataset dan lihat proses SBERT embedding</p>
-    </div>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'eyebrow' => __('Panel admin'),
+        'title' => __('Dataset jalur dan alat penelitian.'),
+        'lead' => __('Unduh data, periksa keaslian file GPX, dan siapkan tabel untuk naskah. Hanya admin yang melihat halaman ini.'),
+        'actions' => [
+            ['href' => route('admin.export.csv'), 'label' => __('Unduh dataset lengkap (CSV)'), 'style' => 'sign', 'icon' => 'document-text'],
+            ['href' => route('routes.create'), 'label' => __('Upload GPX'), 'icon' => 'upload'],
+        ],
+        'width' => 'max-w-7xl',
+        'seed' => 103,
+    ])
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-500 mb-1">Total Rute</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ $stats['total_routes'] }}</p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{-- Dataset numbers, straight from the database. --}}
+        <section class="rs-card -mt-5 sm:-mt-7 relative" aria-label="{{ __('Ringkasan dataset') }}">
+            <dl class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#ece9de] rounded-xl overflow-hidden">
+                @foreach([
+                    [__('jalur di dataset'), $n($stats['total_routes'])],
+                    [__('km total panjang jalur'), $n($stats['total_distance'], 1)],
+                    [__('m rata-rata total tanjakan'), $n($stats['avg_elevation'])],
+                    [__('jalur sudah punya embedding'), $n($stats['routes_with_embedding'])],
+                ] as [$label, $value])
+                <div class="flex flex-col-reverse justify-end bg-white p-4 sm:p-6 min-w-0">
+                    <dt class="mt-1 text-sm rs-muted">{{ $label }}</dt>
+                    <dd class="rs-display rs-num text-4xl sm:text-5xl leading-none text-[#053b30] [overflow-wrap:anywhere]">{{ $value }}</dd>
                 </div>
-                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
+                @endforeach
+            </dl>
+        </section>
 
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-500 mb-1">Total Jarak</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ number_format($stats['total_distance'], 1) }} <span class="text-lg font-normal text-slate-500">km</span></p>
-                </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-500 mb-1">Rata-rata Elevasi</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ number_format($stats['avg_elevation'], 0) }} <span class="text-lg font-normal text-slate-500">m</span></p>
-                </div>
-                <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-slate-500 mb-1">Dengan Embedding</p>
-                    <p class="text-3xl font-bold text-slate-800">{{ $stats['routes_with_embedding'] }}</p>
-                </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Export Buttons -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Export Dataset</h2>
-        <div class="flex flex-wrap gap-4">
-            <a href="{{ route('admin.export.csv') }}"
-               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Download Full Dataset (CSV)
-            </a>
-            <a href="{{ route('admin.export.embeddings') }}"
-               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
-                </svg>
-                Download Embeddings Only (CSV)
-            </a>
-            <a href="{{ route('admin.evaluation.provenance') }}"
-               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h6v6m2 4H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0120 6.414V19a2 2 0 01-2 2z"/>
-                </svg>
-                Evaluasi GPX Provenance
-            </a>
-            <a href="{{ route('admin.paper-outputs.provenance') }}"
-               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0120 6.414V19a2 2 0 01-2 2z"/>
-                </svg>
-                Paper Outputs Provenance
-            </a>
-        </div>
-        <p class="mt-4 text-sm text-slate-500">
-            <strong>Full Dataset:</strong> Semua data termasuk metadata dan embedding dalam satu file.<br>
-            <strong>Embeddings Only:</strong> Format tabel dengan 384 kolom dimensi untuk analisis ML.
-        </p>
-    </div>
-
-    <!-- Paper Table Navigation -->
-    <div class="bg-gradient-to-r from-slate-900 to-emerald-900 rounded-2xl shadow-xl p-6 mb-8 text-white">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-            <div>
-                <p class="text-emerald-200 text-sm font-bold uppercase tracking-wide mb-2">Paper SINTA 3</p>
-                <h2 class="text-2xl font-extrabold mb-2">Navigasi Tabel Provenance</h2>
-                <p class="text-slate-200 text-sm max-w-2xl">
-                    Akses ringkasan evaluasi dan tabel siap ekspor untuk GPX versioning, integrity verification, dan version recovery.
-                </p>
-            </div>
-            <div class="flex flex-col sm:flex-row gap-3 shrink-0">
-                <a href="{{ route('admin.evaluation.provenance') }}"
-                   class="inline-flex items-center justify-center px-5 py-3 bg-white text-emerald-800 font-bold rounded-2xl shadow-lg hover:bg-emerald-50 transition-colors">
-                    Lihat Evaluasi
-                </a>
-                <a href="{{ route('admin.paper-outputs.provenance') }}"
-                   class="inline-flex items-center justify-center px-5 py-3 bg-amber-500 text-white font-bold rounded-2xl shadow-lg hover:bg-amber-600 transition-colors">
-                    Buka Tabel Paper
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Feature Navigation -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">Navigasi Fitur Admin</h2>
-                <p class="text-sm text-slate-500 mt-1">Akses cepat ke fitur utama dan fitur baru provenance untuk kebutuhan sistem dan paper.</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <a href="{{ route('routes.index') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">R</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-emerald-800">Daftar Rute</h3>
-                        <p class="text-sm text-slate-500 mt-1">Lihat semua rute pendakian, detail GPX, dan badge verifikasi.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('routes.create') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black">U</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-blue-800">Upload GPX Baru</h3>
-                        <p class="text-sm text-slate-500 mt-1">Tambah rute baru, generate fitur GPX, hash, dan versi awal.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('routes.batch') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-cyan-50 hover:border-cyan-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center font-black">B</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-cyan-800">Batch Upload GPX</h3>
-                        <p class="text-sm text-slate-500 mt-1">Upload banyak file GPX sekaligus untuk mempercepat dataset paper.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('search.index') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-lime-50 hover:border-lime-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-lime-100 text-lime-700 flex items-center justify-center font-black">S</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-lime-800">Pencarian Rekomendasi</h3>
-                        <p class="text-sm text-slate-500 mt-1">Cek hasil rekomendasi SBERT dan trust badge pada rute.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ config('services.webchat.url') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-rose-50 hover:border-rose-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-black">AI</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-rose-800">AI Chat</h3>
-                        <p class="text-sm text-slate-500 mt-1">Buka RuteStrip AI Chat (chat.rutestrip.ai.id) untuk tanya jawab berbasis data rute.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('admin.evaluation.provenance') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-purple-50 hover:border-purple-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black">E</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-purple-800">Evaluasi Provenance</h3>
-                        <p class="text-sm text-slate-500 mt-1">Ringkasan versioning, hash verification, dan restore.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('admin.paper-outputs.provenance') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-amber-50 hover:border-amber-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-black">P</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-amber-800">Tabel Paper</h3>
-                        <p class="text-sm text-slate-500 mt-1">Download CSV untuk GPX versions, integrity, dan version recovery.</p>
-                    </div>
-                </div>
-            </a>
-
-            @if($routes->count() > 0)
-            @php
-                $latestRoute = $routes->first();
-            @endphp
-            <a href="{{ route('routes.provenance', $latestRoute) }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-black">G</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-slate-900">Contoh Provenance</h3>
-                        <p class="text-sm text-slate-500 mt-1">Buka provenance rute terbaru: {{ Str::limit($latestRoute->name, 36) }}.</p>
-                    </div>
-                </div>
-            </a>
-            @endif
-
-            <a href="{{ route('admin.export.csv') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-teal-50 hover:border-teal-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-black">CSV</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-teal-800">Export Full Dataset</h3>
-                        <p class="text-sm text-slate-500 mt-1">Download dataset rute lengkap untuk analisis dan lampiran paper.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('admin.export.embeddings') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">384</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-indigo-800">Export Embeddings</h3>
-                        <p class="text-sm text-slate-500 mt-1">Download matriks embedding SBERT 384 dimensi.</p>
-                    </div>
-                </div>
-            </a>
-
-            <a href="{{ route('evaluation.sus.create') }}" class="group p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">SUS</div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 group-hover:text-emerald-800">SUS Questionnaire</h3>
-                        <p class="text-sm text-slate-500 mt-1">Isi form usability untuk menghitung SUS score paper.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Provenance Health Panel -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Provenance Health Panel</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @php
-                $healthItems = [
-                    ['label' => 'Versioning', 'ready' => $provenanceStats['total_versions'] > 0, 'detail' => $provenanceStats['total_versions'] . ' versi GPX'],
-                    ['label' => 'Hash Verification', 'ready' => $provenanceStats['verification_logs'] > 0, 'detail' => $provenanceStats['verification_logs'] . ' log'],
-                    ['label' => 'CSV Outputs', 'ready' => true, 'detail' => 'exports ready'],
-                ];
-            @endphp
-            @foreach($healthItems as $item)
-            <div class="rounded-2xl border p-4 {{ $item['ready'] ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200' }}">
-                <p class="font-bold {{ $item['ready'] ? 'text-emerald-800' : 'text-amber-800' }}">{{ $item['label'] }}</p>
-                <p class="text-sm {{ $item['ready'] ? 'text-emerald-700' : 'text-amber-700' }} mt-1">{{ $item['ready'] ? 'Ready' : 'Needs data' }} - {{ $item['detail'] }}</p>
-            </div>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- Provenance Status Panels -->
-    <div class="grid grid-cols-1 gap-6 mb-8">
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
-            <h2 class="text-lg font-bold text-slate-800 mb-4">Status Integrity</h2>
-            <div class="space-y-3 text-sm">
-                <div class="flex justify-between"><span class="text-slate-500">Verified</span><span class="font-bold text-emerald-700">{{ $provenanceStats['verified_versions'] }}</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Invalid</span><span class="font-bold text-red-700">{{ $provenanceStats['invalid_versions'] }}</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Verification failed</span><span class="font-bold text-amber-700">{{ $provenanceStats['failed_versions'] }}</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Restore events</span><span class="font-bold text-slate-700">{{ $provenanceStats['restore_events'] }}</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Penjelasan Status Provenance</h2>
-        <div class="grid md:grid-cols-3 gap-4 text-sm">
-            <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-                <p class="font-bold text-emerald-800 mb-1">Verified GPX</p>
-                <p class="text-emerald-700">File GPX cocok dengan hash tersimpan dan belum terdeteksi berubah.</p>
-            </div>
-            <div class="rounded-2xl bg-red-50 border border-red-100 p-4">
-                <p class="font-bold text-red-800 mb-1">Invalid GPX</p>
-                <p class="text-red-700">Hash file GPX tidak cocok dengan hash tersimpan, sehingga file terdeteksi berubah.</p>
-            </div>
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <p class="font-bold text-slate-800 mb-1">Restore Version</p>
-                <p class="text-slate-600">Versi GPX sebelumnya dapat dipulihkan dan setiap restore tercatat sebagai event.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Provenance Charts -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Grafik Status Provenance</h2>
-        <div class="grid grid-cols-1 gap-6">
-            @foreach([
-                'Integrity' => ['items' => $chartStats['integrity'], 'colors' => ['verified' => 'bg-emerald-500', 'invalid' => 'bg-red-500', 'failed' => 'bg-amber-500']],
-            ] as $chartTitle => $chart)
-            @php
-                $totalChart = max(array_sum($chart['items']), 1);
-            @endphp
-            <div class="rounded-2xl bg-slate-50 border border-slate-100 p-4">
-                <h3 class="font-bold text-slate-800 mb-4">{{ $chartTitle }}</h3>
-                <div class="space-y-3">
-                    @foreach($chart['items'] as $label => $value)
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="capitalize text-slate-600">{{ str_replace('_', ' ', $label) }}</span>
-                            <span class="font-bold text-slate-800">{{ $value }}</span>
-                        </div>
-                        <div class="h-3 rounded-full bg-white overflow-hidden border border-slate-100">
-                            <div class="h-full {{ $chart['colors'][$label] }}" style="width: {{ round(($value / $totalChart) * 100, 1) }}%"></div>
-                        </div>
-                    </div>
+        {{-- Tools, grouped by what the admin is doing (not one tile per link). --}}
+        <div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            @foreach($toolGroups as $group => $tools)
+            <section class="min-w-0" aria-labelledby="tools-{{ $loop->index }}">
+                <h2 id="tools-{{ $loop->index }}" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ $group }}</h2>
+                <ul class="mt-3 rs-card divide-y divide-[#ece9de]">
+                    @foreach($tools as $tool)
+                    <li>
+                        <a href="{{ $tool['href'] }}" class="flex items-center gap-4 px-4 sm:px-5 py-3.5 min-w-0 hover:bg-[#faf9f4]">
+                            <x-icon :name="$tool['icon']" class="w-5 h-5 text-[#047857] shrink-0" />
+                            <span class="min-w-0 flex-1">
+                                <span class="block font-semibold text-[#053b30]">{{ $tool['label'] }}</span>
+                                <span class="block text-sm rs-muted truncate">{{ $tool['note'] }}</span>
+                            </span>
+                            <x-icon name="chevron-right" class="w-4 h-4 text-[#7c8c84] shrink-0" />
+                        </a>
+                    </li>
                     @endforeach
-                </div>
-            </div>
+                </ul>
+            </section>
             @endforeach
         </div>
-    </div>
 
-    <!-- Bulk Provenance Actions -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Bulk Action Provenance</h2>
-        <p class="text-sm text-slate-500 mb-4">Aksi berjalan melalui Laravel queue agar proses verifikasi hash tidak timeout. Jalankan worker dengan <code class="text-xs bg-slate-100 px-2 py-1 rounded">php artisan queue:work</code>.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <form action="{{ route('admin.bulk-provenance-action') }}" method="POST" onsubmit="return confirm('Verify ulang semua versi aktif?')" class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                @csrf
-                <input type="hidden" name="action" value="verify_active">
-                <h3 class="font-bold text-emerald-800 mb-2">Verify Active GPX</h3>
-                <p class="text-sm text-emerald-700 mb-4">Hitung ulang hash lokal untuk semua versi aktif.</p>
-                <button class="px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold hover:bg-emerald-800">Jalankan</button>
-            </form>
-        </div>
+        {{-- GPX integrity --}}
+        <section class="mt-12" aria-labelledby="integrity-title">
+            <h2 id="integrity-title" class="rs-display uppercase text-[clamp(2rem,6vw,2.75rem)] leading-none text-[#053b30]">{{ __('Keaslian file GPX') }}</h2>
+            <p class="mt-2 rs-muted max-w-2xl">{{ __('Setiap versi file disimpan dengan hash SHA-256. Pemeriksaan menghitung ulang hash dan membandingkannya.') }}</p>
 
-        <div class="mt-6 rounded-2xl border border-slate-100 overflow-hidden">
-            <div class="px-4 py-3 bg-slate-50 font-bold text-slate-700">Progress Bulk Terbaru</div>
-            <div class="divide-y divide-slate-100">
-                @forelse($recentBulkActions as $bulkAction)
-                <div class="px-4 py-3 text-sm grid md:grid-cols-5 gap-2">
-                    <span class="font-bold text-slate-800">{{ str_replace('_', ' ', strtoupper($bulkAction->action)) }}</span>
-                    <span class="text-slate-600">{{ strtoupper($bulkAction->status) }}</span>
-                    <span class="text-emerald-700 font-semibold">OK: {{ $bulkAction->processed_count }}</span>
-                    <span class="text-red-700 font-semibold">Fail: {{ $bulkAction->failed_count }}</span>
-                    <span class="text-slate-500 truncate" title="{{ $bulkAction->last_error }}">{{ $bulkAction->last_error ?: '-' }}</span>
+            <div class="mt-5 lg:grid lg:grid-cols-12 lg:gap-8">
+                <div class="lg:col-span-7 rs-card p-5 sm:p-6 min-w-0">
+                    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div><dt class="text-sm rs-muted">{{ __('Versi GPX') }}</dt><dd class="rs-display rs-num text-3xl">{{ $n($provenanceStats['total_versions']) }}</dd></div>
+                        <div><dt class="text-sm rs-muted">{{ __('Log pemeriksaan') }}</dt><dd class="rs-display rs-num text-3xl">{{ $n($provenanceStats['verification_logs']) }}</dd></div>
+                        <div><dt class="text-sm rs-muted">{{ __('Pemulihan versi') }}</dt><dd class="rs-display rs-num text-3xl">{{ $n($provenanceStats['restore_events']) }}</dd></div>
+                        <div><dt class="text-sm rs-muted">{{ __('Isi berubah') }}</dt><dd class="rs-display rs-num text-3xl {{ $provenanceStats['invalid_versions'] ? 'text-[#b91c1c]' : '' }}">{{ $n($provenanceStats['invalid_versions']) }}</dd></div>
+                    </dl>
+
+                    <div class="mt-6 space-y-3" role="list" aria-label="{{ __('Status versi GPX') }}">
+                        @foreach($integrity as $row)
+                        <div role="listitem">
+                            <div class="flex justify-between gap-3 text-sm">
+                                <span class="rs-chip {{ $row['chip'] }}">{{ $row['label'] }}</span>
+                                <span class="rs-num font-semibold">{{ $n($row['value']) }}</span>
+                            </div>
+                            <div class="mt-1.5 h-2.5 rounded-sm bg-[#ece9de] overflow-hidden"><div class="h-full" style="width: {{ round($row['value'] / $integrityTotal * 100, 1) }}%; background: {{ $row['bar'] }}"></div></div>
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
-                @empty
-                <div class="px-4 py-3 text-sm text-slate-500">Belum ada bulk action.</div>
-                @endforelse
-            </div>
-        </div>
-    </div>
 
-    <!-- Incomplete Routes Shortcuts -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Shortcut Rute Bermasalah</h2>
-        <div class="grid grid-cols-1 gap-6">
-            @php
-                $issueSections = [
-                'invalid' => 'Status Invalid',
-            ];
-            @endphp
-            @foreach($issueSections as $key => $title)
-            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                <h3 class="font-bold text-slate-800 mb-3">{{ $title }}</h3>
-                <a href="{{ route('routes.index', ['provenance_filter' => $key]) }}" class="inline-flex mb-3 text-xs font-bold text-emerald-700 hover:text-emerald-800">Lihat semua</a>
-                <div class="space-y-2">
-                    @forelse($issueRoutes[$key] as $version)
-                    <a href="{{ route('routes.provenance', $version->route) }}" class="block text-sm text-emerald-700 hover:text-emerald-800 font-semibold">
-                        {{ Str::limit($version->route?->name, 34) }} v{{ $version->version_number }}
-                    </a>
-                    @empty
-                    <p class="text-sm text-slate-500">Tidak ada data.</p>
-                    @endforelse
+                <div class="lg:col-span-5 mt-6 lg:mt-0 space-y-6 min-w-0">
+                    <form action="{{ route('admin.bulk-provenance-action') }}" method="POST" class="rs-card p-5 sm:p-6"
+                          onsubmit="return confirm(@js(__('Periksa ulang semua versi GPX yang aktif sekarang?')))">
+                        @csrf
+                        <input type="hidden" name="action" value="verify_active">
+                        <h3 class="font-semibold">{{ __('Periksa ulang semua file aktif') }}</h3>
+                        <p class="mt-1 text-sm rs-muted">{{ __('Berjalan di antrean Laravel supaya tidak timeout. Pastikan worker hidup:') }} <code class="text-xs bg-[#faf9f4] border rs-rule rounded px-1.5 py-0.5">php artisan queue:work</code></p>
+                        <button type="submit" class="rs-btn rs-btn-sm mt-4">{{ __('Jalankan pemeriksaan') }}</button>
+                    </form>
+
+                    <div class="rs-card p-5 sm:p-6">
+                        <h3 class="font-semibold">{{ __('Versi yang isinya berubah') }}</h3>
+                        @if($issueRoutes['invalid']->isEmpty())
+                        <p class="mt-1 text-sm rs-muted">{{ __('Tidak ada. Semua file yang diperiksa masih cocok.') }}</p>
+                        @else
+                        <ul class="mt-2 space-y-1">
+                            @foreach($issueRoutes['invalid'] as $version)
+                            <li class="min-w-0">
+                                <a href="{{ route('routes.provenance', $version->route) }}" class="inline-flex min-h-[44px] items-center font-semibold text-[#047857] hover:text-[#053b30] [overflow-wrap:anywhere]">
+                                    {{ \Illuminate\Support\Str::limit($version->route?->name, 40) }} v{{ $version->version_number }}
+                                </a>
+                            </li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('routes.index', ['provenance_filter' => 'invalid']) }}" class="inline-flex min-h-[44px] items-center text-sm font-semibold text-[#047857]">{{ __('Lihat semua di daftar jalur') }}</a>
+                        @endif
+                    </div>
                 </div>
             </div>
-            @endforeach
-        </div>
-    </div>
 
-    <!-- Paper Output Quick Downloads -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Quick Download Tabel Paper</h2>
-        <div class="flex flex-wrap gap-3">
-            <a href="{{ route('admin.evaluation.provenance.export-versions') }}" class="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100">GPX Versions CSV</a>
-            <a href="{{ route('admin.paper-outputs.provenance.export-integrity') }}" class="px-4 py-2 rounded-xl bg-red-50 text-red-700 font-bold hover:bg-red-100">Integrity CSV</a>
-            <a href="{{ route('admin.paper-outputs.provenance.export-version-recovery') }}" class="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100">Recovery CSV</a>
-            <a href="{{ route('admin.evaluation.provenance.export-summary') }}" class="px-4 py-2 rounded-xl bg-amber-50 text-amber-700 font-bold hover:bg-amber-100">Summary CSV</a>
-            <a href="{{ route('admin.paper-outputs.provenance.export-black-box-testing') }}" class="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100">Black Box CSV</a>
-            <a href="{{ route('admin.paper-outputs.provenance.export-sus-responses') }}" class="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100">SUS CSV</a>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-8">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">Dataset Readiness Checker</h2>
-                <p class="text-sm text-slate-500 mt-1">Kesiapan evidence untuk paper: {{ $paperReadiness['passed'] }}/{{ $paperReadiness['total'] }} kriteria terpenuhi.</p>
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <a href="{{ route('admin.paper-readiness') }}" class="px-4 py-2 rounded-xl bg-indigo-700 text-white font-bold hover:bg-indigo-800">Lihat Checklist</a>
-                <a href="{{ route('admin.paper-readiness.export') }}" class="px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100">Readiness CSV</a>
-            </div>
-        </div>
-        <div class="h-3 rounded-full bg-slate-100 overflow-hidden mb-3">
-            <div class="h-full {{ $paperReadiness['status'] === 'ready' ? 'bg-emerald-500' : 'bg-amber-500' }}" style="width: {{ $paperReadiness['score'] }}%"></div>
-        </div>
-        <p class="text-sm font-bold {{ $paperReadiness['status'] === 'ready' ? 'text-emerald-700' : 'text-amber-700' }}">{{ strtoupper(str_replace('_', ' ', $paperReadiness['status'])) }} - {{ number_format($paperReadiness['score'], 2) }}%</p>
-    </div>
-
-    <!-- SBERT Process Explanation -->
-    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-5 sm:p-8 mb-8 text-white">
-        <h2 class="text-2xl font-bold mb-4">Proses SBERT & Cosine Similarity</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5">
-                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
-                    <span class="text-xl font-bold">1</span>
+            <div class="mt-6 rs-card overflow-hidden">
+                <h3 class="px-5 pt-4 pb-3 font-semibold border-b rs-rule">{{ __('Pemeriksaan massal terakhir') }}</h3>
+                @if($recentBulkActions->isEmpty())
+                <p class="px-5 py-4 text-sm rs-muted">{{ __('Belum pernah dijalankan.') }}</p>
+                @else
+                <div class="rs-table-wrap">
+                    <table class="rs-table">
+                        <thead><tr><th>{{ __('Waktu') }}</th><th>{{ __('Status') }}</th><th>{{ __('Berhasil') }}</th><th>{{ __('Gagal') }}</th><th>{{ __('Pesan terakhir') }}</th></tr></thead>
+                        <tbody>
+                            @foreach($recentBulkActions as $bulk)
+                            @php $bs = $bulkStatus($bulk->status); @endphp
+                            <tr>
+                                <td class="whitespace-nowrap">{{ $bulk->created_at?->translatedFormat('j M Y, H:i') }}</td>
+                                <td><span class="rs-chip {{ $bs['chip'] }}">{{ $bs['label'] }}</span></td>
+                                <td class="rs-num">{{ $bulk->processed_count }}</td>
+                                <td class="rs-num">{{ $bulk->failed_count }}</td>
+                                <td class="min-w-[12rem] rs-muted [overflow-wrap:anywhere]">{{ $bulk->last_error ?: '-' }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                <h3 class="font-semibold mb-2">GPX Processing</h3>
-                <p class="text-sm text-purple-100">File GPX diekstrak untuk mendapatkan jarak, elevasi, durasi Naismith, dan grade.</p>
+                @endif
             </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5">
-                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
-                    <span class="text-xl font-bold">2</span>
+        </section>
+
+        {{-- Readiness + CSV downloads --}}
+        <section class="mt-12 lg:grid lg:grid-cols-12 lg:gap-8" aria-labelledby="ready-title">
+            <div class="lg:col-span-7 rs-card p-5 sm:p-6">
+                <h2 id="ready-title" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ __('Dataset Readiness Checker') }}</h2>
+                <p class="mt-2 rs-muted">{{ __(':passed dari :total kriteria terpenuhi.', ['passed' => $paperReadiness['passed'], 'total' => $paperReadiness['total']]) }}</p>
+                <div class="mt-4 h-3 rounded-sm bg-[#ece9de] overflow-hidden"><div class="h-full bg-[#047857]" style="width: {{ $paperReadiness['score'] }}%"></div></div>
+                <p class="mt-2 text-sm font-semibold">
+                    <span class="rs-chip {{ $paperReadiness['status'] === 'ready' ? 'rs-chip-ok' : 'rs-chip-warn' }}">{{ $paperReadiness['status'] === 'ready' ? __('Siap') : __('Belum lengkap') }}</span>
+                    <span class="ml-2 rs-num">{{ $n($paperReadiness['score'], 2) }}%</span>
+                </p>
+                <a href="{{ route('admin.paper-readiness') }}" class="rs-btn rs-btn-sm mt-4">{{ __('Buka daftar periksa') }}</a>
+            </div>
+            <div class="lg:col-span-5 mt-6 lg:mt-0">
+                <h2 class="font-semibold">{{ __('Unduh tabel CSV') }}</h2>
+                <ul class="mt-3 flex flex-wrap gap-2">
+                    @foreach($downloads as $dl)
+                    <li><a href="{{ $dl['href'] }}" class="rs-btn-ghost rs-btn-sm">{{ $dl['label'] }}</a></li>
+                    @endforeach
+                </ul>
+            </div>
+        </section>
+
+        {{-- Routes table --}}
+        <section class="mt-12" aria-labelledby="routes-title">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <h2 id="routes-title" class="rs-display uppercase text-[clamp(2rem,6vw,2.75rem)] leading-none text-[#053b30]">{{ __('Dataset jalur') }}</h2>
+                <p class="text-sm rs-muted">{{ __(':count jalur', ['count' => $n($routes->total())]) }}</p>
+            </div>
+
+            <div class="mt-4 rs-card overflow-hidden">
+                <div class="rs-table-wrap">
+                    <table class="rs-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>{{ __('Nama jalur') }}</th><th>{{ __('Jarak') }}</th><th>{{ __('Tanjakan') }}</th><th>{{ __('Estimasi') }}</th><th>{{ __('Kemiringan') }}</th><th>{{ __('Embedding') }}</th><th><span class="sr-only">{{ __('Aksi') }}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($routes as $route)
+                            <tr>
+                                <td class="rs-num rs-muted">{{ $route->id }}</td>
+                                <td class="min-w-[12rem]">
+                                    <span class="font-semibold">{{ \Illuminate\Support\Str::limit($route->name, 40) }}</span>
+                                    <span class="block text-xs rs-muted">{{ $route->created_at->translatedFormat('j M Y') }}</span>
+                                </td>
+                                <td class="rs-num whitespace-nowrap">{{ $route->distance_km !== null ? $n($route->distance_km, 2) . ' km' : '-' }}</td>
+                                <td class="rs-num whitespace-nowrap">{{ $route->elevation_gain_m !== null ? $n($route->elevation_gain_m) . ' m' : '-' }}</td>
+                                <td class="rs-num whitespace-nowrap">{{ $route->naismith_duration_hour !== null ? $n($route->naismith_duration_hour, 1) . ' ' . __('jam') : '-' }}</td>
+                                <td class="rs-num whitespace-nowrap">{{ $route->average_grade_pct !== null ? $n($route->average_grade_pct, 1) . '%' : '-' }}</td>
+                                <td class="whitespace-nowrap">
+                                    @if($route->sbert_embedding)
+                                    <button type="button" class="inline-flex items-center gap-1 min-h-[44px] font-semibold text-[#047857] hover:text-[#053b30]"
+                                            data-embedding-id="{{ $route->id }}" data-embedding-name="{{ $route->name }}">{{ __('Lihat 384 dimensi') }}</button>
+                                    @else
+                                    <span class="rs-chip rs-chip-plain">{{ __('Belum ada') }}</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap"><a href="{{ route('routes.show', $route) }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] hover:text-[#053b30]">{{ __('Buka') }}</a></td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="8" class="text-center py-10">
+                                    <p class="font-semibold">{{ __('Belum ada data jalur.') }}</p>
+                                    <a href="{{ route('routes.create') }}" class="rs-btn rs-btn-sm mt-3">{{ __('Upload GPX pertama') }}</a>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-                <h3 class="font-semibold mb-2">Narrative Generation</h3>
-                <p class="text-sm text-purple-100">Statistik diubah menjadi teks naratif deskriptif untuk input SBERT.</p>
+                @if($routes->hasPages())
+                <div class="px-5 py-4 border-t rs-rule">{{ $routes->links() }}</div>
+                @endif
             </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-5">
-                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
-                    <span class="text-xl font-bold">3</span>
-                </div>
-                <h3 class="font-semibold mb-2">SBERT Embedding</h3>
-                <p class="text-sm text-purple-100">Model paraphrase-multilingual-MiniLM-L12-v2 menghasilkan vector 384 dimensi.</p>
-            </div>
-        </div>
-        <div class="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-5">
-            <h3 class="font-semibold mb-2">Cosine Similarity Search</h3>
-            <p class="text-sm text-purple-100">Saat user mencari rute, query diubah menjadi embedding, lalu dihitung cosine similarity dengan semua rute untuk menemukan yang paling mirip.</p>
-            <code class="block mt-2 bg-black/20 rounded-lg p-3 text-xs font-mono">similarity = cos(θ) = (A · B) / (||A|| × ||B||)</code>
-        </div>
-    </div>
-
-    <!-- Routes Table -->
-    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-            <h2 class="text-xl font-bold text-slate-800">Dataset Rute Pendakian</h2>
-            <span class="text-sm text-slate-500">{{ $routes->total() }} total rute</span>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ID</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nama Rute</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Jarak</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Elevasi</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Durasi</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Grade</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Embedding</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse($routes as $route)
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-4 py-4 text-sm text-slate-600">{{ $route->id }}</td>
-                        <td class="px-4 py-4">
-                            <div class="font-medium text-slate-800">{{ Str::limit($route->name, 30) }}</div>
-                            <div class="text-xs text-slate-500">{{ $route->created_at->format('d M Y') }}</div>
-                        </td>
-                        <td class="px-4 py-4 text-sm text-slate-600">{{ $route->distance_km ?? '-' }} km</td>
-                        <td class="px-4 py-4 text-sm text-slate-600">{{ $route->elevation_gain_m ?? '-' }} m</td>
-                        <td class="px-4 py-4 text-sm text-slate-600">{{ $route->naismith_duration_hour ?? '-' }} jam</td>
-                        <td class="px-4 py-4 text-sm text-slate-600">{{ $route->average_grade_pct ?? '-' }}%</td>
-                        <td class="px-4 py-4">
-                            @if($route->sbert_embedding)
-                                <div class="flex items-center space-x-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        384 dim
-                                    </span>
-                                    <button onclick="showEmbedding({{ $route->id }}, '{{ $route->name }}')"
-                                            class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">
-                                        Lihat
-                                    </button>
-                                </div>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                                    Tidak ada
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-4">
-                            <a href="{{ route('routes.show', $route) }}" class="text-emerald-600 hover:text-emerald-800 text-sm font-medium">
-                                Detail
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-500">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <p>Belum ada data rute.</p>
-                            <a href="{{ route('routes.create') }}" class="text-emerald-600 hover:underline mt-2 inline-block">Upload GPX pertama</a>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if($routes->hasPages())
-        <div class="px-6 py-4 border-t border-slate-100">
-            {{ $routes->links() }}
-        </div>
-        @endif
+        </section>
     </div>
 </div>
 
-<!-- Embedding Modal -->
-<div id="embeddingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-            <div>
-                <h3 class="text-lg font-bold">SBERT Embedding</h3>
-                <p class="text-sm text-purple-100" id="modalRouteName">-</p>
-            </div>
-            <button onclick="closeModal()" class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
+{{-- Embedding viewer: native <dialog> closes with Escape and keeps focus inside. --}}
+<dialog id="embeddingModal" class="w-[min(56rem,calc(100vw-2rem))] max-h-[85vh] p-0 rounded-xl border border-[#dcd8c9] backdrop:bg-black/50" aria-labelledby="modalTitle">
+    <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-[#dcd8c9] bg-[#053b30] text-white">
+        <div class="min-w-0">
+            <h2 id="modalTitle" class="font-semibold">{{ __('Embedding SBERT') }}</h2>
+            <p class="text-sm text-[#d1fae5] [overflow-wrap:anywhere]" id="modalRouteName">-</p>
         </div>
-        <div class="p-6 overflow-y-auto max-h-[70vh]">
-            <div class="mb-4">
-                <h4 class="font-semibold text-slate-700 mb-2">Narrative Text (Input SBERT)</h4>
-                <p class="text-sm text-slate-600 bg-slate-50 rounded-xl p-4" id="modalNarrative">-</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-slate-700 mb-2">Embedding Vector (384 dimensi)</h4>
-                <div class="bg-slate-900 rounded-xl p-4 overflow-x-auto">
-                    <code class="text-xs text-green-400 font-mono whitespace-pre-wrap" id="modalEmbedding">-</code>
-                </div>
-            </div>
-        </div>
+        <form method="dialog"><button class="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-white/10 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-white" aria-label="{{ __('Tutup') }}"><x-icon name="x" class="w-5 h-5" /></button></form>
     </div>
-</div>
+    <div class="p-5 overflow-y-auto max-h-[calc(85vh-5rem)] text-[#14231d]">
+        <h3 class="font-semibold">{{ __('Kalimat ringkasan jalur (masukan SBERT)') }}</h3>
+        <p class="mt-2 text-sm bg-[#faf9f4] border border-[#dcd8c9] rounded-lg p-4 [overflow-wrap:anywhere]" id="modalNarrative">-</p>
+        <h3 class="mt-5 font-semibold">{{ __('Vektor embedding (384 dimensi)') }}</h3>
+        <pre class="mt-2 text-xs bg-[#14231d] text-[#d1fae5] rounded-lg p-4 overflow-x-auto max-h-80"><code id="modalEmbedding">-</code></pre>
+    </div>
+</dialog>
 
 <script>
-    // Store route data for modal
-    const routeData = @json($routes->items());
-
-    function showEmbedding(id, name) {
-        const route = routeData.find(r => r.id === id);
-        if (!route) return;
-
-        document.getElementById('modalRouteName').textContent = name;
-        document.getElementById('modalNarrative').textContent = route.narrative_text || 'Tidak ada narasi';
-
-        const embedding = route.sbert_embedding;
-        if (embedding && Array.isArray(embedding)) {
-            const formatted = embedding.map((v, i) => `[${i}]: ${v.toFixed(6)}`).join('\n');
-            document.getElementById('modalEmbedding').textContent = formatted;
-        } else {
-            document.getElementById('modalEmbedding').textContent = 'Tidak ada embedding';
-        }
-
-        const modal = document.getElementById('embeddingModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('embeddingModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    // Close modal on backdrop click
-    document.getElementById('embeddingModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
+(function () {
+    const data = @json($embeddingData);
+    const empty = { narrative: @js(__('Tidak ada kalimat ringkasan.')), embedding: @js(__('Tidak ada embedding.')) };
+    const modal = document.getElementById('embeddingModal');
+    document.querySelectorAll('[data-embedding-id]').forEach((btn) => btn.addEventListener('click', () => {
+        const route = data[btn.dataset.embeddingId] || {};
+        document.getElementById('modalRouteName').textContent = btn.dataset.embeddingName;
+        document.getElementById('modalNarrative').textContent = route.narrative || empty.narrative;
+        document.getElementById('modalEmbedding').textContent = Array.isArray(route.embedding)
+            ? route.embedding.map((v, i) => `[${i}] ${Number(v).toFixed(6)}`).join('\n')
+            : empty.embedding;
+        modal.showModal();
+    }));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.close(); });
+})();
 </script>
 @endsection

@@ -156,13 +156,13 @@ class SsoApiTest extends TestCase
         $this->postJson('/api/sso/register', $this->registerBody())
             ->assertStatus(422)
             ->assertExactJson([
-                'error'  => 'Verifikasi anti-robot gagal, silakan coba lagi.',
-                'errors' => ['altcha' => ['Verifikasi anti-robot gagal, silakan coba lagi.']],
+                'error'  => 'Cek bukan robot belum lolos. Centang kotaknya lagi, lalu kirim ulang.',
+                'errors' => ['altcha' => ['Cek bukan robot belum lolos. Centang kotaknya lagi, lalu kirim ulang.']],
             ]);
 
         $this->postJson('/api/sso/register', $this->registerBody(['altcha' => $this->solvedAltcha(), 'website' => 'https://spam.example']), ['Accept-Language' => 'en'])
             ->assertStatus(422)
-            ->assertJsonPath('error', 'The anti-robot check failed, please try again.');
+            ->assertJsonPath('error', 'The robot check did not pass. Tick the box again and send the form once more.');
 
         $this->assertDatabaseCount('users', 0);
     }

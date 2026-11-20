@@ -11,7 +11,7 @@ class RegisterAltchaTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const FAIL = 'Verifikasi anti-robot gagal, silakan coba lagi.';
+    private const FAIL = 'Cek bukan robot belum lolos. Centang kotaknya lagi, lalu kirim ulang.';
 
     protected function setUp(): void
     {

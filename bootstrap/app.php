@@ -22,5 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [\App\Http\Middleware\SetLocale::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Community chat endpoints always answer in JSON (a guest gets 401, not a login redirect).
+        $exceptions->shouldRenderJsonWhen(fn (\Illuminate\Http\Request $request) => $request->expectsJson() || $request->is('komunitas/chat', 'komunitas/chat/*'));
     })->create();

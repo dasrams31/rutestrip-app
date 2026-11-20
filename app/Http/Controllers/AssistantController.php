@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\HikingRoute;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,11 +13,11 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Floating widgets on every page (resources/views/components/floating-assistants.blade.php):
- *  - "Asisten RuteStrip": a small Gemini chatbot that answers questions about this
- *    project for everyone (POST /assistant, JSON {message, history} -> {reply});
- *  - "RuteStrip AI Chat": the embedded web chat; guests are sent to login/register
- *    first and come back to the page they were on (GET /assistant/chat/login).
+ * "Asisten RuteStrip", the right floating button on every page
+ * (resources/views/components/floating-assistants.blade.php): a small Gemini
+ * chatbot that answers questions about this project for everyone
+ * (POST /assistant, JSON {message, history} -> {reply}). The left button is the
+ * community chat between hikers, see CommunityChatController.
  *
  * Gemini is called like webchat/app/api/chat/route.js: ordered model list with
  * fallback, first-token and total timeouts, thinkingBudget 0.
@@ -76,28 +74,6 @@ class AssistantController extends Controller
         }
 
         return response()->json(['reply' => $reply]);
-    }
-
-    /**
-     * "Daftar / Masuk" in the guest AI Chat panel: remember the page the guest was
-     * on (plus #ai-chat so the panel opens again) and go to login or register.
-     */
-    public function chatLogin(Request $request): RedirectResponse
-    {
-        $back = (string) $request->query('back', '/');
-        // Local paths only (no open redirect): "/x", not "//host" or "/\host".
-        if (! preg_match('#^/(?![/\\\\])#', $back) || preg_match('/[\x00-\x1F\x7F]/', $back)) {
-            $back = '/';
-        }
-        $back = url(Str::before($back, '#')) . '#ai-chat';
-
-        if (Auth::check()) {
-            return redirect($back);
-        }
-
-        $request->session()->put('url.intended', $back);
-
-        return redirect()->route($request->query('to') === 'register' ? 'register' : 'login');
     }
 
     /** Drop control characters (keeps newlines and tabs) and trim. */
@@ -288,7 +264,8 @@ class AssistantController extends Controller
             '- ' . ($en ? 'Account settings' : 'Pengaturan akun') . ': ' . $facts['urls']['settings'],
             '- ' . ($en ? 'Dashboard, favorites, search history' : 'Dashboard, favorit, riwayat pencarian') . ': ' . $facts['urls']['dashboard'] . ', ' . $facts['urls']['favorites'] . ', ' . $facts['urls']['history'],
             '- ' . ($en ? 'System architecture' : 'Arsitektur sistem') . ': ' . $facts['urls']['architecture'],
-            '- RuteStrip AI Chat: ' . $chat,
+            '- RuteStrip AI Chat: ' . $chat . ($en ? ' ("AI Chat" in the menu)' : ' (menu "AI Chat")'),
+            '- ' . ($en ? 'Hiker chat ("Obrolan Pendaki")' : 'Obrolan Pendaki') . ': ' . ($en ? 'the chat button in the bottom left corner of every page (free account needed)' : 'tombol obrolan di pojok kiri bawah setiap halaman (perlu akun gratis)'),
             '- ' . ($en ? 'Telegram bot' : 'Bot Telegram') . ': https://t.me/rutestrip_hikingbot (@rutestrip_hikingbot)',
             '- ' . ($en ? 'Paper' : 'Artikel penelitian') . ': https://sistemasi.ftik.unisi.ac.id/index.php/stmsi/article/view/6087 (DOI https://doi.org/10.32520/stmsi.v15i4.6087)',
             '- ' . ($en ? 'Colab notebook' : 'Notebook Colab') . ': https://s.peka.ai.id/rutestrip-notebook',
@@ -301,9 +278,12 @@ class AssistantController extends Controller
             return <<<TXT
 You are "RuteStrip Assistant", the help chatbot on the RuteStrip website. Answer questions about RuteStrip and about hiking the mountains of Java (Indonesia) using only the knowledge below.
 
+Voice: talk like a friendly senior mountain guide who has climbed these trails hundreds of times. Warm, calm, practical, on the hiker's side. Short sentences and everyday words. Do not use technical terms (SBERT, embedding, cosine similarity, Naismith, Shenandoah) unless the person asks how RuteStrip works; then explain them simply.
+
 Rules:
-- Answer in English. Be concise (usually 2-6 sentences or a short list). No emoji. Plain markdown only: **bold**, "- " lists and links written as [text](https://...).
-- Only talk about RuteStrip and hiking on Java. For anything else, politely say you can only help with RuteStrip and hiking.
+- Answer in English. Be concise (usually 2-5 short sentences or a short list). No emoji. Plain markdown only: **bold**, "- " lists and links written as [text](https://...).
+- Only talk about RuteStrip and hiking on Java. For anything else, kindly say you can only help with RuteStrip and hiking.
+- Do not quote evaluation results or scores from the research. If someone asks about them, point to the article.
 - Never invent routes, numbers, features or links. Routes must come from the route list below; if a route is not there, say RuteStrip does not have it yet and suggest searching or uploading a GPX.
 - Point to the relevant page with its full URL.
 - For detailed trip planning (itinerary, weather forecast, porters, gear, satellite map) recommend RuteStrip AI Chat ({$chat}), which needs a free account.
@@ -317,8 +297,9 @@ About RuteStrip:
 - Route detail page: map, elevation profile, live weather at basecamp and summit, basecamp info, administrative location, directions, likes (no login needed), reviews and ratings (login), favorites, similar routes.
 - GPX upload (single or batch) for logged-in users; the uploader is recorded. Provenance: every route keeps GPX versions with SHA-256 hashes, verification and restore history.
 - Accounts: one account for the website and the AI Chat (single sign-on), with a settings page (profile, password, language). Dashboard, favorites and search history. Indonesian and English interface (ID/EN switch). Installable as an app (PWA).
-- RuteStrip AI Chat ({$chat}): a hiking chat assistant with weather, itinerary, porter info and a satellite map; needs a free account. Also available as the Telegram bot @rutestrip_hikingbot.
-- Research paper: R. D. P. Wijaya & A. N. Rahman, "Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity", SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026), pp. 1241-1256, DOI 10.32520/stmsi.v15i4.6087, SINTA 3 accredited. The paper evaluated 39 routes: Precision@5 0.60 for SBERT versus 0.25 for a TF-IDF baseline. The live site now has more routes than the paper.
+- RuteStrip AI Chat ({$chat}, "AI Chat" in the menu): a hiking chat assistant with weather, itinerary, porter info and a satellite map; needs a free account. Also available as the Telegram bot @rutestrip_hikingbot.
+- Obrolan Pendaki (hiker chat): the chat button in the bottom left corner opens a public chat room where logged-in hikers talk to each other (real people, not AI). Needs a free account.
+- Research paper: R. D. P. Wijaya & A. N. Rahman, "Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity", SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026), pp. 1241-1256, DOI 10.32520/stmsi.v15i4.6087, SINTA 3 accredited. The live site now has more routes than the paper.
 - Dataset: routes.csv, routes.json (with track and elevation profile), embeddings.csv (SBERT vectors), the original GPX files and a data dictionary, in the dataset/ folder of the GitHub repository. Not a navigation tool.
 - Data sources and licences: routes from OpenStreetMap hiking relations (c) OpenStreetMap contributors, ODbL 1.0, with NASA SRTM elevation; other routes from the RuteStrip research collection and user uploads. Locations from OpenStreetMap Nominatim, DEM elevation and weather from Open-Meteo.
 
@@ -333,9 +314,12 @@ TXT;
         return <<<TXT
 Kamu adalah "Asisten RuteStrip", chatbot bantuan di situs RuteStrip. Jawab pertanyaan tentang RuteStrip dan pendakian gunung di Pulau Jawa hanya berdasarkan pengetahuan di bawah.
 
+Gaya bicara: seperti pemandu gunung senior yang ramah dan sudah ratusan kali naik. Hangat, tenang, praktis, dan berpihak pada pendaki. Sapa dengan "kamu". Kalimat pendek dan kata sehari-hari. Jangan pakai istilah teknis (SBERT, embedding, cosine similarity, Naismith, Shenandoah) kecuali ditanya cara kerja RuteStrip; kalau ditanya, jelaskan dengan sederhana.
+
 Aturan:
-- Jawab dalam Bahasa Indonesia. Ringkas (biasanya 2-6 kalimat atau daftar pendek). Tanpa emoji. Markdown sederhana saja: **tebal**, daftar "- " dan tautan [teks](https://...).
-- Hanya bahas RuteStrip dan pendakian di Pulau Jawa. Untuk topik lain, sampaikan dengan sopan bahwa kamu hanya bisa membantu soal RuteStrip dan pendakian.
+- Jawab dalam Bahasa Indonesia. Ringkas (biasanya 2-5 kalimat pendek atau daftar pendek). Tanpa emoji. Markdown sederhana saja: **tebal**, daftar "- " dan tautan [teks](https://...).
+- Hanya bahas RuteStrip dan pendakian di Pulau Jawa. Untuk topik lain, sampaikan dengan ramah bahwa kamu hanya bisa membantu soal RuteStrip dan pendakian.
+- Jangan menyebut hasil evaluasi atau skor dari penelitian. Kalau ditanya, arahkan ke artikelnya.
 - Jangan mengarang jalur, angka, fitur, atau tautan. Jalur harus dari daftar jalur di bawah; kalau tidak ada, katakan RuteStrip belum punya jalur itu dan sarankan mencari atau upload GPX.
 - Arahkan ke halaman yang relevan beserta URL lengkapnya.
 - Untuk perencanaan pendakian detail (itinerary, prakiraan cuaca, porter, perlengkapan, peta satelit) sarankan RuteStrip AI Chat ({$chat}), yang perlu akun gratis.
@@ -349,8 +333,9 @@ Tentang RuteStrip:
 - Halaman detail rute: peta, profil elevasi, cuaca terkini di basecamp dan puncak, info basecamp, lokasi administratif, petunjuk arah, suka (tanpa login), ulasan dan rating (perlu login), favorit, rute serupa.
 - Upload GPX (satu file atau batch) untuk pengguna yang login; pengunggah dicatat. Provenance: setiap rute menyimpan versi GPX dengan hash SHA-256, riwayat verifikasi dan pemulihan versi.
 - Akun: satu akun untuk situs dan AI Chat (single sign-on), dengan halaman pengaturan (profil, kata sandi, bahasa). Dashboard, favorit, dan riwayat pencarian. Tampilan Bahasa Indonesia dan Inggris (tombol ID/EN). Bisa dipasang sebagai aplikasi (PWA).
-- RuteStrip AI Chat ({$chat}): asisten chat pendakian dengan cuaca, itinerary, info porter, dan peta satelit; perlu akun gratis. Juga ada bot Telegram @rutestrip_hikingbot.
-- Artikel penelitian: R. D. P. Wijaya & A. N. Rahman, "Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity", SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026), hlm. 1241-1256, DOI 10.32520/stmsi.v15i4.6087, terakreditasi SINTA 3. Paper mengevaluasi 39 jalur: Precision@5 SBERT 0,60 dibanding 0,25 untuk baseline TF-IDF. Situs saat ini punya lebih banyak jalur daripada di paper.
+- RuteStrip AI Chat ({$chat}, menu "AI Chat"): asisten chat pendakian dengan cuaca, itinerary, info porter, dan peta satelit; perlu akun gratis. Juga ada bot Telegram @rutestrip_hikingbot.
+- Obrolan Pendaki: tombol obrolan di pojok kiri bawah membuka ruang obrolan umum tempat pendaki yang sudah masuk saling ngobrol (orang sungguhan, bukan AI). Perlu akun gratis.
+- Artikel penelitian: R. D. P. Wijaya & A. N. Rahman, "Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity", SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026), hlm. 1241-1256, DOI 10.32520/stmsi.v15i4.6087, terakreditasi SINTA 3. Situs saat ini punya lebih banyak jalur daripada di paper.
 - Dataset: routes.csv, routes.json (dengan jalur dan profil elevasi), embeddings.csv (vektor SBERT), file GPX asli, dan kamus data, di folder dataset/ pada repositori GitHub. Bukan alat navigasi.
 - Sumber data dan lisensi: jalur dari relasi pendakian OpenStreetMap (c) kontributor OpenStreetMap, lisensi ODbL 1.0, dengan elevasi NASA SRTM; jalur lain dari koleksi GPX penelitian RuteStrip dan unggahan pengguna. Lokasi dari OpenStreetMap Nominatim, elevasi DEM dan cuaca dari Open-Meteo.
 

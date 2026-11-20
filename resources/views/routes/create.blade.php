@@ -2,242 +2,225 @@
 
 @section('title', __('Upload GPX'))
 
+@php
+    $computed = [
+        __('Jarak total jalur, dalam km'),
+        __('Total tanjakan, dalam meter'),
+        __('Estimasi waktu tempuh dengan rumus Naismith'),
+        __('Kemiringan rata-rata jalur'),
+        __('Ringkasan jalur supaya bisa ditemukan lewat pencarian biasa'),
+    ];
+@endphp
+
 @section('content')
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <a href="{{ route('routes.index') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 group">
-            <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            {{ __('Kembali ke Daftar Rute') }}
-        </a>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'back' => ['href' => route('routes.index'), 'label' => __('Kembali ke daftar jalur')],
+        'eyebrow' => __('Upload GPX'),
+        'title' => __('Bagikan jejak pendakianmu.'),
+        'lead' => __('Unggah satu file GPX dari jam GPS atau aplikasi pelacak. Angka jalurnya kami hitung sendiri dari file itu.'),
+        'actions' => [['href' => route('routes.batch'), 'label' => __('Banyak file? Unggah sekaligus'), 'icon' => 'upload']],
+        'width' => 'max-w-5xl',
+        'seed' => 53,
+    ])
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Upload File GPX') }}</h1>
-        <p class="text-slate-600">{{ __('Upload file GPX dari perangkat GPS atau aplikasi tracking Anda.') }}</p>
-    </div>
-
-    <!-- Upload Form -->
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
     @guest
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
+        <div class="rs-card p-6 sm:p-10 max-w-2xl">
+            <x-icon name="lock-closed" class="w-8 h-8 text-[#047857]" />
+            <h2 class="rs-display mt-3 uppercase text-3xl sm:text-4xl leading-none text-[#053b30]">{{ __('Masuk dulu untuk mengunggah GPX') }}</h2>
+            <p class="mt-3 rs-muted max-w-lg">{{ __('Setiap jalur yang diunggah ditandai dengan nama pengunggahnya. Masuk atau buat akun gratis, nanti kamu kembali ke halaman ini.') }}</p>
+            <div class="mt-6 flex flex-col min-[420px]:flex-row gap-3">
+                <a href="{{ route('login') }}" class="rs-sign">{{ __('Masuk') }}</a>
+                <a href="{{ route('register') }}" class="rs-btn-ghost">{{ __('Buat akun gratis') }}</a>
+            </div>
         </div>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">{{ __('Masuk dulu untuk mengunggah GPX') }}</h2>
-        <p class="text-slate-600 mb-6 max-w-md mx-auto">
-            {{ __('Setiap jalur yang diunggah akan ditandai dengan nama pengunggahnya. Silakan masuk atau daftar akun gratis, lalu Anda akan kembali ke halaman ini.') }}
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="{{ route('login') }}" class="px-6 py-3 rounded-xl bg-mountain-gradient text-white font-semibold shadow-lg hover:shadow-xl transition-all">{{ __('Masuk') }}</a>
-            <a href="{{ route('register') }}" class="px-6 py-3 rounded-xl border border-emerald-200 text-emerald-700 font-semibold hover:bg-emerald-50 transition-all">{{ __('Daftar Akun') }}</a>
-        </div>
-    </div>
     @else
-    <p class="mb-4 text-sm text-slate-500">{{ __('Jalur yang Anda unggah akan ditandai:') }} <span class="font-semibold text-slate-700">{{ __('Diunggah oleh :name', ['name' => auth()->user()->name]) }}</span></p>
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-        <div class="bg-mountain-gradient p-6">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                </div>
+        <div class="lg:grid lg:grid-cols-12 lg:gap-10">
+            <form action="{{ route('routes.store') }}" method="POST" enctype="multipart/form-data" class="lg:col-span-8 rs-card p-5 sm:p-8 space-y-6" id="uploadForm">
+                @csrf
+
+                {{-- 1. The file --}}
                 <div>
-                    <h2 class="text-xl font-bold text-white">{{ __('Upload Jalur Baru') }}</h2>
-                    <p class="text-emerald-100 text-sm">{{ __('Format yang didukung: .gpx, .xml') }}</p>
-                </div>
-            </div>
-        </div>
-
-        <form action="{{ route('routes.store') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8">
-            @csrf
-
-            <!-- Route Name -->
-            <div class="mb-6">
-                <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
-                    {{ __('Nama Jalur/Gunung') }} <span class="text-red-500">*</span>
-                </label>
-                <input type="text"
-                       name="name"
-                       id="name"
-                       value="{{ old('name') }}"
-                       placeholder="{{ __('Contoh: Gunung Semeru via Ranu Pani') }}"
-                       class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all @error('name') border-red-500 @enderror"
-                       required>
-                @error('name')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Description (Optional) -->
-            <div class="mb-6">
-                <label for="description" class="block text-sm font-semibold text-slate-700 mb-2">
-                    {{ __('Deskripsi Jalur') }} <span class="text-slate-400 font-normal">({{ __('Opsional') }})</span>
-                </label>
-                <textarea name="description"
-                          id="description"
-                          rows="4"
-                          class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none"
-                          placeholder="{{ __('Contoh: Jalur dengan vegetasi hutan pinus, sumber air tersedia di pos 2, pemandangan sabana yang indah...') }}">{{ old('description') }}</textarea>
-                <p class="mt-2 text-xs text-slate-500">
-                    {{ __('Tambahkan informasi seperti: tipe vegetasi, ketersediaan sumber air, panorama, kondisi medan, dll.') }}
-                </p>
-                @error('description')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Change Log -->
-            <div class="mb-6">
-                <label for="change_log" class="block text-sm font-semibold text-slate-700 mb-2">
-                    {{ __('Catatan Provenance') }} <span class="text-slate-400 font-normal">({{ __('Opsional') }})</span>
-                </label>
-                <textarea name="change_log"
-                          id="change_log"
-                          rows="3"
-                          class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all resize-none"
-                          placeholder="{{ __('Contoh: Upload awal dataset GPX dari tracking lapangan via aplikasi GPS.') }}">{{ old('change_log') }}</textarea>
-                <p class="mt-2 text-xs text-slate-500">
-                    {{ __('Catatan ini akan muncul di riwayat provenance GPX untuk kebutuhan audit dan paper.') }}
-                </p>
-                @error('change_log')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- GPX File Upload -->
-            <div class="mb-8">
-                <label for="gpx_file" class="block text-sm font-semibold text-slate-700 mb-2">
-                    {{ __('File GPX') }} <span class="text-red-500">*</span>
-                </label>
-
-                <div class="relative">
-                    <input type="file"
-                           name="gpx_file"
-                           id="gpx_file"
-                           accept=".gpx,.xml"
-                           class="sr-only"
-                           required>
-
-                    <label for="gpx_file"
-                           class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all @error('gpx_file') border-red-500 @enderror"
-                           id="dropzone">
-                        <div class="flex flex-col items-center justify-center px-4 pt-5 pb-6 text-center" id="dropzone-content">
-                            <div class="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
-                                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                </svg>
-                            </div>
-                            <p class="mb-2 text-sm text-slate-600">
-                                <span class="font-semibold text-emerald-600">{{ __('Klik untuk upload') }}</span> {{ __('atau drag & drop') }}
-                            </p>
-                            <p class="text-xs text-slate-500">{{ __('File GPX atau XML (Maks. 10MB)') }}</p>
-                        </div>
-                        <div class="hidden flex-col items-center justify-center w-full max-w-full px-4 pt-5 pb-6" id="file-selected">
-                            <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
-                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            </div>
-                            <p class="mb-2 max-w-full text-center text-sm font-semibold text-green-600 break-all line-clamp-2" id="file-name">{{ __('File terpilih') }}</p>
-                            <p class="text-xs text-slate-500">{{ __('Klik untuk mengganti file') }}</p>
-                        </div>
-                    </label>
-                </div>
-
-                @error('gpx_file')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Info Box -->
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
-                <div class="flex items-start space-x-3">
-                    <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="text-sm text-blue-700">
-                        <p class="font-semibold mb-1">{{ __('Proses Analisis Otomatis') }}</p>
-                        <p>{{ __('Sistem akan mengekstrak data berikut secara otomatis:') }}</p>
-                        <ul class="mt-2 list-disc list-inside space-y-1">
-                            <li>{{ __('Jarak total jalur (km)') }}</li>
-                            <li>{{ __('Total elevasi gain (meter)') }}</li>
-                            <li>{{ __('Estimasi waktu tempuh (Naismith)') }}</li>
-                            <li>{{ __('Grade rata-rata (%)') }}</li>
-                            <li>{{ __('Vector embedding untuk pencarian AI') }}</li>
-                        </ul>
+                    <p class="rs-label" id="gpx_file_label">{{ __('File GPX') }} <span class="text-[#b91c1c]" aria-hidden="true">*</span></p>
+                    <div class="relative">
+                        <input type="file" name="gpx_file" id="gpx_file" accept=".gpx,.xml" class="peer sr-only" required
+                               aria-labelledby="gpx_file_label" aria-describedby="gpx_file_hint @error('gpx_file') gpx_file-error @enderror">
+                        <label for="gpx_file" id="dropzone" data-dropzone
+                               class="rs-dropzone relative flex flex-col items-center justify-center w-full min-h-[11rem] px-4 py-6 overflow-hidden rounded-xl border-2 border-dashed cursor-pointer text-center transition-colors bg-[#faf9f4] hover:bg-[#ecfdf5]
+                                      peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#053b30]
+                                      @error('gpx_file') border-[#b91c1c] @else border-[#7c8c84] @enderror">
+                            @include('partials.rs-contours', ['seed' => 5, 'tone' => 'light', 'class' => 'absolute inset-0 w-full h-full pointer-events-none', 'peaks' => [[960, 200, 9]]])
+                            <span class="relative flex flex-col items-center" id="dropzone-content">
+                                <x-icon name="upload" class="w-9 h-9 text-[#047857]" />
+                                <span class="mt-3 font-semibold text-[#053b30]">{{ __('Pilih file GPX') }}</span>
+                                <span class="hidden sm:block mt-1 text-sm rs-muted">{{ __('atau seret filenya ke kotak ini') }}</span>
+                            </span>
+                            <span class="relative hidden flex-col items-center w-full max-w-full min-w-0" id="file-selected">
+                                <x-icon name="check" class="w-9 h-9 text-[#047857]" />
+                                <span class="mt-3 max-w-full font-semibold text-[#053b30] [overflow-wrap:anywhere] line-clamp-2" id="file-name"></span>
+                                <span class="mt-1 text-sm rs-muted"><span id="file-size"></span> · {{ __('Ketuk untuk ganti file') }}</span>
+                            </span>
+                        </label>
                     </div>
+                    <p id="gpx_file_hint" class="rs-hint">{{ __('File .gpx atau .xml, paling besar 10 MB.') }}</p>
+                    <p id="file-client-error" class="rs-error hidden" role="alert"></p>
+                    @error('gpx_file')
+                        <p id="gpx_file-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+                    @enderror
                 </div>
-            </div>
 
-            <!-- Submit Button -->
-            <button type="submit"
-                    class="w-full py-4 bg-mountain-gradient text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2 hover:scale-[1.02]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                </svg>
-                <span>{{ __('Upload & Proses GPX') }}</span>
-            </button>
-        </form>
-    </div>
+                {{-- 2. Name --}}
+                <div>
+                    <label for="name" class="rs-label">{{ __('Nama jalur') }} <span class="text-[#b91c1c]" aria-hidden="true">*</span></label>
+                    <input type="text" name="name" id="name" value="{{ old('name') }}" maxlength="255" required
+                           placeholder="{{ __('Contoh: Gunung Semeru via Ranu Pani') }}"
+                           class="rs-input" aria-describedby="name_hint @error('name') name-error @enderror" @error('name') aria-invalid="true" @enderror>
+                    <p id="name_hint" class="rs-hint">{{ __('Terisi otomatis dari nama file. Ganti kalau perlu.') }}</p>
+                    @error('name')
+                        <p id="name-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+                    @enderror
+                </div>
+
+                {{-- 3. Description --}}
+                <div>
+                    <label for="description" class="rs-label">{{ __('Cerita singkat jalurnya') }} <span class="font-normal rs-muted">({{ __('opsional') }})</span></label>
+                    <textarea name="description" id="description" rows="4" maxlength="2000" class="rs-input"
+                              aria-describedby="description_hint @error('description') description-error @enderror"
+                              placeholder="{{ __('Contoh: hutan pinus sampai pos 2, ada sumber air di pos 2, sabana menjelang puncak.') }}">{{ old('description') }}</textarea>
+                    <p id="description_hint" class="rs-hint">{{ __('Tulis yang berguna buat pendaki lain: vegetasi, sumber air, pemandangan, kondisi medan.') }}</p>
+                    @error('description')
+                        <p id="description-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+                    @enderror
+                </div>
+
+                {{-- 4. Change note --}}
+                <div>
+                    <label for="change_log" class="rs-label">{{ __('Catatan untuk riwayat file') }} <span class="font-normal rs-muted">({{ __('opsional') }})</span></label>
+                    <textarea name="change_log" id="change_log" rows="2" maxlength="1000" class="rs-input"
+                              aria-describedby="change_log_hint @error('change_log') change_log-error @enderror"
+                              placeholder="{{ __('Contoh: direkam sendiri pakai jam GPS, Agustus 2026.') }}">{{ old('change_log') }}</textarea>
+                    <p id="change_log_hint" class="rs-hint">{{ __('Tampil di halaman riwayat file GPX jalur ini.') }}</p>
+                    @error('change_log')
+                        <p id="change_log-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+                    @enderror
+                </div>
+
+                <div class="pt-2 border-t rs-rule">
+                    <p class="text-sm rs-muted mt-4">{{ __('Jalur ini akan tampil dengan tanda') }} <span class="font-semibold text-[#14231d] [overflow-wrap:anywhere]">{{ __('Diunggah oleh :name', ['name' => auth()->user()->name]) }}</span></p>
+                    <button type="submit" class="rs-sign w-full sm:w-auto mt-4 text-base" id="submit-btn">
+                        <x-icon name="upload" class="w-5 h-5" /> <span id="btn-text">{{ __('Unggah dan hitung jalurnya') }}</span>
+                    </button>
+                </div>
+            </form>
+
+            <aside class="lg:col-span-4 mt-8 lg:mt-0">
+                <div class="lg:sticky lg:top-24 border-l-4 border-[#047857] pl-5">
+                    <h2 class="rs-display uppercase text-2xl leading-none text-[#053b30]">{{ __('Yang kami hitung dari filemu') }}</h2>
+                    <ul class="mt-4 space-y-3">
+                        @foreach($computed as $item)
+                        <li class="flex gap-3 items-start">
+                            <svg class="w-3.5 h-3.5 mt-1.5 shrink-0" viewBox="0 0 26 22" aria-hidden="true"><path d="M13 2 L24 20 H2 Z" fill="#fff" stroke="#053b30" stroke-width="2.5" stroke-linejoin="round"/></svg>
+                            <span>{{ $item }}</span>
+                        </li>
+                        @endforeach
+                    </ul>
+                    <p class="mt-5 text-sm rs-muted">{{ __('Prosesnya biasanya beberapa detik. Setelah selesai, kamu langsung dibawa ke halaman jalurnya.') }}</p>
+                </div>
+            </aside>
+        </div>
     @endguest
+    </div>
 </div>
 
 @auth
 <script>
-    // File input handling
-    const fileInput = document.getElementById('gpx_file');
-    const dropzoneContent = document.getElementById('dropzone-content');
-    const fileSelected = document.getElementById('file-selected');
-    const fileName = document.getElementById('file-name');
-
-    fileInput.addEventListener('change', function() {
-        if (this.files.length > 0) {
-            dropzoneContent.classList.add('hidden');
-            fileSelected.classList.remove('hidden');
-            fileSelected.classList.add('flex');
-            fileName.textContent = this.files[0].name;
-        }
-    });
-
-    // Drag and drop
+(function () {
+    const i18n = {
+        tooBig: @js(__('File ini lebih dari 10 MB. Pilih file yang lebih kecil.')),
+        wrongType: @js(__('File ini bukan .gpx atau .xml.')),
+        uploading: @js(__('Sedang mengunggah dan menghitung...')),
+        idle: @js(__('Unggah dan hitung jalurnya')),
+    };
+    const input = document.getElementById('gpx_file');
     const dropzone = document.getElementById('dropzone');
+    const content = document.getElementById('dropzone-content');
+    const selected = document.getElementById('file-selected');
+    const nameEl = document.getElementById('file-name');
+    const sizeEl = document.getElementById('file-size');
+    const clientError = document.getElementById('file-client-error');
+    const routeName = document.getElementById('name');
+    let autoName = '';
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, preventDefaults, false);
-    });
+    const formatSize = (bytes) => bytes >= 1048576
+        ? (bytes / 1048576).toLocaleString(document.documentElement.lang, { maximumFractionDigits: 1 }) + ' MB'
+        : Math.max(1, Math.round(bytes / 1024)).toLocaleString(document.documentElement.lang) + ' KB';
 
-    function preventDefaults(e) {
+    function showError(message) {
+        clientError.textContent = message || '';
+        clientError.classList.toggle('hidden', !message);
+    }
+
+    function render() {
+        const file = input.files && input.files[0];
+        if (!file) {
+            content.classList.remove('hidden');
+            selected.classList.add('hidden');
+            selected.classList.remove('flex');
+            showError('');
+            return;
+        }
+        content.classList.add('hidden');
+        selected.classList.remove('hidden');
+        selected.classList.add('flex');
+        nameEl.textContent = file.name;
+        nameEl.title = file.name;
+        sizeEl.textContent = formatSize(file.size);
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        showError(!['gpx', 'xml'].includes(ext) ? i18n.wrongType : (file.size > 10 * 1048576 ? i18n.tooBig : ''));
+
+        // Fill the route name from the file name, unless the hiker already typed one.
+        const fromFile = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (routeName && (routeName.value.trim() === '' || routeName.value === autoName)) {
+            routeName.value = fromFile.slice(0, 255);
+            autoName = routeName.value;
+        }
+    }
+
+    input.addEventListener('change', render);
+
+    ['dragenter', 'dragover'].forEach((type) => dropzone.addEventListener(type, (e) => {
         e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, highlight, false);
+        dropzone.classList.add('is-drag');
+    }));
+    ['dragleave', 'drop'].forEach((type) => dropzone.addEventListener(type, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('is-drag');
+    }));
+    dropzone.addEventListener('drop', (e) => {
+        if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+        const dt = new DataTransfer();
+        dt.items.add(e.dataTransfer.files[0]);
+        input.files = dt.files;
+        render();
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, unhighlight, false);
+    document.getElementById('uploadForm').addEventListener('submit', function () {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        document.getElementById('btn-text').textContent = i18n.uploading;
     });
 
-    function highlight(e) {
-        dropzone.classList.add('border-emerald-400', 'bg-emerald-50');
-    }
+    // Back/forward cache: never leave the button stuck on "uploading".
+    window.addEventListener('pageshow', function () {
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('btn-text').textContent = i18n.idle;
+    });
 
-    function unhighlight(e) {
-        dropzone.classList.remove('border-emerald-400', 'bg-emerald-50');
-    }
-
-    dropzone.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files;
-        fileInput.dispatchEvent(new Event('change'));
-    }
+    render();
+})();
 </script>
 @endauth
 @endsection

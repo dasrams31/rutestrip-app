@@ -2,278 +2,244 @@
 
 @section('title', __('Batch Upload GPX'))
 
+@php
+    // Same limit the controller enforces: PHP drops files beyond max_file_uploads.
+    $maxFiles = min(50, (int) ini_get('max_file_uploads') ?: 20);
+    $postMax = preg_replace('/^(\d+)\s*([KMG])$/i', '$1 $2B', (string) ini_get('post_max_size'));
+    $batch = session('batch_results');
+    $failed = is_array($batch) ? ($batch['failed'] ?? []) : [];
+@endphp
+
 @section('content')
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <a href="{{ route('routes.index') }}" class="inline-flex items-center text-emerald-600 hover:text-emerald-700 mb-4 group">
-            <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            {{ __('Kembali ke Daftar Rute') }}
-        </a>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'back' => ['href' => route('routes.index'), 'label' => __('Kembali ke daftar jalur')],
+        'eyebrow' => __('Upload GPX sekaligus'),
+        'title' => __('Banyak jejak, sekali unggah.'),
+        'lead' => __('Pilih sampai :max file GPX. Nama jalur diambil dari nama filenya, jadi rapikan dulu nama file sebelum diunggah.', ['max' => $maxFiles]),
+        'actions' => [['href' => route('routes.create'), 'label' => __('Satu file saja? Unggah satuan'), 'icon' => 'document-add']],
+        'width' => 'max-w-5xl',
+        'seed' => 61,
+    ])
 
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Batch Upload GPX') }}</h1>
-        <p class="text-slate-600">{{ __('Upload beberapa file GPX sekaligus (maksimal 50 file).') }}</p>
-    </div>
-
-    <!-- Upload Form -->
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10">
     @guest
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
+        <div class="rs-card p-6 sm:p-10 max-w-2xl">
+            <x-icon name="lock-closed" class="w-8 h-8 text-[#047857]" />
+            <h2 class="rs-display mt-3 uppercase text-3xl sm:text-4xl leading-none text-[#053b30]">{{ __('Masuk dulu untuk mengunggah GPX') }}</h2>
+            <p class="mt-3 rs-muted max-w-lg">{{ __('Setiap jalur yang diunggah ditandai dengan nama pengunggahnya. Masuk atau buat akun gratis, nanti kamu kembali ke halaman ini.') }}</p>
+            <div class="mt-6 flex flex-col min-[420px]:flex-row gap-3">
+                <a href="{{ route('login') }}" class="rs-sign">{{ __('Masuk') }}</a>
+                <a href="{{ route('register') }}" class="rs-btn-ghost">{{ __('Buat akun gratis') }}</a>
+            </div>
         </div>
-        <h2 class="text-xl font-bold text-slate-800 mb-2">{{ __('Masuk dulu untuk mengunggah GPX') }}</h2>
-        <p class="text-slate-600 mb-6 max-w-md mx-auto">
-            {{ __('Setiap jalur yang diunggah akan ditandai dengan nama pengunggahnya. Silakan masuk atau daftar akun gratis, lalu Anda akan kembali ke halaman ini.') }}
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="{{ route('login') }}" class="px-6 py-3 rounded-xl bg-mountain-gradient text-white font-semibold shadow-lg hover:shadow-xl transition-all">{{ __('Masuk') }}</a>
-            <a href="{{ route('register') }}" class="px-6 py-3 rounded-xl border border-emerald-200 text-emerald-700 font-semibold hover:bg-emerald-50 transition-all">{{ __('Daftar Akun') }}</a>
-        </div>
-    </div>
     @else
-    <p class="mb-4 text-sm text-slate-500">{{ __('Jalur yang Anda unggah akan ditandai:') }} <span class="font-semibold text-slate-700">{{ __('Diunggah oleh :name', ['name' => auth()->user()->name]) }}</span></p>
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-        <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                </div>
+        @if(count($failed) > 0)
+        <section class="mb-8 rs-card p-5 sm:p-6" style="border-color:#fecaca" aria-labelledby="failed-title">
+            <h2 id="failed-title" class="flex items-center gap-2 font-semibold text-[#991b1b]"><x-icon name="exclamation" class="w-5 h-5 shrink-0" /> {{ __('File yang belum bisa diproses') }}</h2>
+            <ul class="mt-3 divide-y divide-[#f1e4e4]">
+                @foreach($failed as $item)
+                <li class="py-3 min-w-0">
+                    <p class="font-semibold [overflow-wrap:anywhere]">{{ $item['file'] }}</p>
+                    <p class="text-sm text-[#991b1b] [overflow-wrap:anywhere]">{{ $item['error'] }}</p>
+                </li>
+                @endforeach
+            </ul>
+        </section>
+        @endif
+
+        <div class="lg:grid lg:grid-cols-12 lg:gap-10">
+            <form action="{{ route('routes.batch.store') }}" method="POST" enctype="multipart/form-data" class="lg:col-span-8 rs-card p-5 sm:p-8 space-y-6" id="batchForm">
+                @csrf
+
                 <div>
-                    <h2 class="text-xl font-bold text-white">{{ __('Batch Upload') }}</h2>
-                    <p class="text-emerald-100 text-sm">{{ __('Pilih beberapa file GPX sekaligus') }}</p>
-                </div>
-            </div>
-        </div>
-
-        <form action="{{ route('routes.batch.store') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8" id="batchForm">
-            @csrf
-
-            <!-- GPX Files Upload -->
-            <div class="mb-8">
-                <label for="gpx_files" class="block text-sm font-semibold text-slate-700 mb-2">
-                    {{ __('File GPX') }} <span class="text-red-500">*</span>
-                </label>
-
-                <div class="relative">
-                    <input type="file"
-                           name="gpx_files[]"
-                           id="gpx_files"
-                           accept=".gpx,.xml"
-                           class="sr-only"
-                           multiple
-                           required>
-
-                    <label for="gpx_files"
-                           class="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-slate-300 rounded-2xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all @error('gpx_files') border-red-500 @enderror @error('gpx_files.*') border-red-500 @enderror"
-                           id="dropzone">
-                        <div class="flex flex-col items-center justify-center px-4 pt-5 pb-6 text-center" id="dropzone-content">
-                            <div class="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
-                                <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                </svg>
-                            </div>
-                            <p class="mb-2 text-sm text-slate-600">
-                                <span class="font-semibold text-emerald-600">{{ __('Klik untuk pilih file') }}</span> {{ __('atau drag & drop') }}
-                            </p>
-                            <p class="text-xs text-slate-500">{{ __('Pilih beberapa file GPX atau XML (Maks. 50 file, 10MB per file)') }}</p>
-                        </div>
-                    </label>
-                </div>
-
-                @error('gpx_files')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-                @error('gpx_files.*')
-                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Selected Files List -->
-            <div class="mb-8 hidden" id="files-list-container">
-                <h3 class="text-sm font-semibold text-slate-700 mb-3">{{ __('File yang dipilih:') }}</h3>
-                <div class="bg-slate-50 rounded-xl p-4 max-h-64 overflow-y-auto" id="files-list">
-                    <!-- Files will be listed here -->
-                </div>
-                <p class="mt-2 text-sm text-slate-600">
-                    <span id="file-count" class="font-semibold text-emerald-600">0</span> {{ __('file dipilih') }}
-                </p>
-            </div>
-
-            <!-- Info Box -->
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
-                <div class="flex items-start space-x-3">
-                    <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                    <div class="text-sm text-amber-700">
-                        <p class="font-semibold mb-1">{{ __('Catatan Penting') }}</p>
-                        <ul class="list-disc list-inside space-y-1">
-                            <li>{{ __('Nama rute akan diambil dari nama file (tanpa ekstensi)') }}</li>
-                            <li>{{ __('Proses bisa memakan waktu beberapa menit tergantung jumlah file') }}</li>
-                            <li>{{ __('File yang gagal diproses akan dilewati, yang berhasil tetap tersimpan') }}</li>
-                        </ul>
+                    <p class="rs-label" id="gpx_files_label">{{ __('File GPX') }} <span class="text-[#b91c1c]" aria-hidden="true">*</span></p>
+                    <div class="relative">
+                        <input type="file" name="gpx_files[]" id="gpx_files" accept=".gpx,.xml" class="peer sr-only" multiple required
+                               aria-labelledby="gpx_files_label" aria-describedby="gpx_files_hint">
+                        <label for="gpx_files" id="dropzone"
+                               class="rs-dropzone relative flex flex-col items-center justify-center w-full min-h-[11rem] px-4 py-6 overflow-hidden rounded-xl border-2 border-dashed cursor-pointer text-center transition-colors bg-[#faf9f4] hover:bg-[#ecfdf5]
+                                      peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#053b30]
+                                      {{ $errors->has('gpx_files') || $errors->has('gpx_files.*') ? 'border-[#b91c1c]' : 'border-[#7c8c84]' }}">
+                            @include('partials.rs-contours', ['seed' => 9, 'tone' => 'light', 'class' => 'absolute inset-0 w-full h-full pointer-events-none', 'peaks' => [[980, 210, 10], [120, 40, 5]]])
+                            <span class="relative flex flex-col items-center" id="dropzone-content">
+                                <x-icon name="upload" class="w-9 h-9 text-[#047857]" />
+                                <span class="mt-3 font-semibold text-[#053b30]" id="dropzone-title">{{ __('Pilih file GPX') }}</span>
+                                <span class="mt-1 text-sm rs-muted" id="dropzone-sub">
+                                    <span class="hidden sm:inline">{{ __('atau seret semua filenya ke kotak ini') }}</span>
+                                    <span class="sm:hidden">{{ __('Bisa pilih beberapa file sekaligus') }}</span>
+                                </span>
+                            </span>
+                        </label>
                     </div>
+                    <p id="gpx_files_hint" class="rs-hint">
+                        {{ __('File .gpx atau .xml, paling besar 10 MB per file, maksimal :max file.', ['max' => $maxFiles]) }}
+                        @if($postMax){{ __('Total semua file paling besar :size.', ['size' => $postMax]) }}@endif
+                    </p>
+                    @error('gpx_files')
+                        <p class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span class="[overflow-wrap:anywhere]">{{ $message }}</span></p>
+                    @enderror
+                    @error('gpx_files.*')
+                        <p class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span class="[overflow-wrap:anywhere]">{{ $message }}</span></p>
+                    @enderror
                 </div>
-            </div>
 
-            <!-- Progress Section (hidden initially) -->
-            <div class="hidden mb-8" id="progress-section">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold text-slate-700">{{ __('Mengupload...') }}</span>
-                    <span class="text-sm text-slate-600" id="progress-text">0%</span>
+                {{-- Selected files: names wrap or truncate, never push the page sideways. --}}
+                <div class="hidden" id="files-list-container">
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <h3 class="font-semibold">{{ __('File yang dipilih') }}</h3>
+                        <p class="text-sm rs-muted" aria-live="polite"><span id="file-count" class="rs-num font-semibold text-[#14231d]"></span> · <span id="file-total" class="rs-num"></span></p>
+                    </div>
+                    <p id="files-warning" class="rs-error hidden" role="alert"></p>
+                    <ul class="mt-3 max-h-72 overflow-y-auto rounded-lg border rs-rule divide-y divide-[#ece9de] bg-[#faf9f4]" id="files-list"></ul>
                 </div>
-                <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-3 rounded-full transition-all duration-300" id="progress-bar" style="width: 0%"></div>
-                </div>
-            </div>
 
-            <!-- Submit Button -->
-            <button type="submit"
-                    id="submit-btn"
-                    class="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                </svg>
-                <span id="btn-text">{{ __('Upload Semua File') }}</span>
-            </button>
-        </form>
-    </div>
-
-    <!-- Failed Files Results (if any) -->
-    @if(session('batch_results') && count(session('batch_results')['failed']) > 0)
-    <div class="mt-8 bg-red-50 border border-red-200 rounded-xl p-6">
-        <h3 class="text-lg font-semibold text-red-700 mb-4">{{ __('File yang Gagal Diproses:') }}</h3>
-        <div class="space-y-2">
-            @foreach(session('batch_results')['failed'] as $failed)
-            <div class="flex items-start gap-3 bg-white p-3 rounded-lg">
-                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <div class="min-w-0">
-                    <p class="font-medium text-red-700 break-all">{{ $failed['file'] }}</p>
-                    <p class="text-sm text-red-600 break-words">{{ $failed['error'] }}</p>
+                <div class="rounded-lg bg-[#faf9f4] border rs-rule p-4 text-[0.9375rem]">
+                    <p class="font-semibold">{{ __('Sebelum mengunggah') }}</p>
+                    <ul class="mt-2 space-y-1.5 rs-muted">
+                        <li>{{ __('Nama jalur diambil dari nama file, tanpa .gpx.') }}</li>
+                        <li>{{ __('Banyak file bisa butuh beberapa menit. Biarkan halaman ini terbuka.') }}</li>
+                        <li>{{ __('File yang gagal dilewati, yang berhasil tetap tersimpan.') }}</li>
+                    </ul>
                 </div>
-            </div>
-            @endforeach
+
+                <div id="progress-section" class="hidden rounded-lg border-2 border-[#047857] bg-[#ecfdf5] p-4" role="status" aria-live="polite">
+                    <p class="font-semibold text-[#053b30] flex items-center gap-2">
+                        <svg class="w-5 h-5 animate-spin motion-reduce:animate-none shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#a7f3d0" stroke-width="3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="#047857" stroke-width="3" stroke-linecap="round"/></svg>
+                        <span id="progress-text"></span>
+                    </p>
+                    <p class="mt-1 text-sm rs-muted">{{ __('Jangan tutup atau muat ulang halaman ini sampai selesai.') }}</p>
+                </div>
+
+                <div class="pt-2 border-t rs-rule">
+                    <p class="text-sm rs-muted mt-4">{{ __('Semua jalur akan tampil dengan tanda') }} <span class="font-semibold text-[#14231d] [overflow-wrap:anywhere]">{{ __('Diunggah oleh :name', ['name' => auth()->user()->name]) }}</span></p>
+                    <button type="submit" id="submit-btn" class="rs-sign w-full sm:w-auto mt-4 text-base">
+                        <x-icon name="upload" class="w-5 h-5" /> <span id="btn-text">{{ __('Unggah semua file') }}</span>
+                    </button>
+                </div>
+            </form>
+
+            <aside class="lg:col-span-4 mt-8 lg:mt-0">
+                <div class="lg:sticky lg:top-24 border-l-4 border-[#047857] pl-5">
+                    <h2 class="rs-display uppercase text-2xl leading-none text-[#053b30]">{{ __('Tips nama file') }}</h2>
+                    <p class="mt-3">{{ __('Nama file jadi nama jalur. Contoh yang enak dibaca:') }}</p>
+                    <p class="mt-2 font-semibold [overflow-wrap:anywhere]">Gunung Prau via Patak Banteng.gpx</p>
+                    <p class="mt-4 text-sm rs-muted">{{ __('Setiap jalur bisa diberi cerita singkat nanti, dari halaman jalurnya.') }}</p>
+                </div>
+            </aside>
         </div>
-    </div>
-    @endif
     @endguest
+    </div>
 </div>
 
 @auth
 <script>
-    const i18n = { selected: @js(__('file terpilih')), change: @js(__('Klik untuk mengubah pilihan')), uploading: @js(__('Mengupload & Memproses...')) };
-    const fileInput = document.getElementById('gpx_files');
+(function () {
+    const MAX_FILES = {{ $maxFiles }};
+    const MAX_BYTES = 10 * 1048576;
+    const i18n = {
+        selected: @js(__(':count file dipilih')),
+        change: @js(__('Ketuk untuk ganti pilihan')),
+        uploading: @js(__('Mengunggah :count file dan menghitung jalurnya...')),
+        button: @js(__('Unggah semua file')),
+        busy: @js(__('Sedang mengunggah...')),
+        tooMany: @js(__('Kamu memilih :count file. Maksimal :max file sekali unggah, sisanya unggah di putaran berikutnya.')),
+        bad: @js(__(':count file akan dilewati karena bukan .gpx/.xml atau lebih dari 10 MB.')),
+        notGpx: @js(__('Bukan .gpx')),
+        tooBig: @js(__('Lebih dari 10 MB')),
+    };
+    const fmt = (s, v) => s.replace(/:(\w+)/g, (m, k) => (k in v ? v[k] : m));
+    const lang = document.documentElement.lang;
+    const formatSize = (bytes) => bytes >= 1048576
+        ? (bytes / 1048576).toLocaleString(lang, { maximumFractionDigits: 1 }) + ' MB'
+        : Math.max(1, Math.round(bytes / 1024)).toLocaleString(lang) + ' KB';
+
+    const input = document.getElementById('gpx_files');
     const dropzone = document.getElementById('dropzone');
-    const dropzoneContent = document.getElementById('dropzone-content');
-    const filesListContainer = document.getElementById('files-list-container');
-    const filesList = document.getElementById('files-list');
-    const fileCount = document.getElementById('file-count');
-    const batchForm = document.getElementById('batchForm');
-    const submitBtn = document.getElementById('submit-btn');
+    const title = document.getElementById('dropzone-title');
+    const sub = document.getElementById('dropzone-sub');
+    const subDefault = sub.innerHTML;
+    const titleDefault = title.textContent;
+    const container = document.getElementById('files-list-container');
+    const list = document.getElementById('files-list');
+    const count = document.getElementById('file-count');
+    const total = document.getElementById('file-total');
+    const warning = document.getElementById('files-warning');
+    const form = document.getElementById('batchForm');
+    const btn = document.getElementById('submit-btn');
     const btnText = document.getElementById('btn-text');
-    const progressSection = document.getElementById('progress-section');
-    const progressBar = document.getElementById('progress-bar');
+    const progress = document.getElementById('progress-section');
     const progressText = document.getElementById('progress-text');
 
-    // Handle file selection
-    fileInput.addEventListener('change', function() {
-        updateFileList(this.files);
-    });
-
-    function updateFileList(files) {
-        if (files.length > 0) {
-            filesListContainer.classList.remove('hidden');
-            filesList.innerHTML = '';
-
-            Array.from(files).forEach((file, index) => {
-                const size = (file.size / 1024 / 1024).toFixed(2);
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between gap-3 py-2 px-3 bg-white rounded-lg mb-2 last:mb-0';
-                item.innerHTML = `
-                    <div class="flex items-center gap-3 min-w-0">
-                        <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <span class="text-sm text-slate-700 truncate" data-file-name></span>
-                    </div>
-                    <span class="text-xs text-slate-500 shrink-0 whitespace-nowrap">${size} MB</span>
-                `;
-                const nameEl = item.querySelector('[data-file-name]');
-                nameEl.textContent = file.name;
-                nameEl.title = file.name;
-                filesList.appendChild(item);
-            });
-
-            fileCount.textContent = files.length;
-
-            // Update dropzone appearance
-            dropzoneContent.innerHTML = `
-                <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mb-4">
-                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                </div>
-                <p class="mb-2 text-sm font-semibold text-green-600">${files.length} ${i18n.selected}</p>
-                <p class="text-xs text-slate-500">${i18n.change}</p>
-            `;
+    function render() {
+        const files = Array.from(input.files || []);
+        list.textContent = '';
+        if (!files.length) {
+            container.classList.add('hidden');
+            title.textContent = titleDefault;
+            sub.innerHTML = subDefault;
+            return;
         }
+        let bytes = 0, bad = 0;
+        files.forEach((file) => {
+            bytes += file.size;
+            const ext = file.name.split('.').pop().toLowerCase();
+            const problem = !['gpx', 'xml'].includes(ext) ? i18n.notGpx : (file.size > MAX_BYTES ? i18n.tooBig : '');
+            if (problem) bad++;
+
+            const li = document.createElement('li');
+            li.className = 'flex items-center gap-3 px-3 py-2.5 min-w-0';
+            const name = document.createElement('span');
+            name.className = 'min-w-0 flex-1 truncate text-[0.9375rem]';
+            name.textContent = file.name;
+            name.title = file.name;
+            const meta = document.createElement('span');
+            meta.className = 'shrink-0 whitespace-nowrap text-sm ' + (problem ? 'font-semibold text-[#b91c1c]' : 'rs-muted');
+            meta.textContent = problem || formatSize(file.size);
+            li.append(name, meta);
+            list.appendChild(li);
+        });
+
+        container.classList.remove('hidden');
+        count.textContent = fmt(i18n.selected, { count: files.length.toLocaleString(lang) });
+        total.textContent = formatSize(bytes);
+        title.textContent = fmt(i18n.selected, { count: files.length });
+        sub.textContent = i18n.change;
+
+        const notes = [];
+        if (files.length > MAX_FILES) notes.push(fmt(i18n.tooMany, { count: files.length, max: MAX_FILES }));
+        if (bad) notes.push(fmt(i18n.bad, { count: bad }));
+        warning.textContent = notes.join(' ');
+        warning.classList.toggle('hidden', !notes.length);
     }
 
-    // Drag and drop
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, preventDefaults, false);
-    });
+    input.addEventListener('change', render);
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => {
-            dropzone.classList.add('border-emerald-400', 'bg-emerald-50');
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => {
-            dropzone.classList.remove('border-emerald-400', 'bg-emerald-50');
-        }, false);
-    });
-
+    ['dragenter', 'dragover'].forEach((type) => dropzone.addEventListener(type, (e) => { e.preventDefault(); dropzone.classList.add('is-drag'); }));
+    ['dragleave', 'drop'].forEach((type) => dropzone.addEventListener(type, (e) => { e.preventDefault(); dropzone.classList.remove('is-drag'); }));
     dropzone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files;
-        updateFileList(files);
-    }, false);
-
-    // Form submission with loading state
-    batchForm.addEventListener('submit', function() {
-        submitBtn.disabled = true;
-        btnText.textContent = i18n.uploading;
-        progressSection.classList.remove('hidden');
-
-        // Simulate progress (actual progress would require AJAX)
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress > 90) {
-                progress = 90;
-                clearInterval(interval);
-            }
-            progressBar.style.width = progress + '%';
-            progressText.textContent = Math.round(progress) + '%';
-        }, 500);
+        if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+        input.files = e.dataTransfer.files;
+        render();
     });
+
+    form.addEventListener('submit', function () {
+        btn.disabled = true;
+        btnText.textContent = i18n.busy;
+        progressText.textContent = fmt(i18n.uploading, { count: (input.files || []).length });
+        progress.classList.remove('hidden');
+    });
+
+    // Back/forward cache: never leave the form stuck in the uploading state.
+    window.addEventListener('pageshow', function () {
+        btn.disabled = false;
+        btnText.textContent = i18n.button;
+        progress.classList.add('hidden');
+    });
+
+    render();
+})();
 </script>
 @endauth
 @endsection

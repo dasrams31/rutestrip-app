@@ -6,242 +6,188 @@
 @section('robots', 'noindex, follow')
 @endif
 
+@php
+    $isEn = app()->getLocale() === 'en';
+    $num = fn ($value, int $decimals = 0) => number_format((float) $value, $decimals, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $hoursLabel = function ($hours) {
+        $hours = (float) $hours;
+        $h = (int) floor($hours);
+        $m = (int) round(($hours - $h) * 60);
+        if ($m === 60) { $h++; $m = 0; }
+        return __(':h j :m mnt', ['h' => $h, 'm' => $m]);
+    };
+    $difficultyLevel = fn ($level) => match ($level) { 'Mudah' => 1, 'Sedang' => 2, 'Sulit' => 3, default => 4 };
+    // Small map thumbnails: at most 80 points per track.
+    $thin = function ($coords, int $max = 80) {
+        $coords = is_array($coords) ? array_values(array_filter($coords, fn ($p) => is_array($p) && isset($p[0], $p[1]) && is_numeric($p[0]) && is_numeric($p[1]))) : [];
+        $n = count($coords);
+        if ($n < 2) return [];
+        $step = max(1, (int) ceil($n / $max));
+        $out = [];
+        foreach ($coords as $i => $p) {
+            if ($i % $step === 0 || $i === $n - 1) $out[] = [round((float) $p[0], 5), round((float) $p[1], 5)];
+        }
+        return $out;
+    };
+    $filterOptions = [
+        '' => __('Semua'),
+        'verified' => __('Terverifikasi'),
+        'invalid' => __('Bermasalah'),
+    ];
+@endphp
+
+@include('partials.rs-kit')
+
 @section('content')
 @inject('conditionsService', 'App\Services\RouteConditionsService')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">{{ __('Semua Rute Pendakian') }}</h1>
-            <p class="text-slate-600">{{ __('Database jalur pendakian yang telah diupload') }}</p>
+<div class="rs-app">
+    @include('partials.rs-head', [
+        'eyebrow' => $routes->total() > 0 ? __($routes->total() === 1 ? '1 jalur dengan file GPX asli' : ':count jalur dengan file GPX asli', ['count' => $num($routes->total())]) : null,
+        'title' => __('Semua Rute Pendakian'),
+        'lead' => __('Pilih satu jalur untuk melihat peta, cuaca terkini, profil tanjakan, dan ulasan pendaki lain.'),
+        'seed' => 9,
+        'width' => 'max-w-7xl',
+    ])
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        {{-- One segmented row (fits 360 px): which GPX files to show. --}}
+        <nav class="flex flex-col min-[480px]:flex-row min-[480px]:items-center gap-2" aria-label="{{ __('Status file GPX') }}">
+            <span class="text-sm font-semibold text-rs-muted">{{ __('Status file GPX') }}</span>
+            <span class="inline-flex w-full min-[480px]:w-auto rounded-lg border border-rs-line bg-white p-1 gap-1">
+                @foreach($filterOptions as $value => $label)
+                @php $on = ($filter ?? '') === $value; @endphp
+                <a href="{{ route('routes.index', $value ? ['provenance_filter' => $value] : []) }}" @if($on) aria-current="page" @endif
+                   class="flex-1 min-[480px]:flex-none inline-flex items-center justify-center min-h-[44px] px-3 rounded-md text-sm font-semibold transition-colors {{ $on ? 'bg-rs-z9 text-white' : 'text-rs-ink hover:bg-rs-paper' }}">
+                    {{ $label }}
+                </a>
+                @endforeach
+            </span>
+        </nav>
+
+        @if($routes->isEmpty())
+        <div class="mt-8 rs-card p-6 sm:p-10 text-center max-w-2xl mx-auto">
+            @if($filter)
+            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Tidak ada jalur dengan status ini.') }}</p>
+            <a href="{{ route('routes.index') }}" class="rs-btn-ghost mt-5">{{ __('Tampilkan semua jalur') }}</a>
+            @else
+            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ada jalur.') }}</p>
+            <p class="mt-2 text-rs-muted">{{ __('Jalur muncul di sini setelah ada yang mengunggah file GPX. File pertama bisa dari pendakianmu.') }}</p>
+            <a href="{{ route('routes.create') }}" class="rs-sign mt-5">{{ __('Upload file GPX') }}</a>
+            @endif
         </div>
-        <a href="{{ route('routes.create') }}"
-           class="mt-4 md:mt-0 inline-flex items-center px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            {{ __('Upload GPX Baru') }}
-        </a>
-    </div>
-
-    @php
-        $filterOptions = [
-            '' => __('Semua Rute'),
-            'verified' => __('Terverifikasi'),
-            'invalid' => __('Tidak valid'),
-        ];
-    @endphp
-    <div class="bg-white rounded-2xl shadow border border-slate-100 p-4 mb-8">
-        <p class="text-sm font-bold text-slate-700 mb-3">{{ __('Filter Provenance') }}</p>
-        <div class="flex flex-wrap gap-2">
-            @foreach($filterOptions as $value => $label)
-            <a href="{{ route('routes.index', $value ? ['provenance_filter' => $value] : []) }}"
-               class="px-4 py-2 rounded-xl text-sm font-bold transition-colors {{ ($filter ?? '') === $value ? 'bg-emerald-700 text-white' : 'bg-slate-50 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700' }}">
-                {{ $label }}
-            </a>
-            @endforeach
-        </div>
-    </div>
-
-    @if($routes->isEmpty())
-    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-12 text-center">
-        <svg class="w-20 h-20 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-        </svg>
-        <h3 class="text-xl font-semibold text-slate-600 mb-2">{{ __('Belum Ada Rute') }}</h3>
-        <p class="text-slate-500 mb-6">{{ __('Mulai dengan mengupload file GPX pertama Anda.') }}</p>
-        <a href="{{ route('routes.create') }}"
-           class="inline-flex items-center px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            {{ __('Upload GPX Sekarang') }}
-        </a>
-    </div>
-    @else
-    <!-- Routes Grid -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        @foreach($routes as $route)
-        <div class="mountain-card bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-100 group">
-            <!-- Card Map/Image -->
-            <div class="relative h-40 overflow-hidden">
-                @if($route->route_coordinates && count($route->route_coordinates) > 0)
-                    <!-- Leaflet Map -->
-                    <div id="map-{{ $route->id }}" class="w-full h-full z-0"></div>
-                @else
-                    <!-- Fallback Image -->
-                    @php
-                        $imageSrc = asset('images/mountains/default.png');
-                        if ($route->image_path) {
-                            $imageSrc = str_starts_with($route->image_path, 'http')
-                                ? $route->image_path
-                                : asset('storage/' . $route->image_path);
-                        }
-                    @endphp
-                    <img src="{{ $imageSrc }}"
-                         alt="{{ $route->name }}"
-                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                         loading="lazy">
-                @endif
-                <!-- Gradient Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
-                <!-- Title on Image/Map -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 z-10">
-                    <h3 class="text-xl font-bold text-white mb-2 line-clamp-2 drop-shadow-lg">{{ $route->name }}</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                            @if($route->difficulty_level === 'Mudah') bg-green-100 text-green-800
-                            @elseif($route->difficulty_level === 'Sedang') bg-yellow-100 text-yellow-800
-                            @elseif($route->difficulty_level === 'Sulit') bg-orange-100 text-orange-800
-                            @else bg-red-100 text-red-800
-                            @endif">
-                            {{ __($route->difficulty_level) }}
-                        </span>
-                        @if($route->activeGpxVersion && $route->activeGpxVersion->verification_status !== 'verified')
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-                            @if($route->activeGpxVersion->verification_status === 'verified') bg-emerald-100 text-emerald-800
-                            @elseif($route->activeGpxVersion->verification_status === 'invalid') bg-red-100 text-red-800
-                            @else bg-amber-100 text-amber-800
-                            @endif">
-                            GPX {{ __(str_replace('_', ' ', ucfirst($route->activeGpxVersion->verification_status))) }}
-                        </span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card Body -->
+        @else
+        <ul class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            @foreach($routes as $route)
             @php
+                $track = $thin($route->route_coordinates);
                 $cardLocation = $conditionsService->cachedLocation($route);
                 $cardPlace = $cardLocation ? implode(', ', array_filter([$cardLocation['regency'] ?? null, $cardLocation['province'] ?? null])) : null;
                 $cardBasecamp = $conditionsService->basecampName($route);
-                $cardDecimal = app()->getLocale() === 'en' ? '.' : ',';
-                $cardThousands = app()->getLocale() === 'en' ? ',' : '.';
+                $level = $difficultyLevel($route->difficulty_level);
+                $gpxStatus = $route->activeGpxVersion?->verification_status;
             @endphp
-            <div class="p-5 sm:p-6">
-                <div class="mb-4 flex items-center justify-between gap-3 text-xs text-slate-500">
-                    <p class="inline-flex items-center gap-1.5 min-w-0" title="{{ __('Pengunggah jalur') }}">
-                        <x-icon name="user" class="w-3.5 h-3.5 shrink-0" />
-                        <span class="truncate">{{ __('Diunggah oleh') }} <span class="font-semibold text-slate-700">{{ $route->uploader_name }}</span></span>
-                    </p>
-                    <span class="inline-flex items-center gap-1 font-semibold text-rose-600 shrink-0" title="{{ __('Jumlah suka') }}">
-                        <x-icon name="heart" class="w-3.5 h-3.5" /> {{ $route->likes_count }}
-                    </span>
-                </div>
-                <div class="grid grid-cols-4 gap-2 mb-4">
-                    <div class="text-center min-w-0">
-                        <p class="text-base sm:text-lg font-bold text-slate-800 truncate">{{ number_format($route->distance_km, 1, $cardDecimal, $cardThousands) }}<span class="text-xs font-semibold text-slate-500"> km</span></p>
-                        <p class="text-[11px] text-slate-500">{{ __('Jarak') }}</p>
-                    </div>
-                    <div class="text-center min-w-0">
-                        <p class="text-base sm:text-lg font-bold text-slate-800 truncate">{{ number_format($route->elevation_gain_m, 0, $cardDecimal, $cardThousands) }}<span class="text-xs font-semibold text-slate-500"> m</span></p>
-                        <p class="text-[11px] text-slate-500">{{ __('Tanjakan') }}</p>
-                    </div>
-                    <div class="text-center min-w-0">
-                        <p class="text-base sm:text-lg font-bold text-slate-800 truncate">{{ number_format($route->naismith_duration_hour, 1, $cardDecimal, $cardThousands) }}<span class="text-xs font-semibold text-slate-500"> {{ __('jam') }}</span></p>
-                        <p class="text-[11px] text-slate-500">{{ __('Waktu') }}</p>
-                    </div>
-                    <div class="text-center min-w-0">
-                        <p class="text-base sm:text-lg font-bold text-slate-800 truncate">{{ $route->formatted_grade }}</p>
-                        <p class="text-[11px] text-slate-500">{{ __('Kemiringan') }}</p>
-                    </div>
+            <li class="rs-card overflow-hidden flex flex-col min-w-0 relative group hover:border-rs-z7 transition-colors">
+                <div class="relative h-36 shrink-0 bg-rs-mist overflow-hidden">
+                    @if($track)
+                    <div class="route-thumb absolute inset-0 pointer-events-none" data-track='@json($track)' aria-hidden="true"></div>
+                    <span class="absolute bottom-1 right-2 z-[1] text-[10px] leading-none text-rs-ink/70 bg-white/80 px-1 rounded pointer-events-none">&copy; OpenStreetMap</span>
+                    @else
+                    <div class="absolute inset-0 flex items-center justify-center text-rs-z7"><x-icon name="mountain" class="w-10 h-10" /></div>
+                    @endif
                 </div>
 
-                <!-- Mountain / route info (no external calls: the location shows only if already cached) -->
-                <ul class="mb-4 rounded-2xl bg-slate-50 border border-slate-100 p-3 text-xs text-slate-600 space-y-2">
-                    @if($route->max_elevation_m)
-                    <li class="flex items-start gap-2">
-                        <x-icon name="mountain" class="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>{{ __('Puncak') }} <span class="font-semibold text-slate-800">± {{ number_format($route->max_elevation_m, 0, $cardDecimal, $cardThousands) }} {{ __('mdpl') }}</span></span>
-                    </li>
-                    @endif
-                    <li class="flex items-start gap-2">
-                        <x-icon name="clock" class="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>{{ __('Estimasi naik') }} <span class="font-semibold text-slate-800">{{ $route->formatted_duration }}</span> <span class="text-slate-400">(Naismith)</span></span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                        <x-icon name="flag" class="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span><span class="font-semibold text-slate-800">{{ __($route->difficulty_level) }}:</span> {{ __($route->difficulty_hint) }}</span>
-                    </li>
-                    @if($cardBasecamp || $cardPlace)
-                    <li class="flex items-start gap-2">
-                        <x-icon name="location-marker" class="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span class="min-w-0 break-words">
-                            @if($cardBasecamp)<span class="font-semibold text-slate-800">{{ $cardBasecamp }}</span>@endif
-                            @if($cardBasecamp && $cardPlace) · @endif
-                            @if($cardPlace){{ $cardPlace }}@endif
+                <div class="p-5 flex-1 flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span class="inline-flex items-center gap-2 font-semibold text-rs-ink">
+                            <span class="rs-diff" aria-hidden="true">@for($i = 1; $i <= 4; $i++)<i class="{{ $i <= $level ? 'on' : '' }}"></i>@endfor</span>
+                            <span><span class="sr-only">{{ __('Tingkat kesulitan') }}:</span> {{ __($route->difficulty_level) }}</span>
                         </span>
-                    </li>
-                    @endif
-                </ul>
+                        <span class="inline-flex items-center gap-1 text-rs-muted" title="{{ __('Jumlah suka') }}">
+                            <x-icon name="heart" class="w-4 h-4 text-rs-z7" /> <span class="sr-only">{{ __('Jumlah suka') }}:</span>{{ $num($route->likes_count) }}
+                        </span>
+                    </div>
 
-                <!-- Actions -->
-                <div class="flex gap-2">
-                    <a href="{{ route('routes.show', $route) }}"
-                       class="flex-1 py-2 text-center bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium rounded-xl transition-colors">
-                        {{ __('Lihat Detail') }}
-                    </a>
-                    @auth
-                    @if(Auth::user()->isAdmin())
-                    <form action="{{ route('routes.destroy', $route) }}" method="POST"
-                          onsubmit="return confirm(@js(__('Yakin ingin menghapus rute ini?')))">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                                class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors" aria-label="{{ __('Hapus Rute') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
-                    </form>
+                    <h2 class="mt-2 rs-display uppercase text-[1.75rem] leading-none text-rs-z9 break-words">
+                        <a href="{{ route('routes.show', $route) }}" class="after:absolute after:inset-0 after:content-[''] group-hover:text-rs-z7">{{ $route->name }}</a>
+                    </h2>
+                    @if($cardBasecamp || $cardPlace)
+                    <p class="mt-2 text-sm text-rs-muted break-words">
+                        @if($cardBasecamp)<span class="font-semibold text-rs-ink">{{ $cardBasecamp }}</span>@endif
+                        @if($cardBasecamp && $cardPlace) · @endif
+                        @if($cardPlace){{ $cardPlace }}@endif
+                    </p>
                     @endif
-                    @endauth
+                    @if($gpxStatus && $gpxStatus !== 'verified')
+                    <p class="mt-2"><span class="rs-chip {{ $gpxStatus === 'invalid' ? 'rs-chip-bad' : 'rs-chip-warn' }}">{{ $gpxStatus === 'invalid' ? __('File GPX bermasalah') : __('File GPX belum diperiksa') }}</span></p>
+                    @endif
+
+                    <p class="mt-3 text-sm text-rs-ink leading-snug">{{ __($route->difficulty_hint) }}</p>
+
+                    <div class="mt-auto"></div>
+                    <dl class="mt-4 pt-4 grid grid-cols-3 gap-3 border-t border-rs-line">
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $num($route->distance_km, 1) }} km</dd></div>
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Total naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $num($route->elevation_gain_m) }} m</dd></div>
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $hoursLabel($route->naismith_duration_hour) }}</dd></div>
+                    </dl>
+                    <div class="mt-3 flex items-center justify-between gap-3 text-xs text-rs-muted">
+                        <p class="min-w-0 truncate">
+                            @if($route->max_elevation_m){{ __('Puncak') }} <span class="font-semibold text-rs-ink">± {{ $num($route->max_elevation_m) }} {{ __('mdpl') }}</span> · @endif
+                            {{ __('Diunggah oleh') }} <span class="font-semibold text-rs-ink">{{ $route->uploader_name }}</span>
+                        </p>
+                        @auth
+                        @if(Auth::user()->isAdmin())
+                        <form action="{{ route('routes.destroy', $route) }}" method="POST" class="relative z-[2] shrink-0"
+                              onsubmit="return confirm(@js(__('Yakin ingin menghapus rute ini?')))">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-11 h-11 inline-flex items-center justify-center rounded-lg text-[#9f1239] hover:bg-rose-50" aria-label="{{ __('Hapus Rute') }} {{ $route->name }}">
+                                <x-icon name="trash" class="w-5 h-5" />
+                            </button>
+                        </form>
+                        @endif
+                        @endauth
+                    </div>
                 </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
+            </li>
+            @endforeach
+        </ul>
 
-    <!-- Pagination -->
-    <div class="flex justify-center">
-        {{ $routes->links() }}
+        <div class="mt-8">
+            {{ $routes->links() }}
+        </div>
+        @endif
     </div>
-    @endif
 </div>
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize maps for routes with coordinates
-    @foreach($routes as $route)
-        @if($route->route_coordinates && count($route->route_coordinates) > 0)
-        (function() {
-            var coords = @json($route->route_coordinates);
-            if (coords && coords.length > 0) {
-                var map = L.map('map-{{ $route->id }}', {
-                    zoomControl: false,
-                    attributionControl: false,
-                    dragging: false,
-                    scrollWheelZoom: false
-                });
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 18
-                }).addTo(map);
-
-                var polyline = L.polyline(coords, {
-                    color: '#10b981',
-                    weight: 3,
-                    opacity: 0.9
-                }).addTo(map);
-
-                map.fitBounds(polyline.getBounds(), { padding: [10, 10] });
-            }
-        })();
-        @endif
-    @endforeach
-});
+// Map thumbnails: created only when a card scrolls near the viewport.
+(function () {
+    var nodes = document.querySelectorAll('.route-thumb[data-track]');
+    if (!nodes.length || typeof L === 'undefined') return;
+    function initMap(el) {
+        if (el.dataset.ready) return;
+        el.dataset.ready = '1';
+        var coords;
+        try { coords = JSON.parse(el.dataset.track); } catch (e) { return; }
+        if (!coords || coords.length < 2) return;
+        var map = L.map(el, {
+            zoomControl: false, attributionControl: false, dragging: false, touchZoom: false,
+            doubleClickZoom: false, scrollWheelZoom: false, boxZoom: false, keyboard: false, tap: false, zoomSnap: 0.25
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 17 }).addTo(map);
+        L.polyline(coords, { color: '#ffffff', weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        var line = L.polyline(coords, { color: '#047857', weight: 3.5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        map.fitBounds(line.getBounds(), { padding: [16, 16] });
+    }
+    if (!('IntersectionObserver' in window)) { nodes.forEach(initMap); return; }
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (entry.isIntersecting) { io.unobserve(entry.target); initMap(entry.target); }
+        });
+    }, { rootMargin: '200px 0px' });
+    nodes.forEach(function (el) { io.observe(el); });
+})();
 </script>
 @endpush
-
 @endsection

@@ -2,31 +2,69 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex">
-    <meta name="theme-color" content="#047857">
+    <meta name="theme-color" content="#053b30">
     <title>Offline - RuteStrip</title>
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <style>
-        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-               font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f0fdf4; color: #0f172a; }
-        main { max-width: 26rem; padding: 2rem 1.5rem; text-align: center; }
-        img { width: 72px; height: 72px; }
-        h1 { font-size: 1.35rem; margin: 1.25rem 0 .5rem; }
-        p { color: #475569; line-height: 1.55; margin: .25rem 0; }
-        .en { font-size: .9rem; color: #64748b; margin-top: 1rem; }
-        button { margin-top: 1.5rem; padding: .75rem 1.5rem; border: 0; border-radius: .75rem;
-                 background: #059669; color: #fff; font-weight: 600; font-size: 1rem; cursor: pointer; }
-        button:hover { background: #047857; }
+        /* Same language as the site (DESIGN.md), without web fonts: this page must work with no connection. */
+        * { box-sizing: border-box; }
+        html, body { margin: 0; }
+        body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: #f6f4ec; color: #14231d;
+               font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.55; }
+        header { position: relative; overflow: hidden; background: #053b30; color: #fff; padding: 2rem 1.25rem 2.25rem; }
+        header svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        .wrap { position: relative; max-width: 34rem; margin: 0 auto; }
+        .brand { display: flex; align-items: center; gap: .6rem; font-weight: 700; color: #a7f3d0; }
+        .brand img { width: 36px; height: 36px; border-radius: 8px; }
+        h1 { margin: 1.25rem 0 0; font-family: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed, system-ui, sans-serif;
+             font-weight: 800; font-stretch: condensed; text-transform: uppercase; font-size: clamp(2.2rem, 10vw, 3.4rem); line-height: .95; }
+        header p { margin: .9rem 0 0; color: #d1fae5; font-size: 1.05rem; }
+        main { flex: 1; padding: 1.75rem 1.25rem 2.5rem; }
+        ul { margin: 0; padding: 0 0 0 1.1rem; }
+        li { margin: .35rem 0; }
+        .en { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid #dcd8c9; color: #4b5d55; }
+        .en strong { color: #14231d; }
+        button { margin-top: 1.5rem; width: 100%; min-height: 52px; padding: 0 1.25rem; border-radius: 8px; border: 2px solid #053b30;
+                 background: #FCD34D; color: #053b30; font: inherit; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+        button:hover { background: #fde68a; }
+        button:focus-visible { outline: 3px solid #053b30; outline-offset: 2px; }
+        @media (min-width: 480px) { button { width: auto; } header { padding: 3rem 1.5rem 3rem; } main { padding: 2.25rem 1.5rem 3rem; } }
     </style>
 </head>
 <body>
+<header>
+    <svg viewBox="0 0 600 240" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" focusable="false">
+        <g fill="none" stroke="#a7f3d0" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+            <path d="M475 112C474 112 473 112 473 111C472 110 472 110 472 109C471 108 471 107 471 106C471 105 470 104 470 103C470 102 469 101 469 100C469 98 469 97 469 96C470 94 471 93 472 92C473 91 474 91 475 91C476 90 477 89 477 89C478 88 479 87 480 87C481 86 482 86 483 86C484 86 485 87 485 87C486 88 486 89 487 90C487 90 488 91 489 91C489 92 490 92 490 93C491 94 491 96 491 97C491 98 490 99 490 100C489 101 489 102 488 103C488 105 488 106 488 107C487 108 487 110 486 111C485 112 484 113 483 114C482 114 481 114 480 113C479 113 478 113 477 112C477 112 476 112 475 112Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M467 131C465 130 463 130 462 128C460 127 459 124 458 122C458 120 458 117 457 115C457 112 456 110 455 108C454 105 452 102 452 99C451 96 451 92 453 89C454 86 457 82 459 80C461 78 465 77 467 76C469 74 471 73 474 71C476 70 478 67 480 66C483 64 485 63 488 64C490 64 492 66 493 67C495 69 496 71 497 73C499 75 500 76 502 78C503 79 506 81 507 83C507 85 508 89 507 92C507 94 505 98 504 101C503 103 502 106 501 109C501 112 501 115 500 118C499 122 498 126 496 129C494 132 491 134 488 135C485 136 482 135 480 135C477 134 475 133 473 132C471 131 469 131 467 131Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M460 150C456 149 453 148 450 146C448 143 446 139 445 136C444 132 445 127 444 123C443 119 441 116 440 112C438 108 435 104 435 99C434 94 434 87 436 82C438 77 442 72 446 68C450 65 455 63 459 61C463 58 466 56 470 54C473 51 477 46 480 44C484 42 489 40 492 40C496 41 499 44 502 47C505 50 506 54 508 57C510 60 513 61 515 64C517 67 521 69 522 73C524 77 524 82 524 86C523 91 520 96 519 101C517 106 515 109 514 114C513 119 513 124 512 130C510 135 508 143 505 147C502 152 497 156 493 158C489 159 484 158 480 157C476 156 473 153 469 152C466 151 463 151 460 150Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M452 169C447 167 442 166 439 163C436 160 434 154 432 149C431 144 431 137 430 132C429 127 427 122 425 117C423 111 419 105 418 98C417 91 417 82 419 75C422 68 428 61 434 56C439 51 446 50 451 46C457 43 461 40 466 36C471 32 475 26 480 22C486 19 492 16 497 17C502 17 507 22 511 26C514 30 516 36 519 40C522 44 525 47 528 51C531 55 536 58 538 63C540 68 541 75 540 82C539 88 535 95 533 101C531 108 528 113 526 119C525 126 525 133 523 141C522 149 520 159 515 166C511 173 504 179 498 181C492 183 485 180 480 179C474 177 470 173 465 172C461 170 456 170 452 169Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M444 188C438 186 432 185 428 181C423 177 421 169 419 163C417 156 418 147 417 140C416 134 413 128 411 121C408 114 403 107 401 98C400 89 400 77 403 68C406 59 414 50 421 44C428 38 437 36 444 32C450 27 456 24 462 18C468 13 474 4 481 0C487 -4 496 -9 502 -8C509 -7 515 -1 519 4C524 9 526 18 530 23C533 29 537 33 541 38C545 43 551 47 553 53C556 60 557 69 556 77C554 85 549 94 547 102C544 110 540 116 539 124C537 133 538 142 535 152C533 162 531 176 525 185C520 194 511 201 503 204C496 207 486 203 479 201C472 199 467 194 461 191C455 189 450 189 444 188Z" stroke-width="2" stroke-opacity=".3"/>
+            <path d="M436 207C429 205 421 204 416 199C411 194 407 185 405 176C403 168 405 157 404 149C402 140 400 134 397 126C394 117 387 108 385 98C383 87 383 72 387 62C390 51 400 40 409 33C417 25 428 23 436 18C444 12 450 8 458 1C465 -6 472 -17 481 -23C489 -28 500 -34 508 -33C516 -33 523 -25 529 -18C534 -11 536 -1 541 7C545 14 549 18 554 25C558 31 566 35 568 43C571 51 572 62 571 72C570 82 563 92 560 102C556 111 552 119 550 129C548 139 550 151 547 163C545 176 542 193 536 204C529 215 518 224 509 228C499 231 488 227 479 224C471 221 464 214 457 212C450 209 443 209 436 207Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M428 226C420 224 410 223 404 217C398 211 394 200 392 190C390 180 392 167 390 157C389 147 387 140 383 130C379 120 371 110 369 97C367 85 366 68 371 55C375 42 387 30 396 21C406 13 419 10 428 4C438 -3 445 -8 454 -17C463 -25 471 -39 481 -46C491 -53 504 -60 513 -59C523 -59 532 -49 538 -41C544 -33 547 -19 552 -11C556 -2 561 4 567 12C572 19 580 25 583 34C587 43 588 56 586 67C584 79 577 91 573 102C569 113 564 122 562 134C559 146 561 159 559 174C556 189 553 210 546 223C538 236 525 248 514 252C503 256 489 250 479 247C469 244 461 235 453 232C444 228 436 229 428 226Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M420 246C411 243 399 242 392 236C385 229 380 216 378 204C375 193 379 178 377 166C376 154 373 146 369 134C365 123 356 111 353 97C351 83 350 63 355 49C360 34 373 20 385 10C396 0 410 -3 421 -10C432 -17 440 -24 450 -34C460 -44 470 -61 481 -69C493 -78 508 -87 519 -87C530 -86 540 -75 548 -65C555 -55 558 -39 563 -28C568 -17 573 -10 579 -1C585 7 594 14 598 24C602 35 603 50 601 63C599 76 590 90 585 103C580 115 575 124 573 138C570 152 573 168 570 185C567 202 564 227 556 242C548 257 532 271 519 276C507 281 491 274 479 270C467 266 458 256 448 252C439 248 429 248 420 246Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M412 265C401 263 388 262 380 255C372 247 366 232 364 219C361 206 365 188 364 175C362 161 360 151 356 138C352 125 341 113 338 96C335 80 334 58 339 42C345 26 360 10 373 -1C385 -12 402 -15 414 -23C426 -31 435 -39 446 -51C457 -63 468 -83 481 -93C494 -104 512 -115 525 -114C537 -114 550 -101 558 -89C566 -78 569 -58 575 -46C580 -33 586 -25 592 -14C598 -4 609 3 613 15C617 27 618 43 616 58C613 73 603 89 597 103C592 117 586 127 583 142C580 158 584 176 581 195C578 215 576 244 566 261C557 279 540 295 525 301C510 306 492 298 479 294C465 289 455 277 444 272C433 268 423 268 412 265Z" stroke-width="1.2" stroke-opacity=".16"/>
+            <path d="M404 286C391 283 376 283 367 274C358 266 352 249 349 234C346 219 351 199 350 183C349 168 347 157 343 142C338 128 326 114 323 96C320 78 318 54 325 36C331 18 348 0 362 -11C376 -23 394 -26 407 -36C421 -45 430 -54 442 -68C455 -81 467 -105 481 -118C496 -130 516 -144 531 -143C545 -143 559 -128 568 -115C578 -102 580 -79 586 -64C593 -50 598 -39 605 -28C612 -16 623 -8 627 6C632 19 633 37 630 54C627 70 615 88 609 103C603 119 596 129 593 147C590 164 595 183 592 206C589 228 587 261 576 280C566 300 547 319 530 325C514 331 494 322 479 317C464 312 452 298 440 293C427 287 416 289 404 286Z" stroke-width="2" stroke-opacity=".3"/>
+            <path d="M395 306C382 303 364 304 354 295C343 285 336 267 334 250C331 233 337 209 336 192C335 175 334 163 329 146C325 130 312 115 308 96C305 76 303 50 310 30C317 10 336 -9 351 -22C366 -35 386 -37 401 -48C416 -58 425 -68 439 -84C452 -100 465 -127 481 -142C498 -157 520 -173 537 -173C553 -173 569 -156 579 -141C589 -126 592 -99 599 -83C605 -66 610 -54 618 -41C625 -28 637 -19 642 -4C646 11 648 31 644 49C641 67 627 87 620 103C614 120 606 132 603 151C600 169 606 191 603 216C600 241 598 277 587 299C575 322 554 343 536 350C518 357 495 346 479 340C462 334 450 319 436 313C422 307 409 309 395 306Z" stroke-width="1.2" stroke-opacity=".16"/>
+        </g>
+    </svg>
+    <div class="wrap">
+        <div class="brand"><img src="/images/logo.svg" alt="" width="36" height="36"> RuteStrip</div>
+        <h1>Sinyal hilang di jalur.</h1>
+        <p>Halaman ini butuh internet untuk mencari jalur dan memuat peta.</p>
+    </div>
+</header>
 <main>
-    <img src="/images/logo.svg" alt="RuteStrip">
-    <h1>Kamu sedang offline</h1>
-    <p>RuteStrip butuh koneksi internet untuk mencari jalur dan memuat peta. Periksa sinyal atau Wi-Fi, lalu coba lagi.</p>
-    <p class="en" lang="en">You are offline. RuteStrip needs an internet connection to search routes and load maps.</p>
-    <button type="button" onclick="location.reload()">Coba lagi / Try again</button>
+    <div class="wrap">
+        <ul>
+            <li>Cek data seluler atau Wi-Fi.</li>
+            <li>Kalau sedang di jalur, coba lagi di tempat yang sinyalnya lebih kuat.</li>
+        </ul>
+        <button type="button" onclick="location.reload()">Coba lagi / Try again</button>
+        <p class="en" lang="en"><strong>No signal on the trail.</strong> This page needs an internet connection to search routes and load maps. Check your mobile data or Wi-Fi, then try again.</p>
+    </div>
 </main>
 </body>
 </html>

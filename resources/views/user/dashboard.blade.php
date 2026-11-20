@@ -2,201 +2,171 @@
 
 @section('title', __('Dashboard'))
 
+@php
+    $isEn = app()->getLocale() === 'en';
+    $fmt = fn ($n) => number_format((float) $n, 0, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $level = fn ($l) => match ($l) { 'Mudah' => 1, 'Sedang' => 2, 'Sulit' => 3, default => 4 };
+    $statItems = [
+        ['id' => 'stat-favorites', 'value' => $stats['favorites'], 'label' => __('jalur favorit'), 'href' => route('user.favorites')],
+        ['id' => 'stat-searches', 'value' => $stats['searches'], 'label' => __('pencarian tersimpan'), 'href' => route('user.history')],
+        ['id' => 'stat-comments', 'value' => $stats['comments'], 'label' => __('komentar ditulis'), 'href' => null],
+        ['id' => 'stat-ratings', 'value' => $stats['ratings'], 'label' => __('nilai bintang diberikan'), 'href' => null],
+    ];
+    $routeTotal = \App\Models\HikingRoute::count();
+    $headActions = array_values(array_filter([
+        ['href' => route('search.index'), 'label' => __('Cari jalur'), 'style' => 'sign', 'icon' => 'search'],
+        Route::has('settings') ? ['href' => route('settings'), 'label' => __('Pengaturan akun'), 'icon' => 'cog'] : null,
+        $user->isAdmin() ? ['href' => route('admin.dashboard'), 'label' => __('Panel admin'), 'icon' => 'shield-check'] : null,
+    ]));
+@endphp
+
 @section('content')
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Welcome Header -->
-    <div class="mb-8 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div class="min-w-0">
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 break-words">{{ __('Halo, :name!', ['name' => $user->name]) }}</h1>
-            <p class="text-slate-600 mt-1">{{ __('Kelola rute favorit dan riwayat pencarian Anda') }}</p>
-        </div>
-        <!-- Realtime Indicator -->
-        <div class="flex items-center gap-2 text-sm text-slate-500 sm:pt-2">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span>{{ __('Live') }}</span>
-            <span id="last-update" class="text-xs text-slate-400"></span>
-        </div>
-    </div>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'eyebrow' => __('Dashboard'),
+        'title' => __('Halo, :name.', ['name' => \Illuminate\Support\Str::limit(\Illuminate\Support\Str::before(trim($user->name) . ' ', ' '), 20, '')]),
+        'lead' => __('Jalur yang kamu simpan dan pencarianmu ada di sini.'),
+        'actions' => $headActions,
+        'seed' => 79,
+    ])
 
-    <!-- Stats Cards - Realtime Updates -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 hover:shadow-xl transition-all">
-            <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3">
-                <svg class="w-6 h-6 text-rose-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-            </div>
-            <p class="text-3xl font-bold text-slate-800 stat-value" id="stat-favorites">{{ $stats['favorites'] }}</p>
-            <p class="text-sm text-slate-500">{{ __('Rute Favorit') }}</p>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 hover:shadow-xl transition-all">
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <p class="text-3xl font-bold text-slate-800 stat-value" id="stat-searches">{{ $stats['searches'] }}</p>
-            <p class="text-sm text-slate-500">{{ __('Pencarian') }}</p>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 hover:shadow-xl transition-all">
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3">
-                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
-            </div>
-            <p class="text-3xl font-bold text-slate-800 stat-value" id="stat-comments">{{ $stats['comments'] }}</p>
-            <p class="text-sm text-slate-500">{{ __('Komentar') }}</p>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-100 hover:shadow-xl transition-all">
-            <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3">
-                <svg class="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-            </div>
-            <p class="text-3xl font-bold text-slate-800 stat-value" id="stat-ratings">{{ $stats['ratings'] }}</p>
-            <p class="text-sm text-slate-500">{{ __('Rating') }}</p>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Favorites -->
-        <div class="lg:col-span-2 min-w-0 bg-white rounded-2xl shadow-lg p-5 sm:p-6 border border-slate-100">
-            <div class="flex items-center justify-between gap-3 mb-4">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 min-w-0"><x-icon name="star" class="w-5 h-5 text-amber-500 shrink-0" /> {{ __('Rute Favorit Terakhir') }}</h2>
-                <a href="{{ route('user.favorites') }}" class="text-emerald-600 hover:underline text-sm shrink-0">{{ __('Lihat Semua') }}</a>
-            </div>
-
-            @if($recentFavorites->count() > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="favorites-container">
-                @foreach($recentFavorites as $route)
-                <a href="{{ route('routes.show', $route) }}"
-                   class="block min-w-0 p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 transition-colors">
-                    <h3 class="font-semibold text-slate-800 truncate">{{ $route->name }}</h3>
-                    <div class="flex items-center gap-3 mt-2 text-sm text-slate-500">
-                        <span>{{ $route->formatted_distance }}</span>
-                        <span>•</span>
-                        <span>{{ __($route->difficulty_level) }}</span>
-                    </div>
-                </a>
-                @endforeach
-            </div>
-            @else
-            <p class="text-slate-500 text-center py-8">{{ __('Belum ada rute favorit.') }} <a href="{{ route('routes.index') }}" class="text-emerald-600 hover:underline">{{ __('Jelajahi rute') }}</a></p>
-            @endif
-        </div>
-
-        <!-- Recent Searches -->
-        <div class="min-w-0 bg-white rounded-2xl shadow-lg p-5 sm:p-6 border border-slate-100">
-            <div class="flex items-center justify-between gap-3 mb-4">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 min-w-0"><x-icon name="search" class="w-5 h-5 text-emerald-600 shrink-0" /> {{ __('Pencarian Terakhir') }}</h2>
-                <a href="{{ route('user.history') }}" class="text-emerald-600 hover:underline text-sm shrink-0">{{ __('Semua') }}</a>
-            </div>
-
-            @if($recentSearches->count() > 0)
-            <div class="space-y-3" id="searches-container">
-                @foreach($recentSearches as $search)
-                <div class="p-3 bg-slate-50 rounded-lg min-w-0">
-                    <p class="text-slate-800 font-medium truncate" title="{{ $search->query }}">{{ $search->query }}</p>
-                    <div class="flex items-center justify-between gap-2 mt-1 text-xs text-slate-400">
-                        <span>{{ __(':count hasil', ['count' => $search->results_count]) }}</span>
-                        <span>{{ $search->created_at->diffForHumans() }}</span>
-                    </div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {{-- Numbers from your own account, refreshed while the page is open. --}}
+        <section class="rs-card -mt-5 sm:-mt-7 relative" aria-labelledby="stats-title">
+            <h2 id="stats-title" class="sr-only">{{ __('Ringkasan akunmu') }}</h2>
+            <dl class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#ece9de] rounded-xl overflow-hidden">
+                @foreach($statItems as $item)
+                <div class="flex flex-col-reverse justify-end bg-white p-4 sm:p-6 min-w-0">
+                    <dt class="mt-1 text-sm rs-muted">
+                        @if($item['href'])<a href="{{ $item['href'] }}" class="underline decoration-[#dcd8c9] underline-offset-4 hover:text-[#053b30]">{{ $item['label'] }}</a>@else{{ $item['label'] }}@endif
+                    </dt>
+                    <dd class="rs-display rs-num text-4xl sm:text-5xl leading-none text-[#053b30] transition-colors" id="{{ $item['id'] }}">{{ $fmt($item['value']) }}</dd>
                 </div>
                 @endforeach
-            </div>
-            @else
-            <p class="text-slate-500 text-center py-8">{{ __('Belum ada riwayat pencarian') }}</p>
-            @endif
+            </dl>
+        </section>
+        <p class="mt-2 text-xs rs-muted text-right" aria-live="polite"><span id="last-update">{{ __('Angka diperbarui otomatis selama halaman ini terbuka.') }}</span></p>
+
+        <div class="mt-8 lg:grid lg:grid-cols-12 lg:gap-8">
+            {{-- Favourites --}}
+            <section class="lg:col-span-7 min-w-0" aria-labelledby="fav-title">
+                <div class="flex items-end justify-between gap-3">
+                    <h2 id="fav-title" class="rs-display uppercase text-3xl sm:text-4xl leading-none text-[#053b30]">{{ __('Jalur favorit') }}</h2>
+                    <a href="{{ route('user.favorites') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] hover:text-[#053b30] shrink-0">{{ __('Lihat semua') }}</a>
+                </div>
+
+                @if($recentFavorites->count() > 0)
+                <ul class="mt-3 rs-card divide-y divide-[#ece9de]">
+                    @foreach($recentFavorites as $route)
+                    <li>
+                        <a href="{{ route('routes.show', $route) }}" class="flex items-center gap-4 p-4 sm:px-5 min-w-0 hover:bg-[#faf9f4]">
+                            <div class="min-w-0 flex-1">
+                                <p class="font-semibold text-[#053b30] truncate" title="{{ $route->name }}">{{ $route->name }}</p>
+                                <p class="mt-1 text-sm rs-muted flex flex-wrap items-center gap-x-3 gap-y-1">
+                                    <span class="rs-num">{{ $route->formatted_distance }}</span>
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="rs-diff" aria-hidden="true">@for($i = 1; $i <= 4; $i++)<i class="{{ $i <= $level($route->difficulty_level) ? 'on' : '' }}"></i>@endfor</span>
+                                        {{ __($route->difficulty_level) }}
+                                    </span>
+                                </p>
+                            </div>
+                            <x-icon name="chevron-right" class="w-5 h-5 text-[#7c8c84] shrink-0" />
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+                @else
+                <div class="mt-3 rs-card p-6">
+                    <p class="font-semibold">{{ __('Belum ada jalur favorit.') }}</p>
+                    <p class="mt-1 rs-muted">{{ __('Ketuk ikon hati di halaman jalur untuk menyimpannya di sini.') }}</p>
+                    <a href="{{ route('routes.index') }}" class="rs-btn mt-4">{{ __('Lihat semua jalur') }}</a>
+                </div>
+                @endif
+            </section>
+
+            {{-- Recent searches --}}
+            <section class="lg:col-span-5 min-w-0 mt-10 lg:mt-0" aria-labelledby="search-title">
+                <div class="flex items-end justify-between gap-3">
+                    <h2 id="search-title" class="rs-display uppercase text-3xl sm:text-4xl leading-none text-[#053b30]">{{ __('Pencarian terakhir') }}</h2>
+                    <a href="{{ route('user.history') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] hover:text-[#053b30] shrink-0">{{ __('Semua') }}</a>
+                </div>
+
+                @if($recentSearches->count() > 0)
+                <ul class="mt-3 rs-card divide-y divide-[#ece9de]">
+                    @foreach($recentSearches as $search)
+                    <li>
+                        <form action="{{ route('search.submit') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="query" value="{{ $search->query }}">
+                            <button type="submit" class="w-full text-left flex items-center gap-3 p-4 sm:px-5 min-w-0 hover:bg-[#faf9f4]" title="{{ __('Cari lagi') }}: {{ $search->query }}">
+                                <x-icon name="search" class="w-4 h-4 text-[#047857] shrink-0" />
+                                <span class="min-w-0 flex-1">
+                                    <span class="block font-semibold truncate">{{ $search->query }}</span>
+                                    <span class="block mt-0.5 text-sm rs-muted">{{ __(':count hasil', ['count' => $search->results_count]) }} · {{ $search->created_at->diffForHumans() }}</span>
+                                </span>
+                            </button>
+                        </form>
+                    </li>
+                    @endforeach
+                </ul>
+                @else
+                <div class="mt-3 rs-card p-6">
+                    <p class="font-semibold">{{ __('Belum ada riwayat pencarian.') }}</p>
+                    <p class="mt-1 rs-muted">{{ __('Coba tulis "jalur landai untuk pemula" di halaman cari.') }}</p>
+                </div>
+                @endif
+            </section>
         </div>
-    </div>
 
-    <!-- Quick Actions -->
-    <div class="mt-8 grid sm:grid-cols-3 gap-4">
-        <a href="{{ route('search.index') }}"
-           class="flex items-center p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors">
-            <svg class="w-8 h-8 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <div>
-                <p class="font-semibold">{{ __('Cari Rute') }}</p>
-                <p class="text-sm opacity-80">{{ __('Temukan rute pendakian') }}</p>
-            </div>
-        </a>
-
-        <a href="{{ route('routes.index') }}"
-           class="flex items-center p-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl border border-slate-200 transition-colors">
-            <svg class="w-8 h-8 mr-3 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-            </svg>
-            <div>
-                <p class="font-semibold">{{ __('Semua Rute') }}</p>
-                <p class="text-sm text-slate-500" id="total-routes">{{ __(':count rute tersedia', ['count' => \App\Models\HikingRoute::count()]) }}</p>
-            </div>
-        </a>
-
-        <a href="{{ route('user.profile') }}"
-           class="flex items-center p-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl border border-slate-200 transition-colors">
-            <svg class="w-8 h-8 mr-3 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-            </svg>
-            <div>
-                <p class="font-semibold">{{ __('Edit Profil') }}</p>
-                <p class="text-sm text-slate-500">{{ __('Ubah nama & password') }}</p>
-            </div>
-        </a>
+        {{-- Next steps --}}
+        <section class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="{{ __('Lanjut ke') }}">
+            <a href="{{ route('routes.index') }}" class="rs-card p-5 flex items-center gap-4 hover:border-[#047857] min-w-0">
+                <x-icon name="map" class="w-7 h-7 text-[#047857] shrink-0" />
+                <span class="min-w-0">
+                    <span class="block font-semibold">{{ __('Semua jalur') }}</span>
+                    <span class="block text-sm rs-muted">{{ __(':count jalur dengan data GPX', ['count' => $fmt($routeTotal)]) }}</span>
+                </span>
+            </a>
+            <a href="{{ route('routes.create') }}" class="rs-card p-5 flex items-center gap-4 hover:border-[#047857] min-w-0">
+                <x-icon name="upload" class="w-7 h-7 text-[#047857] shrink-0" />
+                <span class="min-w-0">
+                    <span class="block font-semibold">{{ __('Upload GPX') }}</span>
+                    <span class="block text-sm rs-muted">{{ __('Bagikan jejak pendakianmu') }}</span>
+                </span>
+            </a>
+        </section>
     </div>
 </div>
 
 @push('scripts')
 <script>
-// Realtime Dashboard Stats Polling
-(function() {
-    const POLL_INTERVAL = 5000; // 5 seconds
+(function () {
+    const url = @js(route('user.dashboard.stats'));
+    const updated = @js(__('Diperbarui pukul :time'));
+    const ids = { favorites: 'stat-favorites', searches: 'stat-searches', comments: 'stat-comments', ratings: 'stat-ratings' };
 
-    function updateStats() {
-        fetch('{{ route('user.dashboard.stats') }}')
-            .then(response => response.json())
-            .then(data => {
-                // Animate stat updates
-                animateValue('stat-favorites', data.favorites);
-                animateValue('stat-searches', data.searches);
-                animateValue('stat-comments', data.comments);
-                animateValue('stat-ratings', data.ratings);
-
-                // Update timestamp
-                document.getElementById('last-update').textContent = @js(__('Diperbarui')) + ' ' + data.timestamp;
+    function refresh() {
+        if (document.hidden) return; // no polling while the tab is in the background
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+            .then((data) => {
+                Object.entries(ids).forEach(([key, id]) => {
+                    const el = document.getElementById(id);
+                    const value = Number(data[key] ?? 0).toLocaleString(document.documentElement.lang);
+                    if (el && el.textContent !== value) {
+                        el.textContent = value;
+                        el.style.color = '#047857';
+                        setTimeout(() => { el.style.color = ''; }, 800);
+                    }
+                });
+                document.getElementById('last-update').textContent = updated.replace(':time', data.timestamp);
             })
-            .catch(err => console.log('Stats update failed:', err));
+            .catch(() => {});
     }
-
-    function animateValue(elementId, newValue) {
-        const el = document.getElementById(elementId);
-        const oldValue = parseInt(el.textContent);
-
-        if (oldValue !== newValue) {
-            el.textContent = newValue;
-            el.classList.add('text-emerald-600', 'scale-110');
-            setTimeout(() => {
-                el.classList.remove('text-emerald-600', 'scale-110');
-            }, 500);
-        }
-    }
-
-    // Start polling
-    setInterval(updateStats, POLL_INTERVAL);
-
-    // Initial call after 2 seconds
-    setTimeout(updateStats, 2000);
+    setInterval(refresh, 10000);
+    setTimeout(refresh, 2000);
 })();
 </script>
 @endpush
-
-<style>
-.stat-value {
-    transition: all 0.3s ease;
-}
-</style>
 @endsection

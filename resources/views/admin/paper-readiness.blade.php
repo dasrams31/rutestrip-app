@@ -1,71 +1,66 @@
 @extends('layouts.app')
 
-@section('title', 'Paper Dataset Readiness')
+@section('title', __('Dataset Readiness Checker'))
+
+@php
+    $isEn = app()->getLocale() === 'en';
+    $ready = $paperReadiness['status'] === 'ready';
+@endphp
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <a href="{{ route('admin.dashboard') }}" class="inline-flex text-emerald-700 font-semibold hover:text-emerald-800 mb-4">Kembali ke Dashboard</a>
-        <div class="bg-gradient-to-r from-indigo-800 to-emerald-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
-            <p class="text-emerald-100 text-sm font-bold uppercase tracking-wide mb-2">Paper Evidence</p>
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3">Dataset Readiness Checker</h1>
-            <p class="text-emerald-50 max-w-3xl">Checklist kesiapan data dan evidence untuk eksperimen paper: dataset rute, SBERT, GPX provenance, Precision@K, black box testing, dan SUS.</p>
-        </div>
-    </div>
+@include('partials.rs-kit')
+<div class="rs-app pb-16">
+    @include('partials.rs-head', [
+        'back' => ['href' => route('admin.dashboard'), 'label' => __('Kembali ke panel admin')],
+        'eyebrow' => __('Bukti untuk naskah'),
+        'title' => __('Dataset Readiness Checker'),
+        'lead' => __('Daftar periksa data sebelum tabel hasil dipakai: dataset jalur, SBERT, provenance GPX, Precision@K, black box, dan SUS.'),
+        'actions' => [['href' => route('admin.paper-readiness.export'), 'label' => __('Download Readiness CSV'), 'style' => 'sign', 'icon' => 'document-text']],
+        'seed' => 107,
+    ])
 
-    <div class="grid md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-2xl border border-slate-100 shadow p-5 md:col-span-2">
-            <p class="text-sm text-slate-500 mb-1">Overall Status</p>
-            <p class="text-3xl font-extrabold {{ $paperReadiness['status'] === 'ready' ? 'text-emerald-700' : 'text-amber-700' }}">{{ strtoupper(str_replace('_', ' ', $paperReadiness['status'])) }}</p>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 shadow p-5">
-            <p class="text-sm text-slate-500 mb-1">Score</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ number_format($paperReadiness['score'], 2) }}%</p>
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 shadow p-5">
-            <p class="text-sm text-slate-500 mb-1">Passed</p>
-            <p class="text-3xl font-extrabold text-slate-800">{{ $paperReadiness['passed'] }}/{{ $paperReadiness['total'] }}</p>
-        </div>
-    </div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section class="rs-card -mt-5 sm:-mt-7 relative" aria-label="{{ __('Ringkasan kesiapan') }}">
+            <dl class="grid grid-cols-1 min-[420px]:grid-cols-3 gap-px bg-[#ece9de] rounded-xl overflow-hidden">
+                <div class="flex flex-col-reverse justify-end bg-white p-4 sm:p-6">
+                    <dt class="mt-2 text-sm rs-muted">{{ __('Status keseluruhan') }}</dt>
+                    <dd><span class="rs-chip {{ $ready ? 'rs-chip-ok' : 'rs-chip-warn' }} text-base">{{ $ready ? __('Siap') : __('Belum lengkap') }}</span></dd>
+                </div>
+                <div class="flex flex-col-reverse justify-end bg-white p-4 sm:p-6">
+                    <dt class="mt-1 text-sm rs-muted">{{ __('Skor') }}</dt>
+                    <dd class="rs-display rs-num text-4xl leading-none text-[#053b30]">{{ number_format($paperReadiness['score'], 2, $isEn ? '.' : ',', $isEn ? ',' : '.') }}%</dd>
+                </div>
+                <div class="flex flex-col-reverse justify-end bg-white p-4 sm:p-6">
+                    <dt class="mt-1 text-sm rs-muted">{{ __('Kriteria terpenuhi') }}</dt>
+                    <dd class="rs-display rs-num text-4xl leading-none text-[#053b30]">{{ $paperReadiness['passed'] }}/{{ $paperReadiness['total'] }}</dd>
+                </div>
+            </dl>
+        </section>
 
-    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">Readiness Criteria</h2>
-                <p class="text-sm text-slate-500 mt-1">Gunakan item TODO sebagai daftar kerja sebelum finalisasi tabel hasil paper.</p>
-            </div>
-            <a href="{{ route('admin.paper-readiness.export') }}" class="inline-flex px-5 py-3 rounded-2xl bg-indigo-700 text-white font-bold hover:bg-indigo-800">Download Readiness CSV</a>
-        </div>
+        <section class="mt-10" aria-labelledby="criteria-title">
+            <h2 id="criteria-title" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ __('Kriteria') }}</h2>
+            <p class="mt-2 rs-muted">{{ __('Kerjakan yang masih TODO sebelum tabel hasil difinalkan.') }}</p>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm border border-slate-200">
-                <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                    <tr>
-                        <th class="px-3 py-3 text-left border-b">Criterion</th>
-                        <th class="px-3 py-3 text-left border-b">Status</th>
-                        <th class="px-3 py-3 text-left border-b">Current</th>
-                        <th class="px-3 py-3 text-left border-b">Notes</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($paperReadiness['items'] as $item)
-                    <tr>
-                        <td class="px-3 py-3 font-bold text-slate-800">{{ $item['name'] }}</td>
-                        <td class="px-3 py-3">
-                            <span class="px-3 py-1 rounded-full text-xs font-bold {{ $item['ready'] ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">{{ $item['ready'] ? 'READY' : 'TODO' }}</span>
-                        </td>
-                        <td class="px-3 py-3">{{ $item['current'] }}</td>
-                        <td class="px-3 py-3 text-slate-600">{{ $item['notes'] }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
+            <ul class="mt-4 rs-card divide-y divide-[#ece9de]">
+                @foreach($paperReadiness['items'] as $item)
+                <li class="p-4 sm:px-6 sm:grid sm:grid-cols-12 sm:gap-6 min-w-0">
+                    <div class="sm:col-span-5 min-w-0">
+                        <p class="flex items-start gap-2">
+                            <span class="rs-chip {{ $item['ready'] ? 'rs-chip-ok' : 'rs-chip-warn' }} shrink-0">{{ $item['ready'] ? 'READY' : 'TODO' }}</span>
+                            <span class="font-semibold [overflow-wrap:anywhere]">{{ $item['name'] }}</span>
+                        </p>
+                    </div>
+                    <div class="sm:col-span-3 mt-2 sm:mt-0 text-sm min-w-0 [overflow-wrap:anywhere]"><span class="sm:hidden rs-muted">{{ __('Sekarang') }}: </span>{{ $item['current'] }}</div>
+                    <div class="sm:col-span-4 mt-1 sm:mt-0 text-sm rs-muted min-w-0 [overflow-wrap:anywhere]">{{ $item['notes'] }}</div>
+                </li>
+                @endforeach
+            </ul>
+        </section>
 
-    <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6">
-        <h2 class="text-lg font-bold text-amber-900 mb-2">Catatan Interpretasi</h2>
-        <p class="text-sm text-amber-800 leading-relaxed">Checklist ini adalah readiness operasional untuk evidence sistem. Kualitas metodologi paper tetap perlu dijelaskan di naskah: sumber dataset, definisi ground truth, skenario black box, profil responden SUS, dan batasan eksperimen.</p>
+        <section class="mt-10 border-l-4 border-[#047857] pl-5 max-w-3xl">
+            <h2 class="font-semibold">{{ __('Cara membaca daftar ini') }}</h2>
+            <p class="mt-1 rs-muted leading-relaxed">{{ __('Daftar ini hanya memeriksa ketersediaan data di sistem. Metodologi tetap perlu dijelaskan di naskah: sumber dataset, definisi ground truth, skenario black box, profil responden SUS, dan batasan eksperimen.') }}</p>
+        </section>
     </div>
 </div>
 @endsection

@@ -3,117 +3,55 @@
 @section('title', __('account.admin.title'))
 
 @section('content')
-<div class="min-h-[70vh] flex items-center justify-center px-4">
-    <div class="w-full max-w-md">
-        <!-- Admin Login Card -->
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-            <!-- Header - Purple Theme for Admin -->
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-700 p-6 sm:p-8 text-center">
-                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                    </svg>
-                </div>
-                <h1 class="text-2xl font-bold text-white mb-2">{{ __('account.admin.title') }}</h1>
-                <p class="text-white/80 text-sm">{{ __('account.admin.subtitle') }}</p>
-            </div>
+@component('partials.rs-auth-shell', [
+    'title' => __('account.admin.heading'),
+    'lead' => __('account.admin.subtitle'),
+    'perks' => false,
+    'seed' => 37,
+])
+<div class="rs-card p-5 sm:p-8">
+    <form method="POST" action="{{ route('admin.login.submit') }}" class="space-y-5">
+        @csrf
 
-            <!-- Form -->
-            <div class="p-5 sm:p-8">
-                @if(session('success'))
-                <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-                    {{ session('success') }}
-                </div>
-                @endif
-
-                <form method="POST" action="{{ route('admin.login.submit') }}">
-                    @csrf
-
-                    <!-- Email -->
-                    <div class="mb-6">
-                        <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
-                            {{ __('account.admin.email') }}
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-                                </svg>
-                            </div>
-                            <input type="email"
-                                   name="email"
-                                   id="email"
-                                   value="{{ old('email') }}"
-                                   class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all @error('email') border-red-500 @enderror"
-                                   placeholder="admin@rutestrip.ai.id"
-                                   autocomplete="email"
-                                   required>
-                        </div>
-                        @error('email')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Password -->
-                    <div class="mb-6">
-                        <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
-                            {{ __('account.login.password') }}
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                            </div>
-                            <input type="password"
-                                   name="password"
-                                   id="password"
-                                   class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all @error('password') border-red-500 @enderror"
-                                   placeholder="••••••••"
-                                   autocomplete="current-password"
-                                   required>
-                        </div>
-                        @error('password')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Remember Me -->
-                    <div class="mb-6">
-                        <label class="flex items-center">
-                            <input type="checkbox" name="remember" class="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500">
-                            <span class="ml-2 text-sm text-slate-600">{{ __('account.login.remember') }}</span>
-                        </label>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit"
-                            class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
-                        <span class="flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                            {{ __('account.admin.submit') }}
-                        </span>
-                    </button>
-                </form>
-
-                <!-- Links -->
-                <div class="mt-6 text-center space-y-2">
-                    <a href="{{ route('login') }}" class="text-sm text-purple-600 hover:text-purple-700 flex items-center justify-center gap-1.5">
-                        <x-icon name="arrow-right" class="w-4 h-4" /> {{ __('account.admin.user_link') }}
-                    </a>
-                    <a href="{{ route('search.index') }}" class="text-sm text-slate-500 hover:text-slate-600 flex items-center justify-center gap-1.5">
-                        <x-icon name="arrow-left" class="w-4 h-4" /> {{ __('account.login.back_home') }}
-                    </a>
-                </div>
-            </div>
+        <div>
+            <label for="email" class="rs-label">{{ __('account.admin.email') }}</label>
+            <input type="email" name="email" id="email" value="{{ old('email') }}"
+                   class="rs-input" autocomplete="email" inputmode="email" required
+                   @error('email') aria-invalid="true" aria-describedby="email-error" @enderror>
+            @error('email')
+                <p id="email-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
         </div>
 
-        <!-- Info -->
-        <p class="mt-6 text-sm text-slate-500 flex items-center justify-center gap-1.5">
-            <x-icon name="lock-closed" class="w-4 h-4 text-slate-400" /> {{ __('account.admin.footer') }}
-        </p>
-    </div>
+        <div>
+            <label for="password" class="rs-label">{{ __('account.login.password') }}</label>
+            <input type="password" name="password" id="password"
+                   class="rs-input" autocomplete="current-password" required
+                   @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+            @error('password')
+                <p id="password-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+            @enderror
+        </div>
+
+        <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
+            <input type="checkbox" name="remember" value="1" class="rs-check" @checked(old('remember'))>
+            <span class="text-[0.9375rem]">{{ __('account.login.remember') }}</span>
+        </label>
+
+        <button type="submit" class="rs-sign w-full text-base">
+            <x-icon name="shield-check" class="w-5 h-5" /> {{ __('account.admin.submit') }}
+        </button>
+    </form>
 </div>
+
+<div class="mt-6 space-y-1 text-[0.9375rem]">
+    <a href="{{ route('login') }}" class="inline-flex items-center gap-2 min-h-[44px] font-semibold text-[#047857] underline decoration-2 underline-offset-4 hover:text-[#053b30]">{{ __('account.admin.user_link') }}</a>
+    <div class="border-t rs-rule pt-2">
+        <a href="{{ route('search.index') }}" class="inline-flex items-center gap-2 min-h-[44px] rs-muted hover:text-[#053b30]">
+            <x-icon name="arrow-left" class="w-4 h-4" /> {{ __('account.login.back_home') }}
+        </a>
+    </div>
+    <p class="flex items-center gap-2 pt-2 text-sm rs-muted"><x-icon name="lock-closed" class="w-4 h-4 shrink-0" /> {{ __('account.admin.footer') }}</p>
+</div>
+@endcomponent
 @endsection
