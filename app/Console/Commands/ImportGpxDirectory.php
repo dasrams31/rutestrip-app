@@ -16,7 +16,9 @@ use Illuminate\Support\Str;
  *  - exact duplicates (same file hash) or the same track already in the DB
  *    (name match, or distance within 3% and elevation gain within 5%);
  *  - compilations of several routes in one file ("semua jalur", "4 jalur");
- *  - GPX without elevation data or longer than 60 km (vehicle segments).
+ *  - GPX without elevation data or longer than 60 km (vehicle segments);
+ *  - noisy elevation: total gain above 1.8x the (max - min) elevation range,
+ *    or an average grade above 35%.
  */
 class ImportGpxDirectory extends Command
 {
@@ -27,6 +29,8 @@ class ImportGpxDirectory extends Command
     protected $description = 'Import a folder of GPX files into hiking_routes, skipping duplicates and unreliable tracks';
 
     private const MAX_HIKE_KM = 60.0;
+    private const MAX_GAIN_TO_RANGE = 1.8;
+    private const MAX_GRADE_PCT = 35.0;
 
     public function handle(PythonProcessorService $python, GpxVersionService $versions): int
     {
@@ -82,6 +86,14 @@ class ImportGpxDirectory extends Command
 
             if ($gain <= 0 || $km <= 0 || $km > self::MAX_HIKE_KM) {
                 $this->line(sprintf('skip  %s: unreliable stats (%.1f km, %d m gain)', $filename, $km, $gain));
+                $skipped++;
+                continue;
+            }
+
+            $grade = (float) ($result['average_grade_pct'] ?? 0);
+            $range = preg_match('/dari (\d+)m\s+hingga (\d+)m/', $result['narrative_text'] ?? '', $m) ? max(0, (int) $m[2] - (int) $m[1]) : 0;
+            if ($grade > self::MAX_GRADE_PCT || ($range > 0 && $gain > self::MAX_GAIN_TO_RANGE * $range)) {
+                $this->line(sprintf('skip  %s: noisy elevation (%d m gain over a %d m range, %.1f%%)', $filename, $gain, $range, $grade));
                 $skipped++;
                 continue;
             }

@@ -21,11 +21,14 @@ class RouteSearchService
     public const W_ASPECT = 0.6;
     public const W_ATTR = 0.45;
     public const STEEP_GRADE_PCT = 15.0;
+    public const VERY_STEEP_GRADE_PCT = 30.0;
     public const MAX_HIKE_KM = 60.0;
     public const W_NAME = 0.35;
 
     private const INTENT_WORDS = [
-        'easy'  => ['landai', 'mudah', 'pemula', 'santai', 'ringan', 'keluarga', 'aman', 'pertama', 'awam', 'anak'],
+        // "landai" = gentle slope; "pemula/mudah" = little climbing, short duration
+        'gentle' => ['landai', 'datar', 'melandai'],
+        'easy'  => ['mudah', 'pemula', 'santai', 'ringan', 'keluarga', 'aman', 'pertama', 'awam', 'anak'],
         'hard'  => ['curam', 'sulit', 'menantang', 'ekstrem', 'ekstrim', 'berat', 'terjal', 'berpengalaman', 'expert', 'teknis'],
         'short' => ['pendek', 'singkat', 'cepat', 'tektok', 'sebentar', 'dekat'],
         'long'  => ['panjang', 'lama', 'ekspedisi', 'jauh', 'lintas', 'traverse'],
@@ -33,7 +36,7 @@ class RouteSearchService
 
     private const NEGATIONS = ['tidak', 'bukan', 'jangan', 'tanpa', 'ga', 'gak', 'nggak', 'enggak', 'kurang'];
 
-    private const OPPOSITE = ['easy' => 'hard', 'hard' => 'easy', 'short' => 'long', 'long' => 'short'];
+    private const OPPOSITE = ['gentle' => 'hard', 'easy' => 'hard', 'hard' => 'gentle', 'short' => 'long', 'long' => 'short'];
 
     private const NAME_STOPWORDS = ['mt', 'mount', 'gunung', 'via', 'to', 'jalur', 'the', 'and', 'dan', 'semua', 'test', 'trail', 'python'];
 
@@ -104,8 +107,8 @@ class RouteSearchService
             }
         }
 
-        if (isset($intents['easy'], $intents['hard'])) {
-            unset($intents['easy'], $intents['hard']);
+        if (isset($intents['hard']) && (isset($intents['gentle']) || isset($intents['easy']))) {
+            unset($intents['gentle'], $intents['easy'], $intents['hard']);
         }
         if (isset($intents['short'], $intents['long'])) {
             unset($intents['short'], $intents['long']);
@@ -133,9 +136,10 @@ class RouteSearchService
     }
 
     /**
-     * "easy" (landai/mudah/pemula) mixes grade 40%, elevation gain 30% and
-     * duration 30% — a 40 km route can average 6% and still be a long climb —
-     * and halves routes averaging >= 15%. "hard" is grade 60%, gain 20%,
+     * "gentle" (landai) mixes grade 40%, elevation gain 30% and duration 30% —
+     * a 40 km route can average 6% and still be a long climb — and halves
+     * routes averaging >= 15%. "easy" (pemula/mudah) is grade 20%, gain 40%,
+     * duration 40%, halving routes >= 30%. "hard" is grade 60%, gain 20%,
      * duration 20%.
      */
     private function attributeScore(array $intents, HikingRoute $route, array $grades, array $durations, array $gains): float
@@ -153,7 +157,8 @@ class RouteSearchService
         $parts = [];
         foreach ($intents as $intent) {
             $parts[] = match ($intent) {
-                'easy'  => (0.4 * (1 - $g) + 0.3 * (1 - $e) + 0.3 * (1 - $d)) * ($grade >= self::STEEP_GRADE_PCT ? 0.5 : 1.0),
+                'gentle' => (0.4 * (1 - $g) + 0.3 * (1 - $e) + 0.3 * (1 - $d)) * ($grade >= self::STEEP_GRADE_PCT ? 0.5 : 1.0),
+                'easy'  => (0.2 * (1 - $g) + 0.4 * (1 - $e) + 0.4 * (1 - $d)) * ($grade >= self::VERY_STEEP_GRADE_PCT ? 0.5 : 1.0),
                 'hard'  => 0.6 * $g + 0.2 * $e + 0.2 * $d,
                 'short' => 1 - $d,
                 'long'  => $d,

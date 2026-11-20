@@ -26,7 +26,10 @@ W_ATTR = 0.45        # share of attribute match when an intent is detected
 W_NAME = 0.35        # share of name match when a mountain/basecamp is named
 
 INTENT_WORDS = {
-    "easy": {"landai", "mudah", "pemula", "santai", "ringan", "keluarga", "aman", "pertama", "awam", "anak"},
+    # "landai" = gentle slope; "pemula/mudah" = little climbing and short duration
+    # (a short steep hill like Andong is beginner-friendly but not "landai").
+    "gentle": {"landai", "datar", "melandai"},
+    "easy": {"mudah", "pemula", "santai", "ringan", "keluarga", "aman", "pertama", "awam", "anak"},
     "hard": {"curam", "sulit", "menantang", "ekstrem", "ekstrim", "berat", "terjal", "berpengalaman", "expert", "teknis"},
     "short": {"pendek", "singkat", "cepat", "tektok", "sebentar", "dekat"},
     "long": {"panjang", "lama", "ekspedisi", "jauh", "lintas", "traverse"},
@@ -71,12 +74,12 @@ def query_text(query: str) -> str:
 
 
 NEGATIONS = {"tidak", "bukan", "jangan", "tanpa", "ga", "gak", "nggak", "enggak", "kurang"}
-OPPOSITE = {"easy": "hard", "hard": "easy", "short": "long", "long": "short"}
+OPPOSITE = {"gentle": "hard", "easy": "hard", "hard": "gentle", "short": "long", "long": "short"}
 
 
 def detect_intents(query: str) -> set:
     """Intent words, with a negation in the previous two words flipping the intent
-    ("tidak terlalu curam" -> easy)."""
+    ("tidak terlalu curam" -> gentle)."""
     words = re.findall(r"[a-z]+", (query or "").lower())
     intents = set()
     for i, word in enumerate(words):
@@ -84,8 +87,8 @@ def detect_intents(query: str) -> set:
             if word in vocab:
                 negated = any(w in NEGATIONS for w in words[max(0, i - 2):i])
                 intents.add(OPPOSITE[intent] if negated else intent)
-    if "easy" in intents and "hard" in intents:
-        intents -= {"easy", "hard"}
+    if "hard" in intents and intents & {"gentle", "easy"}:
+        intents -= {"gentle", "easy", "hard"}
     if "short" in intents and "long" in intents:
         intents -= {"short", "long"}
     return intents
@@ -99,7 +102,8 @@ def _percentile(value: float, values: list) -> float:
     return (below + 0.5 * equal) / len(values)
 
 
-STEEP_GRADE_PCT = 15.0   # narrative: >= 15% is "sangat curam", never "landai"/"pemula"
+STEEP_GRADE_PCT = 15.0   # narrative: >= 15% is "sangat curam", never "landai"
+VERY_STEEP_GRADE_PCT = 30.0  # too steep to recommend to beginners
 MAX_HIKE_KM = 60.0       # longer tracks almost always include road/vehicle segments
 
 
@@ -114,10 +118,12 @@ def stats_reliable(route: dict) -> bool:
 def attribute_score(intents: set, route: dict, all_routes: list) -> float:
     """How well the route's GPX statistics fit the intent, as a 0..1 percentile mix.
 
-    "easy" (landai/mudah/pemula/...) is not only a low average grade: a 40 km
-    route can average 6% and still be a multi-day climb. It combines grade (40%),
-    total elevation gain (30%) and Naismith duration (30%), and routes averaging
-    >= 15% are halved. "hard" weights grade 60%, gain 20%, duration 20%.
+    "gentle" (landai) is not only a low average grade: a 40 km route can average
+    6% and still be a multi-day climb. It combines grade (40%), total elevation
+    gain (30%) and Naismith duration (30%); routes averaging >= 15% are halved.
+    "easy" (pemula/mudah/santai) weights gain (40%) and duration (40%) over grade
+    (20%); routes averaging >= 30% are halved.
+    "hard" weights grade 60%, gain 20%, duration 20%.
     """
     if not intents:
         return 0.0
@@ -131,9 +137,14 @@ def attribute_score(intents: set, route: dict, all_routes: list) -> float:
     d = _percentile(float(route.get("naismith_duration_hour") or 0), durations)
     e = _percentile(float(route.get("elevation_gain_m") or 0), gains)
     parts = []
-    if "easy" in intents:
-        easy = 0.4 * (1 - g) + 0.3 * (1 - e) + 0.3 * (1 - d)
+    if "gentle" in intents:
+        gentle = 0.4 * (1 - g) + 0.3 * (1 - e) + 0.3 * (1 - d)
         if grade >= STEEP_GRADE_PCT:
+            gentle *= 0.5
+        parts.append(gentle)
+    if "easy" in intents:
+        easy = 0.2 * (1 - g) + 0.4 * (1 - e) + 0.4 * (1 - d)
+        if grade >= VERY_STEEP_GRADE_PCT:
             easy *= 0.5
         parts.append(easy)
     if "hard" in intents:

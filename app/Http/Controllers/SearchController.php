@@ -75,7 +75,7 @@ class SearchController extends Controller
             // Be explicit when the user asks for gentle/beginner routes but the
             // dataset has none below the narrative's "landai" threshold (5%).
             $notice = null;
-            if (in_array('easy', $this->routeSearch->detectIntents($query), true)
+            if (in_array('gentle', $this->routeSearch->detectIntents($query), true)
                 && $routes->min('average_grade_pct') >= 5) {
                 $notice = 'Belum ada jalur dengan kemiringan rata-rata di bawah 5% (kategori landai) di database. '
                     . 'Ditampilkan jalur paling ringan berdasarkan kemiringan, total tanjakan, dan durasi.';
