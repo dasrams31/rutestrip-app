@@ -82,7 +82,7 @@
                             </span>
                             @endif
                             <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">{{ $route->name }}</h1>
-                            <p class="text-emerald-100 font-medium">Diupload pada {{ $route->created_at->format('d M Y, H:i') }}</p>
+                            <p class="text-emerald-100 font-medium">Diunggah oleh <span class="font-bold text-white">{{ $route->uploader_name }}</span> pada {{ $route->created_at->format('d M Y, H:i') }}</p>
                         </div>
                     </div>
                 </div>

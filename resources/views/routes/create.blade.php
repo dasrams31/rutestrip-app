@@ -18,6 +18,25 @@
     </div>
 
     <!-- Upload Form -->
+    @guest
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Masuk dulu untuk mengunggah GPX</h2>
+        <p class="text-slate-600 mb-6 max-w-md mx-auto">
+            Setiap jalur yang diunggah akan ditandai dengan nama pengunggahnya. Silakan masuk atau daftar akun gratis,
+            lalu Anda akan kembali ke halaman ini.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="{{ route('login') }}" class="px-6 py-3 rounded-xl bg-mountain-gradient text-white font-semibold shadow-lg hover:shadow-xl transition-all">Masuk</a>
+            <a href="{{ route('register') }}" class="px-6 py-3 rounded-xl border border-emerald-200 text-emerald-700 font-semibold hover:bg-emerald-50 transition-all">Daftar Akun</a>
+        </div>
+    </div>
+    @else
+    <p class="mb-4 text-sm text-slate-500">Jalur yang Anda unggah akan ditandai: <span class="font-semibold text-slate-700">Diunggah oleh {{ auth()->user()->name }}</span></p>
     <div class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
         <div class="bg-mountain-gradient p-6">
             <div class="flex items-center space-x-3">
@@ -164,8 +183,10 @@
             </button>
         </form>
     </div>
+    @endguest
 </div>
 
+@auth
 <script>
     // File input handling
     const fileInput = document.getElementById('gpx_file');
@@ -219,4 +240,5 @@
         fileInput.dispatchEvent(new Event('change'));
     }
 </script>
+@endauth
 @endsection

@@ -19,11 +19,12 @@ Route::get('/', [SearchController::class, 'index'])->name('home');
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 
-// GPX upload (single & batch) changes the public dataset: admins only.
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/routes/create', [RouteController::class, 'create'])->name('routes.create');
+// GPX upload (single & batch): the pages are public (guests are asked to log in),
+// submitting requires a logged-in user and is rate limited. The uploader is recorded.
+Route::get('/routes/create', [RouteController::class, 'create'])->name('routes.create');
+Route::get('/routes-batch', [RouteController::class, 'createBatch'])->name('routes.batch');
+Route::middleware(['auth', 'throttle:10,1'])->group(function () {
     Route::post('/routes', [RouteController::class, 'store'])->name('routes.store');
-    Route::get('/routes-batch', [RouteController::class, 'createBatch'])->name('routes.batch');
     Route::post('/routes-batch', [RouteController::class, 'storeBatch'])->name('routes.batch.store');
 });
 

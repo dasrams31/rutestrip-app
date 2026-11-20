@@ -28,6 +28,8 @@ md(r"""
 
 Notebook ini menjalankan **kode yang sama dengan website** (`python/processor.py` dan `python/search_scoring.py` dari repository `dasrams31/rutestrip-app`), sehingga hasilnya konsisten dengan aplikasi yang berjalan.
 
+Link notebook ini: https://s.peka.ai.id/rutestrip-colab
+
 **Alur sistem**
 1. **Data GPX** → statistik jalur (jarak 3D, total tanjakan, estimasi waktu Naismith, kemiringan rata-rata, elevasi min/maks).
 2. **Tingkat kesulitan** dari profil jalur (Shenandoah difficulty rating + faktor kecuraman & ketinggian).

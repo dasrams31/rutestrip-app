@@ -47,17 +47,39 @@ class GpxUploadTest extends TestCase
         return User::factory()->create(['role' => 'admin']);
     }
 
-    public function test_guests_and_regular_users_cannot_upload(): void
+    public function test_guests_see_a_login_prompt_and_cannot_submit(): void
     {
-        $this->get(route('routes.create'))->assertRedirect(route('login'));
+        $this->get(route('routes.create'))->assertOk()->assertSee('Masuk dulu untuk mengunggah GPX')->assertDontSee('name="gpx_file"', false);
+        $this->get(route('routes.batch'))->assertOk()->assertSee('Masuk dulu untuk mengunggah GPX');
+        $this->assertSame(route('routes.batch'), session('url.intended'));
+
         $this->post(route('routes.store'), ['name' => 'X', 'gpx_file' => $this->gpx()])->assertRedirect(route('login'));
         $this->post(route('routes.batch.store'), ['gpx_files' => [$this->gpx()]])->assertRedirect(route('login'));
-
-        $user = User::factory()->create(['role' => 'user']);
-        $this->actingAs($user)->get(route('routes.batch'))->assertForbidden();
-        $this->actingAs($user)->post(route('routes.store'), ['name' => 'X', 'gpx_file' => $this->gpx()])->assertForbidden();
-
         $this->assertSame(0, HikingRoute::count());
+    }
+
+    public function test_regular_user_can_upload_and_is_shown_as_uploader(): void
+    {
+        $user = User::factory()->create(['role' => 'user', 'name' => 'Rama Pendaki']);
+
+        $this->actingAs($user)->get(route('routes.create'))->assertOk()->assertSee('name="gpx_file"', false);
+        $this->actingAs($user)
+            ->post(route('routes.store'), ['name' => 'Gunung Andong', 'gpx_file' => $this->gpx()])
+            ->assertRedirect(route('routes.index'));
+
+        $route = HikingRoute::firstOrFail();
+        $this->assertSame($user->id, $route->uploaded_by);
+        $this->assertSame($user->id, $route->gpxVersions()->first()->uploaded_by);
+
+        $this->get(route('routes.show', $route))->assertOk()->assertSee('Diunggah oleh')->assertSee('Rama Pendaki');
+        $this->get(route('routes.index'))->assertOk()->assertSee('Rama Pendaki');
+    }
+
+    public function test_routes_without_uploader_are_credited_to_the_team(): void
+    {
+        $route = HikingRoute::create(['name' => 'Mt. Semeru', 'gpx_file_path' => 'gpx_files/x.gpx']);
+
+        $this->assertSame('Tim RuteStrip', $route->uploader_name);
     }
 
     public function test_admin_single_upload_creates_route_version_and_safe_file(): void

@@ -22,6 +22,25 @@
         </p>
     </div>
 
+    <!-- Search again (top) -->
+    <form action="{{ route('search.submit') }}" method="POST" class="mb-8 flex flex-col sm:flex-row gap-3 bg-white rounded-2xl p-4 shadow-lg border border-slate-100">
+        @csrf
+        <label for="query-top" class="sr-only">Cari jalur pendakian</label>
+        <input type="text"
+               id="query-top"
+               name="query"
+               value="{{ $query }}"
+               placeholder="Cari lagi, misalnya: jalur landai untuk pemula"
+               class="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+               required
+               minlength="3">
+        <button type="submit"
+                class="px-6 py-3 bg-mountain-gradient text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Cari
+        </button>
+    </form>
+
     @if(isset($message))
     <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 flex items-center space-x-4">
         <div class="flex-shrink-0">
@@ -144,6 +163,10 @@
 
             <!-- Card Body with Stats -->
             <div class="p-6">
+                <p class="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500" title="Pengunggah jalur">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    Diunggah oleh <span class="font-semibold text-slate-700">{{ $route->uploader_name }}</span>
+                </p>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <!-- Distance -->
                     <div class="bg-slate-50 rounded-xl p-3 text-center">
@@ -240,22 +263,5 @@
     </div>
     @endif
 
-    <!-- New Search -->
-    <div class="mt-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-100">
-        <h3 class="text-lg font-semibold text-slate-800 mb-4">Cari Lagi</h3>
-        <form action="{{ route('search.submit') }}" method="POST" class="flex flex-col sm:flex-row gap-4">
-            @csrf
-            <input type="text"
-                   name="query"
-                   placeholder="Masukkan deskripsi jalur yang diinginkan..."
-                   class="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                   required
-                   minlength="3">
-            <button type="submit"
-                    class="px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all">
-                Cari
-            </button>
-        </form>
-    </div>
 </div>
 @endsection

@@ -235,8 +235,7 @@
                     <a href="{{ route('login') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Masuk</a>
                     <a href="{{ route('register') }}" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Daftar</a>
                     @endauth
-                    <!-- Upload Dropdown (admins only) -->
-                    @if(auth()->user()?->isAdmin())
+                    <!-- Upload Dropdown -->
                     <div class="relative ml-2" x-data="{ open: false }">
                         <button @click="open = !open" @click.away="open = false"
                                 class="px-4 py-2 bg-mountain-gradient text-white rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center space-x-2
@@ -274,7 +273,6 @@
                             </a>
                         </div>
                     </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -390,7 +388,6 @@
                                 Semua Rute
                             </a>
                         </li>
-                        @if(auth()->user()?->isAdmin())
                         <li>
                             <a href="{{ route('routes.create') }}" class="text-slate-400 hover:text-emerald-400 flex items-center transition-colors duration-200">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,7 +396,6 @@
                                 Upload GPX
                             </a>
                         </li>
-                        @endif
                         <li>
                             <a href="{{ route('architecture') }}" class="text-slate-400 hover:text-emerald-400 flex items-center transition-colors duration-200">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

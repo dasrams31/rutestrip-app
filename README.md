@@ -2,6 +2,9 @@
 
 Live: https://rutestrip.ai.id (web utama) dan https://chat.rutestrip.ai.id (AI webchat).
 
+Notebook Google Colab (metode & evaluasi): https://s.peka.ai.id/rutestrip-colab
+— sumbernya `python/RuteStrip_Colab.ipynb`, dibuat ulang dengan `python python/tools/build_colab_notebook.py python/RuteStrip_Colab.ipynb`.
+
 RuteStrip adalah aplikasi Laravel untuk manajemen, pencarian, dan rekomendasi jalur pendakian berbasis file GPX. Aplikasi memakai SBERT untuk embedding/search semantic, Google Gemini untuk chatbot RAG, serta modul provenance GPX (versioning dan verifikasi hash SHA-256).
 
 ## Fitur
@@ -42,6 +45,12 @@ Link "AI Chat" di navbar Laravel memakai `WEBCHAT_URL` (default `https://chat.ru
 - Sebagian GPX dibuat dari relasi jalur pendakian OpenStreetMap dengan
   `python/tools/osm_hiking_to_gpx.py` (elevasi SRTM 30 m via OpenTopoData). Data tersebut
   &copy; OpenStreetMap contributors, lisensi ODbL; daftar sumber ada di `webchat-api/gpx_db/OSM_SOURCES.md`.
+
+## Upload GPX
+
+- Halaman upload single (`/routes/create`) dan batch (`/routes-batch`) bisa dibuka siapa saja; pengunjung yang belum login diminta masuk/daftar dulu dan setelah login kembali ke halaman upload.
+- Mengirim file butuh akun (user biasa maupun admin), dibatasi 10 kiriman per menit, dan setiap jalur menyimpan pengunggahnya (`hiking_routes.uploaded_by`) yang tampil sebagai "Diunggah oleh …". Jalur tanpa pengunggah ditampilkan sebagai "Tim RuteStrip".
+- File harus XML dengan root `<gpx>` dan disimpan sebagai `.gpx` dengan nama acak; Caddy menyajikan `/storage/gpx_files/*` sebagai unduhan.
 
 ## SEO
 

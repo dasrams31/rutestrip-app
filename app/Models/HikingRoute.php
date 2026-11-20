@@ -42,6 +42,7 @@ class HikingRoute extends Model
         'best_season',
         'tips',
         'image_path',
+        'uploaded_by',
         'route_coordinates',
         'gpx_file_path',
         'distance_km',
@@ -165,6 +166,19 @@ class HikingRoute extends Model
     /**
      * Relationships
      */
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Name shown on the "Diunggah oleh" tag; routes imported by the team have no uploader.
+     */
+    public function getUploaderNameAttribute(): string
+    {
+        return $this->uploader?->name ?: 'Tim RuteStrip';
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class);

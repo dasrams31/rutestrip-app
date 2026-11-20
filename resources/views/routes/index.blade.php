@@ -14,7 +14,6 @@
             <h1 class="text-3xl font-bold text-slate-800 mb-2">Semua Rute Pendakian</h1>
             <p class="text-slate-600">Database jalur pendakian yang telah diupload</p>
         </div>
-        @if(auth()->user()?->isAdmin())
         <a href="{{ route('routes.create') }}"
            class="mt-4 md:mt-0 inline-flex items-center px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +21,6 @@
             </svg>
             Upload GPX Baru
         </a>
-        @endif
     </div>
 
     @php
@@ -51,7 +49,6 @@
         </svg>
         <h3 class="text-xl font-semibold text-slate-600 mb-2">Belum Ada Rute</h3>
         <p class="text-slate-500 mb-6">Mulai dengan mengupload file GPX pertama Anda.</p>
-        @if(auth()->user()?->isAdmin())
         <a href="{{ route('routes.create') }}"
            class="inline-flex items-center px-6 py-3 bg-mountain-gradient text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +56,6 @@
             </svg>
             Upload GPX Sekarang
         </a>
-        @endif
     </div>
     @else
     <!-- Routes Grid -->
@@ -115,6 +111,10 @@
 
             <!-- Card Body -->
             <div class="p-6">
+                <p class="mb-3 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500" title="Pengunggah jalur">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    Diunggah oleh <span class="font-semibold text-slate-700">{{ $route->uploader_name }}</span>
+                </p>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <!-- Distance -->
                     <div class="text-center">

@@ -31,7 +31,7 @@ class RouteController extends Controller
     {
         $filter = $request->query('provenance_filter');
 
-        $routesQuery = HikingRoute::with('activeGpxVersion')->latest();
+        $routesQuery = HikingRoute::with(['activeGpxVersion', 'uploader'])->latest();
 
         match ($filter) {
             'invalid' => $routesQuery->whereHas('activeGpxVersion', fn($query) => $query->where('verification_status', 'invalid')),
@@ -49,6 +49,8 @@ class RouteController extends Controller
      */
     public function create()
     {
+        $this->rememberUploadPage();
+
         return view('routes.create');
     }
 
@@ -94,6 +96,7 @@ class RouteController extends Controller
                 'name'                   => $request->name,
                 'description'            => $request->description,
                 'gpx_file_path'          => $filePath,
+                'uploaded_by'            => Auth::id(),
                 'route_coordinates'      => $result['route_coordinates'] ?? null,
                 'distance_km'            => $result['distance_km'] ?? null,
                 'elevation_gain_m'       => $result['elevation_gain_m'] ?? null,
@@ -188,7 +191,19 @@ class RouteController extends Controller
      */
     public function createBatch()
     {
+        $this->rememberUploadPage();
+
         return view('routes.batch');
+    }
+
+    /**
+     * Guests see a "login to upload" card; send them back here after login.
+     */
+    private function rememberUploadPage(): void
+    {
+        if (Auth::guest()) {
+            session()->put('url.intended', url()->current());
+        }
     }
 
     /**
@@ -242,6 +257,7 @@ class RouteController extends Controller
                 $route = HikingRoute::create([
                     'name'                   => $routeName,
                     'gpx_file_path'          => $filePath,
+                    'uploaded_by'            => Auth::id(),
                     'route_coordinates'      => $result['route_coordinates'] ?? null,
                     'distance_km'            => $result['distance_km'] ?? null,
                     'elevation_gain_m'       => $result['elevation_gain_m'] ?? null,
