@@ -46,13 +46,19 @@ class HikingRoute extends Model
     protected static function booted(): void
     {
         // Keep search embeddings (name + narrative + aspects) in sync whenever the
-        // text that feeds them changes. Skipped in unit tests (no Python there).
-        static::saved(function (HikingRoute $route) {
-            if (app()->runningUnitTests() || ! config('services.python.auto_index', true)) {
-                return;
-            }
-            if ($route->wasRecentlyCreated || $route->wasChanged(['name', 'narrative_text', 'description'])) {
+        // text that feeds them changes. Disabled in tests via ROUTE_SEARCH_AUTO_INDEX=false.
+        // (wasRecentlyCreated stays true on the same instance, so "created" and
+        // "updated" are handled separately.)
+        $index = function (HikingRoute $route) {
+            if (config('services.python.auto_index', true)) {
                 app(\App\Services\RouteSearchIndexer::class)->index($route);
+            }
+        };
+
+        static::created($index);
+        static::updated(function (HikingRoute $route) use ($index) {
+            if ($route->wasChanged(['name', 'narrative_text', 'description'])) {
+                $index($route);
             }
         });
     }

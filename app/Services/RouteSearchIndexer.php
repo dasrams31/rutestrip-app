@@ -56,15 +56,18 @@ class RouteSearchIndexer
                 continue;
             }
 
+            // saveQuietly: the HikingRoute "saved" observer triggers indexing, so a
+            // normal save here would re-index forever (wasRecentlyCreated stays true).
             $route->forceFill([
                 'embedding_text'          => $item['embedding_text'] ?? null,
                 'sbert_embedding'         => $item['embedding'],
                 'sbert_aspect_embeddings' => $item['aspect_embeddings'] ?? [],
-            ])->save();
+            ])->saveQuietly();
             $updated++;
         }
 
         Cache::forget('routes_with_embeddings');
+        Cache::forget('routes_with_embeddings_chat');
 
         return $updated;
     }
