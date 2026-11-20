@@ -107,8 +107,12 @@ class ImportGpxDirectory extends Command
                 continue;
             }
 
-            $duplicate = collect($known)->first(fn($k) => $k['name'] === $this->nameKey($name)
-                || (abs($k['km'] - $km) <= 0.03 * max($k['km'], $km) && abs($k['gain'] - $gain) <= 0.05 * max($k['gain'], $gain, 1)));
+            // Same name, or near-identical stats on the same mountain (shared name word).
+            $key       = $this->nameKey($name);
+            $duplicate = collect($known)->first(fn($k) => $k['name'] === $key
+                || (array_intersect(explode(' ', $k['name']), explode(' ', $key))
+                    && abs($k['km'] - $km) <= 0.03 * max($k['km'], $km)
+                    && abs($k['gain'] - $gain) <= 0.05 * max($k['gain'], $gain, 1)));
             if ($duplicate) {
                 $this->line("skip  {$filename}: same track as \"{$duplicate['label']}\"");
                 $skipped++;
@@ -157,9 +161,11 @@ class ImportGpxDirectory extends Command
         $name = preg_replace('/\s*\(\d+\)$/', '', $name);                         // "(1)" copies
         $name = preg_replace('/^\s*(mt\.?|mount)\s+/i', 'Gunung ', $name);
         $name = preg_replace('/\s+-\s+/', ' via ', $name, 1);                     // "Agung - Besakih"
-        $name = preg_replace('/\bvia\b/i', 'via', Str::title(Str::squish($name)));
+        // Capitalise each word but keep existing capitals (acronyms like "PGPI")
+        $name = implode(' ', array_map(fn($w) => Str::ucfirst($w), explode(' ', Str::squish($name))));
+        $name = preg_replace('/\bvia\b/i', 'via', $name);
 
-        return Str::startsWith($name, ['Gunung ', 'Bukit ']) ? $name : 'Gunung ' . $name;
+        return Str::startsWith($name, ['Gunung ', 'Bukit ', 'Puncak ']) ? $name : 'Gunung ' . $name;
     }
 
     private function nameKey(?string $name): string
