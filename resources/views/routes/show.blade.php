@@ -58,7 +58,8 @@
     </div>
 
     <!-- MAIN GRID 2 COLUMNS FOR DESKTOP -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+         @if($trailPoints) x-data="routeConditions(@js(route('routes.conditions', $route)), @js($trailPoints))" x-init="load()" @endif>
         
         <!-- ============================== -->
         <!-- LEFT COLUMN: MAIN CONTENT      -->
@@ -180,13 +181,68 @@
                         {{ $route->narrative_text ?? 'Belum ada deskripsi komprehensif.' }}
                     </p>
                 </div>
+
+                @if($trailPoints)
+                <!-- Elevation profile (DEM heights, loaded with the conditions endpoint) -->
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 flex flex-col h-full min-w-0 {{ $route->description ? 'md:col-span-2' : '' }}">
+                    <h3 class="font-bold text-slate-800 mb-1 flex items-center">
+                        <x-icon name="chart-bar" class="w-5 h-5 text-emerald-500 mr-2 shrink-0" />
+                        Profil Elevasi
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-3">Ketinggian sepanjang jalur dari basecamp ke puncak.</p>
+
+                    <div class="flex-1 min-h-[150px] flex flex-col">
+                        <div x-show="loading" class="flex-1 rounded-2xl bg-slate-100 animate-pulse"></div>
+                        <template x-if="!loading && chart()">
+                            <svg :viewBox="'0 0 ' + chart().w + ' ' + chart().h" class="w-full h-auto" role="img"
+                                 :aria-label="'Profil elevasi dari ' + num(chart().min) + ' sampai ' + num(chart().max) + ' mdpl'">
+                                <defs>
+                                    <linearGradient id="elev-fill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>
+                                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.03"/>
+                                    </linearGradient>
+                                </defs>
+                                <template x-for="t in chart().ticks" :key="t.y">
+                                    <g>
+                                        <line :x1="chart().left" :x2="chart().w" :y1="t.y" :y2="t.y" stroke="#e2e8f0" stroke-dasharray="3 3"/>
+                                        <text :x="chart().left - 6" :y="t.y + 4" text-anchor="end" font-size="11" fill="#64748b" x-text="num(t.v)"></text>
+                                    </g>
+                                </template>
+                                <path :d="chart().area" fill="url(#elev-fill)"/>
+                                <path :d="chart().line" fill="none" stroke="#059669" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+                                <circle :cx="chart().start.x" :cy="chart().start.y" r="4.5" fill="#10b981" stroke="#fff" stroke-width="2"/>
+                                <circle :cx="chart().top.x" :cy="chart().top.y" r="4.5" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+                                <text :x="chart().left" :y="chart().h - 2" font-size="11" fill="#64748b">0 km</text>
+                                <text :x="chart().w" :y="chart().h - 2" font-size="11" fill="#64748b" text-anchor="end" x-text="num(chart().km, 1) + ' km'"></text>
+                            </svg>
+                        </template>
+                        <p x-show="!loading && !chart()" x-cloak class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            Profil elevasi belum tersedia. Coba muat ulang halaman nanti.
+                        </p>
+                    </div>
+
+                    <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
+                        <div class="rounded-xl bg-slate-50 px-2 py-2">
+                            <dt class="text-[11px] text-slate-500">Terendah</dt>
+                            <dd class="font-bold text-slate-800 text-sm" x-text="chart() ? num(chart().min) + ' m' : '–'">–</dd>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-2 py-2">
+                            <dt class="text-[11px] text-slate-500">Tertinggi</dt>
+                            <dd class="font-bold text-slate-800 text-sm" x-text="chart() ? num(chart().max) + ' m' : '–'">–</dd>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 px-2 py-2">
+                            <dt class="text-[11px] text-slate-500">Total naik</dt>
+                            <dd class="font-bold text-slate-800 text-sm">{{ number_format($route->elevation_gain_m, 0, ',', '.') }} m</dd>
+                        </div>
+                    </dl>
+                    <p class="text-[11px] text-slate-400 mt-2">Ketinggian dari model elevasi Open-Meteo (DEM 90 m) atau data GPX.</p>
+                </div>
+                @endif
             </div>
 
             @if($trailPoints)
             <!-- 3b. BASECAMP, LOCATION & LIVE CONDITIONS (location + weather load after the page) -->
-            <div class="space-y-6"
-                 x-data="routeConditions(@js(route('routes.conditions', $route)), @js($trailPoints))"
-                 x-init="load()">
+            <div class="space-y-6">
 
                 <!-- Info Basecamp & Lokasi -->
                 <section id="info-basecamp" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
@@ -258,78 +314,6 @@
                     </div>
                 </section>
 
-                <!-- Kondisi Terkini (Open-Meteo) -->
-                <section id="kondisi-terkini" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden" aria-live="polite">
-                    <div class="p-4 sm:p-6 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
-                        <h3 class="font-bold text-slate-800 flex items-center">
-                            <x-icon name="cloud" class="w-5 h-5 text-sky-500 mr-2 shrink-0" />
-                            Kondisi Terkini
-                        </h3>
-                        <span x-show="weather" x-cloak class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200" x-text="weather ? 'Diperbarui ' + weather.updated_label : ''"></span>
-                    </div>
-
-                    <div class="p-4 sm:p-6 space-y-4">
-                        <div x-show="!loading && !weather" x-cloak class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                            Data cuaca tidak tersedia saat ini. Coba muat ulang halaman beberapa saat lagi.
-                        </div>
-
-                        <div x-show="loading || weather" class="grid sm:grid-cols-2 gap-4">
-                            @foreach(['basecamp' => 'Basecamp', 'summit' => 'Puncak'] as $side => $label)
-                            <div class="rounded-2xl border border-slate-100 bg-gradient-to-br from-sky-50 to-white p-4 min-w-0">
-                                <div class="flex items-baseline justify-between gap-2">
-                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $label }}</p>
-                                    <p class="text-xs text-slate-500" x-text="ele(points.{{ $side }})"></p>
-                                </div>
-                                <div class="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
-                                    <span x-show="loading" class="inline-block h-9 w-20 rounded-lg bg-slate-200 animate-pulse"></span>
-                                    <p x-show="!loading" x-cloak class="text-4xl font-extrabold text-slate-800 leading-none" x-text="num(w('{{ $side }}', 'temperature_c')) + '°C'"></p>
-                                    <p x-show="!loading" x-cloak class="text-sm font-semibold text-slate-600 pb-0.5" x-text="w('{{ $side }}', 'weather_text') || ''"></p>
-                                </div>
-                                <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-                                    @foreach([
-                                        'Terasa seperti' => "num(w('$side', 'apparent_temperature_c')) + '°C'",
-                                        'Angin' => "num(w('$side', 'wind_speed_kmh')) + ' km/jam' + (w('$side', 'wind_direction') ? ' dari ' + w('$side', 'wind_direction') : '')",
-                                        'Kelembapan' => "num(w('$side', 'humidity_pct')) + '%'",
-                                        'Curah hujan' => "num(w('$side', 'precipitation_mm'), 1) + ' mm'",
-                                    ] as $term => $expr)
-                                    <div class="min-w-0">
-                                        <dt class="text-[11px] text-slate-500">{{ $term }}</dt>
-                                        <dd class="font-semibold text-slate-800 break-words">
-                                            <span x-show="loading" class="inline-block h-4 w-16 rounded bg-slate-200 animate-pulse align-middle"></span>
-                                            <span x-show="!loading" x-cloak x-text="{{ $expr }}"></span>
-                                        </dd>
-                                    </div>
-                                    @endforeach
-                                </dl>
-                            </div>
-                            @endforeach
-                        </div>
-
-                        <p x-show="weather && weather.sunrise" x-cloak class="text-sm text-slate-600 flex items-center gap-2">
-                            <x-icon name="sun" class="w-4 h-4 text-amber-500 shrink-0" />
-                            <span x-text="weather ? 'Matahari terbit ' + weather.sunrise + ', terbenam ' + weather.sunset + ' WIB' : ''"></span>
-                        </p>
-
-                        <div x-show="safety" x-cloak class="rounded-2xl border p-4 text-sm"
-                             :class="safety && safety.level === 'caution' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'">
-                            <p class="font-bold flex items-center gap-2 mb-1">
-                                <x-icon name="exclamation" class="w-4 h-4 shrink-0" />
-                                <span x-text="safety && safety.level === 'caution' ? 'Perhatian' : 'Catatan keselamatan'"></span>
-                            </p>
-                            <ul class="space-y-1 list-disc pl-5">
-                                <template x-for="message in (safety ? safety.messages : [])" :key="message">
-                                    <li x-text="message"></li>
-                                </template>
-                            </ul>
-                        </div>
-
-                        <p class="text-[11px] text-slate-400">
-                            Data cuaca: <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="underline hover:text-slate-600">Open-Meteo</a>
-                            · Lokasi: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="underline hover:text-slate-600">OpenStreetMap Nominatim</a>.
-                            Prakiraan model, bukan pengamatan langsung di jalur.
-                        </p>
-                    </div>
-                </section>
             </div>
             @endif
 
@@ -457,6 +441,81 @@
                     @endauth
                 </div>
             </div>
+
+            @if($trailPoints)
+            <!-- Kondisi Terkini (Open-Meteo) -->
+            <section id="kondisi-terkini" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden" aria-live="polite">
+                <div class="p-4 sm:p-6 border-b border-slate-100 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="font-bold text-slate-800 flex items-center">
+                        <x-icon name="cloud" class="w-5 h-5 text-sky-500 mr-2 shrink-0" />
+                        Kondisi Terkini
+                    </h3>
+                    <span x-show="weather" x-cloak class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200" x-text="weather ? 'Diperbarui ' + weather.updated_label : ''"></span>
+                </div>
+
+                <div class="p-4 sm:p-6 space-y-4">
+                    <div x-show="!loading && !weather" x-cloak class="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                        Data cuaca tidak tersedia saat ini. Coba muat ulang halaman beberapa saat lagi.
+                    </div>
+
+                    <div x-show="loading || weather" class="grid sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                        @foreach(['basecamp' => 'Basecamp', 'summit' => 'Puncak'] as $side => $label)
+                        <div class="rounded-2xl border border-slate-100 bg-gradient-to-br from-sky-50 to-white p-4 min-w-0">
+                            <div class="flex items-baseline justify-between gap-2">
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ $label }}</p>
+                                <p class="text-xs text-slate-500" x-text="ele(points.{{ $side }})"></p>
+                            </div>
+                            <div class="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
+                                <span x-show="loading" class="inline-block h-9 w-20 rounded-lg bg-slate-200 animate-pulse"></span>
+                                <p x-show="!loading" x-cloak class="text-4xl font-extrabold text-slate-800 leading-none" x-text="num(w('{{ $side }}', 'temperature_c')) + '°C'"></p>
+                                <p x-show="!loading" x-cloak class="text-sm font-semibold text-slate-600 pb-0.5" x-text="w('{{ $side }}', 'weather_text') || ''"></p>
+                            </div>
+                            <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                                @foreach([
+                                    'Terasa seperti' => "num(w('$side', 'apparent_temperature_c')) + '°C'",
+                                    'Angin' => "num(w('$side', 'wind_speed_kmh')) + ' km/jam' + (w('$side', 'wind_direction') ? ' dari ' + w('$side', 'wind_direction') : '')",
+                                    'Kelembapan' => "num(w('$side', 'humidity_pct')) + '%'",
+                                    'Curah hujan' => "num(w('$side', 'precipitation_mm'), 1) + ' mm'",
+                                ] as $term => $expr)
+                                <div class="min-w-0">
+                                    <dt class="text-[11px] text-slate-500">{{ $term }}</dt>
+                                    <dd class="font-semibold text-slate-800 break-words">
+                                        <span x-show="loading" class="inline-block h-4 w-16 rounded bg-slate-200 animate-pulse align-middle"></span>
+                                        <span x-show="!loading" x-cloak x-text="{{ $expr }}"></span>
+                                    </dd>
+                                </div>
+                                @endforeach
+                            </dl>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <p x-show="weather && weather.sunrise" x-cloak class="text-sm text-slate-600 flex items-center gap-2">
+                        <x-icon name="sun" class="w-4 h-4 text-amber-500 shrink-0" />
+                        <span x-text="weather ? 'Matahari terbit ' + weather.sunrise + ', terbenam ' + weather.sunset + ' WIB' : ''"></span>
+                    </p>
+
+                    <div x-show="safety" x-cloak class="rounded-2xl border p-4 text-sm"
+                         :class="safety && safety.level === 'caution' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'">
+                        <p class="font-bold flex items-center gap-2 mb-1">
+                            <x-icon name="exclamation" class="w-4 h-4 shrink-0" />
+                            <span x-text="safety && safety.level === 'caution' ? 'Perhatian' : 'Catatan keselamatan'"></span>
+                        </p>
+                        <ul class="space-y-1 list-disc pl-5">
+                            <template x-for="message in (safety ? safety.messages : [])" :key="message">
+                                <li x-text="message"></li>
+                            </template>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-400">
+                        Data cuaca: <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="underline hover:text-slate-600">Open-Meteo</a>
+                        · Lokasi: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="underline hover:text-slate-600">OpenStreetMap Nominatim</a>.
+                        Prakiraan model, bukan pengamatan langsung di jalur.
+                    </p>
+                </div>
+            </section>
+            @endif
 
             <!-- B. GPX PROVENANCE -->
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6">
@@ -662,6 +721,38 @@ window.routeConditions = function (url, points) {
         },
         w(side, key) {
             return this.weather && this.weather[side] ? this.weather[side][key] : null;
+        },
+        _chart: null,
+        _chartFor: null,
+        chart() {
+            const profile = this.points && this.points.profile;
+            if (!profile || profile.length < 2) return null;
+            if (this._chartFor === profile) return this._chart;
+
+            const w = 520, h = 190, left = 44, top = 10, bottom = 20;
+            const kms = profile.map(p => p[0]), eles = profile.map(p => p[1]);
+            const km = Math.max(...kms) || 1;
+            let min = Math.min(...eles), max = Math.max(...eles);
+            const pad = Math.max(20, (max - min) * 0.08);
+            const lo = min - pad, hi = max + pad;
+            const x = k => left + (k / km) * (w - left);
+            const y = e => top + (1 - (e - lo) / (hi - lo)) * (h - top - bottom);
+            const pts = profile.map(p => [x(p[0]), y(p[1])]);
+            const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+            const base = (h - bottom).toFixed(1);
+            const area = line + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + base + ' L' + pts[0][0].toFixed(1) + ' ' + base + ' Z';
+            const topIdx = eles.indexOf(max);
+            const step = Math.max(50, Math.ceil((max - min) / 3 / 50) * 50);
+            const ticks = [];
+            for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) ticks.push({ v, y: y(v) });
+
+            this._chartFor = profile;
+            this._chart = {
+                w, h, left, line, area, ticks, km, min, max,
+                start: { x: pts[0][0], y: pts[0][1] },
+                top: { x: pts[topIdx][0], y: pts[topIdx][1] },
+            };
+            return this._chart;
         },
     };
 };

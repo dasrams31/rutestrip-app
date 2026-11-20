@@ -113,12 +113,20 @@ class RouteConditionsService
         $basecampEle = isset($start[2]) ? (int) round($start[2]) : $this->narrativeMinElevation($route);
         $summitEle   = isset($summit[2]) ? (int) round($summit[2]) : $this->plausibleElevation($route->max_elevation_m);
 
+        $profile = null;
+        if (isset($start[2])) {
+            $step    = max(1, (int) ceil(count($coords) / 100));
+            $indexes = array_values(array_filter(array_keys($coords), fn($i) => $i % $step === 0 && isset($coords[$i][2])));
+            $profile = $this->profile($route, $coords, $indexes, array_map(fn($i) => $coords[$i][2], $indexes));
+        }
+
         return [
             'basecamp' => $this->point($start[0], $start[1], $basecampEle, [
                 'name' => $this->basecampName($route),
             ]),
             'summit' => $this->point($summit[0], $summit[1], $summitEle),
             'elevation_source' => isset($start[2]) ? 'gpx' : 'narrative',
+            'profile' => $profile,
         ];
     }
 
@@ -137,7 +145,7 @@ class RouteConditionsService
         }
 
         $start = $trail['basecamp'];
-        $key   = sprintf('route-points:%d:%.4f,%.4f:%d', $route->id, $start['lat'], $start['lng'], count($this->coordinates($route)));
+        $key   = sprintf('route-points:v2:%d:%.4f,%.4f:%d', $route->id, $start['lat'], $start['lng'], count($this->coordinates($route)));
 
         if ($cached = Cache::get($key)) {
             // The name follows the current route name, it is not part of the cached geometry.
@@ -343,9 +351,10 @@ class RouteConditionsService
 
     private function refineWithElevationModel(HikingRoute $route, array $trail): ?array
     {
-        $coords = $this->coordinates($route);
-        $step   = max(1, (int) ceil(count($coords) / 100));
-        $sample = array_values(array_filter($coords, fn($i) => $i % $step === 0, ARRAY_FILTER_USE_KEY));
+        $coords  = $this->coordinates($route);
+        $step    = max(1, (int) ceil(count($coords) / 100));
+        $indexes = array_values(array_filter(array_keys($coords), fn($i) => $i % $step === 0));
+        $sample  = array_map(fn($i) => $coords[$i], $indexes);
 
         try {
             $response = $this->http()->get(self::ELEVATION_URL, [
@@ -383,7 +392,46 @@ class RouteConditionsService
             ]),
             'summit'           => $this->point($sample[$top][0], $sample[$top][1], $summitEle),
             'elevation_source' => 'dem',
+            'profile'          => $this->profile($route, $coords, $indexes, $elevations),
         ];
+    }
+
+    /**
+     * Elevation profile as [[km, metres], ...] at the given track indexes.
+     * Distances follow the stored (simplified) track, scaled to the route's
+     * GPX distance so the last point matches the distance shown on the page.
+     */
+    private function profile(HikingRoute $route, array $coords, array $indexes, array $elevations): ?array
+    {
+        if (count($indexes) < 2) {
+            return null;
+        }
+
+        $cumulative = [0.0];
+        for ($i = 1, $n = count($coords); $i < $n; $i++) {
+            $cumulative[$i] = $cumulative[$i - 1] + $this->distanceKm($coords[$i - 1], $coords[$i]);
+        }
+
+        $trackKm = $cumulative[$indexes[count($indexes) - 1]];
+        $scale   = $trackKm > 0 && $route->distance_km > 0 ? $route->distance_km / $trackKm : 1.0;
+
+        $profile = [];
+        foreach ($indexes as $k => $i) {
+            if (is_numeric($elevations[$k] ?? null)) {
+                $profile[] = [round($cumulative[$i] * $scale, 2), (int) round($elevations[$k])];
+            }
+        }
+
+        return count($profile) >= 2 ? $profile : null;
+    }
+
+    private function distanceKm(array $a, array $b): float
+    {
+        $lat1 = deg2rad($a[0]);
+        $lat2 = deg2rad($b[0]);
+        $h = sin(($lat2 - $lat1) / 2) ** 2 + cos($lat1) * cos($lat2) * sin(deg2rad($b[1] - $a[1]) / 2) ** 2;
+
+        return 2 * 6371 * asin(min(1, sqrt($h)));
     }
 
     private function reverseGeocode(float $lat, float $lng): ?array

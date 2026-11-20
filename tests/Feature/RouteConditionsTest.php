@@ -71,6 +71,11 @@ class RouteConditionsTest extends TestCase
             ->assertJsonPath('points.summit.lat', -7.4545)          // highest DEM point, not the last one
             ->assertJsonPath('points.summit.elevation_m', 3128)     // GPX maximum from the narrative
             ->assertJsonPath('points.elevation_source', 'dem')
+            // Elevation profile: [km, m] per sampled point, last km scaled to the route distance.
+            ->assertJsonCount(4, 'points.profile')
+            ->assertJsonPath('points.profile.0', [0, 1820])
+            ->assertJsonPath('points.profile.3.0', 11.1)
+            ->assertJsonPath('points.profile.2.1', 3123)
             ->assertJsonPath('location.village', 'Samiran')
             ->assertJsonPath('location.district', 'Selo')
             ->assertJsonPath('location.regency', 'Boyolali')
