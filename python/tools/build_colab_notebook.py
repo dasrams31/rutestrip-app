@@ -23,7 +23,7 @@ def code(text):
 
 
 md(r"""
-# 🏔️ RuteStrip — Sistem Rekomendasi Jalur Pendakian Gunung di Jawa
+# RuteStrip — Sistem Rekomendasi Jalur Pendakian Gunung di Jawa
 ## Content-Based Filtering berbasis SBERT dan Cosine Similarity (versi web rutestrip.ai.id)
 
 Notebook ini menjalankan **kode yang sama dengan website** (`python/processor.py` dan `python/search_scoring.py` dari repository `dasrams31/rutestrip-app`), sehingga hasilnya konsisten dengan aplikasi yang berjalan.
@@ -41,7 +41,7 @@ Link notebook ini: https://s.peka.ai.id/rutestripcolab
 """)
 
 code(r"""
-#@title 1️⃣ Setup: install library & ambil kode + data dari repository
+#@title 1. Setup: install library & ambil kode + data dari repository
 import os, sys, subprocess
 
 IN_COLAB = 'google.colab' in sys.modules
@@ -70,7 +70,7 @@ print('File GPX   :', len([f for f in os.listdir(GPX_DIR) if f.endswith('.gpx')]
 """)
 
 md(r"""
-## 2️⃣ Preprocessing teks
+## 2. Preprocessing teks
 Sama dengan paper: hapus URL, karakter non-alfanumerik, angka berdiri sendiri, normalisasi spasi, case folding, lalu **stopword removal selektif** (kata negasi dan kata sifat jalur seperti *landai, curam, pemula* tetap dipertahankan). Tidak memakai stemming karena SBERT peka konteks.
 """)
 
@@ -85,7 +85,7 @@ print('Hasil :', processor.preprocess_text(contoh))
 """)
 
 md(r"""
-## 3️⃣ Statistik GPX, Naismith, dan tingkat kesulitan
+## 3. Statistik GPX, Naismith, dan tingkat kesulitan
 - **Jarak**: `gpx.length_3d()` (km). Elevasi dihaluskan dulu (`gpx.smooth(vertical=True)`) untuk mengurangi noise GPS.
 - **Total tanjakan**: jumlah selisih elevasi positif antar titik.
 - **Naismith**: `jarak/5 + tanjakan/600` (jam).
@@ -102,7 +102,7 @@ for fn in (processor.calculate_statistics, processor.difficulty_score, processor
 """)
 
 md(r"""
-## 4️⃣ Membangun dataset dari file GPX
+## 4. Membangun dataset dari file GPX
 Filter kualitas yang sama dengan perintah web `php artisan routes:import-gpx-dir`:
 - lewati file duplikat (hash sama) dan jalur yang sama (nama sama, atau statistik nyaris sama pada gunung yang sama);
 - lewati file gabungan beberapa jalur ("semua jalur", "4 jalur");
@@ -184,7 +184,7 @@ print(df['Kesulitan'].value_counts().reindex(['mudah', 'sedang', 'sulit', 'sanga
 """)
 
 md(r"""
-## 5️⃣ Representasi dokumen untuk SBERT
+## 5. Representasi dokumen untuk SBERT
 - **Dokumen jalur** = `"Jalur pendakian {nama}. {narasi}"` → satu embedding (nama ikut masuk sehingga query "merbabu" bisa cocok secara semantik).
 - **Aspek** = setiap kalimat narasi (jarak, waktu, kemiringan, elevasi, kesulitan, kecocokan) + kalimat nama → satu embedding per aspek, agar query pendek seperti "jalur landai" dibandingkan dengan aspek yang paling relevan.
 - Query diproses dengan `preprocess_text` yang sama seperti paper.
@@ -208,7 +208,7 @@ print('Jumlah aspek  :', len(contoh['aspects']))
 """)
 
 md(r"""
-## 6️⃣ Skor relevansi (hybrid)
+## 6. Skor relevansi (hybrid)
 1. `semantik = 0,4 × cos(Q, dokumen) + 0,6 × max cos(Q, aspek)`, dengan `cos(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)`.
 2. Jika query memuat kata intent, skor dicampur dengan kecocokan atribut GPX (bobot 0,45):
    *landai* → kemiringan rendah (0,4 grade + 0,3 tanjakan + 0,3 durasi); *pemula/mudah/santai* → sedikit tanjakan & singkat (0,2 / 0,4 / 0,4);
@@ -231,7 +231,7 @@ def search(query, top_n=5):
 """)
 
 code(r"""
-#@title 7️⃣ Coba pencarian (ubah query di kolom kanan)
+#@title 7. Coba pencarian (ubah query di kolom kanan)
 QUERY = "jalur landai untuk pemula"  #@param {type:"string"}
 
 print(f"Query: {QUERY!r}\n")
@@ -251,7 +251,7 @@ display(pd.DataFrame(rows))
 """)
 
 md(r"""
-## 8️⃣ Evaluasi
+## 8. Evaluasi
 Label relevansi diturunkan otomatis dari statistik GPX (`python/evaluate_search.py`), sehingga dapat direproduksi:
 - query *landai* / *tidak terlalu curam* → grade < 15% dan total tanjakan di sepertiga terendah;
 - query *pemula/mudah/santai* → total tanjakan di sepertiga terendah dan grade < 30%;
@@ -280,7 +280,7 @@ display(pd.Series(summary).round(3).to_frame('Nilai'))
 """)
 
 code(r"""
-#@title 9️⃣ Ringkasan (dihitung dari hasil di atas)
+#@title 9. Ringkasan (dihitung dari hasil di atas)
 print(f"Dataset    : {len(routes)} jalur dari {len(files)} file GPX ({len(skipped)} dilewati karena duplikat/data rusak)")
 print(f"Kesulitan  : " + ', '.join(f"{k} {v}" for k, v in df['Kesulitan'].value_counts().items()))
 print(f"Query uji  : {len(ev_df)}")
@@ -290,7 +290,7 @@ print(f"Skor top-1 : {summary['Skor top-1 rata-rata']:.3f}")
 """)
 
 code(r"""
-#@title 🔟 Export dataset ke CSV
+#@title 10. Export dataset ke CSV
 out = df.copy()
 out['Narasi'] = [r['narrative_text'] for r in routes]
 out.to_csv('rutestrip_routes.csv', index=False)

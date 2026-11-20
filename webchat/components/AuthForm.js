@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { loadAltcha } from '@/lib/altcha';
 
 export default function AuthForm({ onAuthSuccess }) {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -18,6 +19,25 @@ export default function AuthForm({ onAuthSuccess }) {
   const [regUsername, setRegUsername] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPass, setRegPass] = useState('');
+
+  // Anti-robot check: ALTCHA proof-of-work payload + honeypot field
+  const altchaRef = useRef(null);
+  const [altchaPayload, setAltchaPayload] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+
+  useEffect(() => {
+    if (mode !== 'register') return undefined;
+    const widget = altchaRef.current;
+    const onStateChange = (ev) => {
+      setAltchaPayload(ev.detail?.state === 'verified' ? ev.detail.payload || '' : '');
+    };
+    widget?.addEventListener('statechange', onStateChange);
+    loadAltcha().catch(() => setError('Gagal memuat verifikasi anti-robot. Muat ulang halaman.'));
+    return () => {
+      widget?.removeEventListener('statechange', onStateChange);
+      setAltchaPayload('');
+    };
+  }, [mode]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -71,6 +91,11 @@ export default function AuthForm({ onAuthSuccess }) {
       setError('Mohon lengkapi Username, Email, dan Password.');
       return;
     }
+    if (!altchaPayload) {
+      setError('Centang "Saya bukan robot" dan tunggu hingga terverifikasi.');
+      altchaRef.current?.verify?.();
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -85,6 +110,8 @@ export default function AuthForm({ onAuthSuccess }) {
           email: regEmail.trim(),
           password: regPass,
           full_name: regFullName.trim() || regUsername.trim(),
+          altcha: altchaPayload,
+          website: honeypot,
         }),
       });
 
@@ -108,6 +135,9 @@ export default function AuthForm({ onAuthSuccess }) {
       }
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan saat registrasi.');
+      // A payload is single-use: solve a fresh challenge for the next attempt.
+      setAltchaPayload('');
+      altchaRef.current?.reset?.();
     } finally {
       setLoading(false);
     }
@@ -268,6 +298,27 @@ export default function AuthForm({ onAuthSuccess }) {
                 required
               />
             </div>
+
+            <div className="auth-hp" aria-hidden="true">
+              <label htmlFor="regWebsite">Website</label>
+              <input
+                id="regWebsite"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
+
+            <altcha-widget
+              ref={altchaRef}
+              className="auth-altcha"
+              challenge="/api/auth/altcha"
+              language="id"
+              auto="onfocus"
+            />
 
             <button type="submit" disabled={loading} className="auth-submit-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               <span>{loading ? 'Mendaftarkan Akun...' : 'Daftar Akun Baru'}</span>

@@ -3,16 +3,22 @@ import { NextResponse } from 'next/server';
 export async function POST(request) {
   try {
     const body = await request.json();
+    const forwardedFor = request.headers.get('x-forwarded-for');
     const res = await fetch(`${process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010'}/api/auth/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // Visitor IP (set by Caddy) for the API's per-IP registration limit
+        ...(forwardedFor ? { 'X-Forwarded-For': forwardedFor } : {}),
+      },
       body: JSON.stringify(body),
     });
 
     const data = await res.json();
     if (!res.ok) {
+      const detail = typeof data.detail === 'string' ? data.detail : data.detail?.[0]?.msg;
       return NextResponse.json(
-        { error: data.detail?.[0]?.msg || data.message || 'Registrasi gagal' },
+        { error: detail || data.message || 'Registrasi gagal' },
         { status: res.status }
       );
     }

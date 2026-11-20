@@ -20,6 +20,15 @@ www.rutestrip.ai.id {
 	redir https://rutestrip.ai.id{uri} permanent
 }
 
+# Old domain: send everything to the new one (needs DNS A records -> this VPS)
+rutestrip.web.id, www.rutestrip.web.id {
+	redir https://rutestrip.ai.id{uri} permanent
+}
+
+chat.rutestrip.web.id {
+	redir https://chat.rutestrip.ai.id{uri} permanent
+}
+
 chat.rutestrip.ai.id {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3010

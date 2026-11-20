@@ -7,7 +7,7 @@ import json
 import uuid
 import subprocess
 from typing import Optional
-from fastapi import FastAPI, Query, HTTPException, Header, Body
+from fastapi import FastAPI, Query, HTTPException, Header, Body, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
@@ -33,6 +33,7 @@ import broadcast_weekend_getaway
 import broadcast_survival_tips
 import broadcast_bot_usage
 import auth_handler
+import altcha_guard
 import guardrail
 import chat_history_handler
 
@@ -87,6 +88,8 @@ class UserRegisterModel(BaseModel):
     email: str
     password: str
     full_name: Optional[str] = None
+    altcha: Optional[str] = None   # ALTCHA proof-of-work payload (base64 JSON)
+    website: Optional[str] = None  # honeypot, must stay empty
 
 class UserLoginModel(BaseModel):
     username_or_email: str
@@ -112,8 +115,19 @@ def root():
 
 # --- AUTHENTICATION & PASSWORD RESET ENDPOINTS (WEBCHAT AI ASSISTANT) ---
 
+@app.get('/api/auth/altcha-challenge', summary='Tantangan Anti-Robot (ALTCHA) untuk Registrasi')
+def altcha_challenge(request: Request):
+    if not altcha_guard.challenge_limiter.hit(altcha_guard.client_ip(request)):
+        raise HTTPException(status_code=429, detail=altcha_guard.RATE_LIMIT_MESSAGE)
+    return JSONResponse(altcha_guard.create_challenge(), headers={'Cache-Control': 'no-store'})
+
 @app.post('/api/auth/register', summary='Registrasi Akun Baru WebChat AI')
-def register_account(body: UserRegisterModel):
+def register_account(body: UserRegisterModel, request: Request):
+    if not altcha_guard.register_limiter.hit(altcha_guard.client_ip(request)):
+        raise HTTPException(status_code=429, detail=altcha_guard.RATE_LIMIT_MESSAGE)
+    # Anti-robot checks before touching the user store (no account probing by bots)
+    if body.website or not altcha_guard.verify_payload(body.altcha):
+        raise HTTPException(status_code=400, detail=altcha_guard.ERROR_MESSAGE)
     res = auth_handler.register_user(
         username=body.username,
         email=body.email,

@@ -51,4 +51,12 @@ return [
         'url' => env('WEBCHAT_URL', 'https://chat.rutestrip.ai.id'),
     ],
 
+    // Self-hosted ALTCHA proof-of-work captcha on /register.
+    // Empty ALTCHA_HMAC_KEY falls back to a key derived from APP_KEY.
+    'altcha'   => [
+        'hmac_key'   => env('ALTCHA_HMAC_KEY'),
+        'max_number' => (int) env('ALTCHA_MAX_NUMBER', 100000),
+        'expires'    => (int) env('ALTCHA_EXPIRES', 600),
+    ],
+
 ];

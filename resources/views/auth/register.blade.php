@@ -70,6 +70,20 @@
                                placeholder="Ulangi password" required>
                     </div>
 
+                    <!-- Honeypot: hidden from people, bots that fill every field are rejected -->
+                    <div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+                        <label for="website">Website</label>
+                        <input type="text" name="website" id="website" value="" tabindex="-1" autocomplete="off">
+                    </div>
+
+                    <!-- Anti-robot check (self-hosted ALTCHA proof-of-work) -->
+                    <div class="mb-6">
+                        <altcha-widget class="rs-altcha" challenge="{{ route('altcha.challenge') }}" language="id" auto="onfocus"></altcha-widget>
+                        @error('altcha')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Submit Button -->
                     <button type="submit"
                             class="w-full py-4 bg-mountain-gradient text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
@@ -91,3 +105,25 @@
     </div>
 </div>
 @endsection
+
+@push('head')
+<style>
+    .rs-altcha {
+        display: block;
+        min-height: 4.5rem;
+        --altcha-max-width: 100%;
+        --altcha-border-radius: 0.75rem;
+        --altcha-border-color: #e2e8f0;
+        --altcha-color-primary: #059669;
+        --altcha-color-primary-content: #ffffff;
+        --altcha-color-success: #059669;
+        --altcha-color-success-content: #ffffff;
+        --altcha-color-base-content: #334155;
+        --altcha-checkbox-outline-color: #10b981;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script type="module" src="{{ asset('js/altcha-init.js') }}"></script>
+@endpush

@@ -2,9 +2,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AltchaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -37,8 +39,14 @@ class AuthController extends Controller
     /**
      * Handle registration
      */
-    public function register(Request $request)
+    public function register(Request $request, AltchaService $altcha)
     {
+        // Anti-robot checks run first so bots cannot probe which emails exist.
+        // "website" is a honeypot field that humans never see.
+        if (filled($request->input('website')) || ! $altcha->verify($request->input('altcha'))) {
+            throw ValidationException::withMessages(['altcha' => AltchaService::ERROR_MESSAGE]);
+        }
+
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
@@ -56,6 +64,15 @@ class AuthController extends Controller
 
         return redirect()->intended(route('user.dashboard'))
             ->with('success', 'Registrasi berhasil! Selamat datang, ' . $user->name);
+    }
+
+    /**
+     * Issue a fresh ALTCHA proof-of-work challenge for the register form
+     */
+    public function altchaChallenge(AltchaService $altcha)
+    {
+        return response()->json($altcha->createChallenge())
+            ->header('Cache-Control', 'no-store');
     }
 
     /**

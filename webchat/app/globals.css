@@ -1790,6 +1790,30 @@ button:focus-visible,
   color: #065f46;
 }
 
+/* Anti-robot widget (self-hosted ALTCHA) */
+.auth-altcha {
+  display: block;
+  min-height: 4.5rem;
+  --altcha-max-width: 100%;
+  --altcha-border-radius: 0.625rem;
+  --altcha-border-color: #cbd5e1;
+  --altcha-color-primary: #059669;
+  --altcha-color-primary-content: #ffffff;
+  --altcha-color-success: #059669;
+  --altcha-color-success-content: #ffffff;
+  --altcha-color-base-content: #334155;
+  --altcha-checkbox-outline-color: #10b981;
+}
+
+/* Honeypot field: off-screen for people, bots that fill every input get rejected */
+.auth-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .auth-footer-note {
   font-size: 0.6875rem;
   color: #64748b;
