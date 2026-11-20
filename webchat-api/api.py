@@ -344,9 +344,24 @@ def get_recommendation(query: str = Query(..., description='Kata kunci kriteria 
         })
     return {'query': query, 'total': len(formatted), 'results': formatted}
 
+_WEATHER_CACHE = {'at': 0.0, 'text': None}
+_WEATHER_TTL_SECONDS = 15 * 60
+
+
+def _cached_all_weather() -> str:
+    """Open-Meteo is queried for every mountain sequentially (~10+ s), so keep
+    the summary for 15 minutes; forecasts don't change faster than that."""
+    import time
+    now = time.time()
+    if _WEATHER_CACHE['text'] is None or now - _WEATHER_CACHE['at'] > _WEATHER_TTL_SECONDS:
+        _WEATHER_CACHE['text'] = cek_cuaca_gunung.check_all_weather()
+        _WEATHER_CACHE['at'] = now
+    return _WEATHER_CACHE['text']
+
+
 @app.get('/api/cuaca', summary='Prakiraan Cuaca Live Realtime (Open-Meteo)')
 def get_weather(mountain: Optional[str] = Query(None, description='Nama gunung')):
-    weather_text = cek_cuaca_gunung.check_all_weather()
+    weather_text = _cached_all_weather()
     if mountain:
         lines = [line for line in weather_text.splitlines() if mountain.lower() in line.lower()]
         return {'mountain': mountain, 'weather_info': lines if lines else weather_text}
