@@ -5,7 +5,7 @@
 Dataset jalur pendakian dari [RuteStrip](https://rutestrip.ai.id), sistem rekomendasi
 jalur pendakian berbasis content-based filtering dengan SBERT dan cosine similarity.
 
-**Versi:** 2.0 (21 November 2026) · **Jumlah jalur:** 143 · **Wilayah:** Pulau Jawa, Indonesia (ditambah Gunung Anak Krakatau, Lampung)
+**Versi:** 2.1 (21 November 2026) · **Jumlah jalur:** 143 · **Wilayah:** Pulau Jawa, Indonesia (ditambah Gunung Anak Krakatau, Lampung)
 
 ## Isi folder
 
@@ -20,7 +20,11 @@ jalur pendakian berbasis content-based filtering dengan SBERT dan cosine similar
 ## Cara data dibuat
 
 - **Statistik** dihitung dari GPX dengan `python/processor.py`: jarak 3D, total tanjakan
-  (elevation gain), grade rata-rata, dan estimasi waktu **Naismith** (jarak/5 + tanjakan/600 jam).
+  (elevation gain), grade rata-rata, bagian paling curam ±1 km (`steepest_grade_pct`), dan
+  estimasi waktu **Naismith** (jarak/5 + tanjakan/600 jam).
+- **Satu jalur per file, dari basecamp sampai puncak.** Rekaman yang naik lalu turun lewat
+  jalur yang sama, berupa loop, atau berisi beberapa track dirapikan dengan hanya membuang
+  titik (titik GPS tidak digeser atau ditambah). Versi 2.1 memuat hasil perapian ini.
 - **Tingkat kesulitan**: skor Shenandoah √(tanjakan[ft] × 2 × jarak[mil]), dikali 1,15 bila
   grade ≥ 25% dan 1,15 bila puncak ≥ 3.000 m. Mudah < 75 ≤ Sedang < 200 ≤ Sulit < 460 ≤ Sangat Sulit;
   tanjakan ≥ 1.200 m minimal Sulit.
@@ -64,7 +68,7 @@ Paper mengevaluasi 39 jalur; dataset ini adalah versi lanjutan dengan 143 jalur.
 Hiking routes from [RuteStrip](https://rutestrip.ai.id), a content-based hiking route
 recommender using SBERT and cosine similarity.
 
-**Version:** 2.0 (21 November 2026) · **Routes:** 143 · **Region:** Java, Indonesia (plus Anak Krakatau, Lampung)
+**Version:** 2.1 (21 November 2026) · **Routes:** 143 · **Region:** Java, Indonesia (plus Anak Krakatau, Lampung)
 
 ## Files
 
@@ -79,7 +83,9 @@ recommender using SBERT and cosine similarity.
 ## Method
 
 Statistics come from the GPX via `python/processor.py` (3D distance, elevation gain,
-average grade, Naismith time = km/5 + gain/600 h). Difficulty uses the Shenandoah rating
+average grade, steepest ~1 km stretch, Naismith time = km/5 + gain/600 h). Each file holds
+one track from the trailhead to the summit: recordings that went up and back the same way,
+looped, or held several tracks were trimmed by removing points only (version 2.1). Difficulty uses the Shenandoah rating
 √(gain[ft] × 2 × distance[mi]) with ×1.15 for grade ≥ 25% and ×1.15 for summits ≥ 3,000 m
 (Easy < 75 ≤ Moderate < 200 ≤ Hard < 460 ≤ Very hard; ≥ 1,200 m gain is at least Hard).
 Narratives (Indonesian) are generated from the statistics and are the SBERT input.

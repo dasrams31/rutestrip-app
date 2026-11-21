@@ -1,7 +1,12 @@
 """
 Generate python/RuteStrip_Colab.ipynb: a Colab notebook that reproduces the
-search method used by the live website (rutestrip.ai.id) with the code from
-this repository, so the notebook and the web app never drift apart.
+search used by the live website (rutestrip.ai.id) with the code and the
+dataset from this repository, so the notebook and the web app never drift apart.
+
+Data: dataset/routes.json and dataset/embeddings.csv, exported from the
+production database with `php artisan dataset:export` (the same routes and
+statistics the website shows). GPX processing is demonstrated on the GPX files
+in webchat-api/gpx_db.
 
 Usage: python build_colab_notebook.py OUTPUT.ipynb
 """
@@ -26,18 +31,20 @@ md(r"""
 # RuteStrip — Sistem Rekomendasi Jalur Pendakian Gunung di Jawa
 ## Content-Based Filtering berbasis SBERT dan Cosine Similarity (versi web rutestrip.ai.id)
 
-Notebook ini menjalankan **kode yang sama dengan website** (`python/processor.py` dan `python/search_scoring.py` dari repository `dasrams31/rutestrip-app`), sehingga hasilnya konsisten dengan aplikasi yang berjalan.
+Notebook ini menjalankan **kode dan data yang sama dengan website**: `python/processor.py`, `python/search_scoring.py`, dan dataset `dataset/` (hasil ekspor database produksi) dari repository `dasrams31/rutestrip-app`.
 
 Link notebook ini: https://s.peka.ai.id/rutestrip-notebook
 
 **Alur sistem**
-1. **Data GPX** → statistik jalur (jarak 3D, total tanjakan, estimasi waktu Naismith, kemiringan rata-rata, elevasi min/maks).
-2. **Tingkat kesulitan** dari profil jalur (Shenandoah difficulty rating + faktor kecuraman & ketinggian).
+1. **Data GPX** → statistik jalur (jarak 3D, total tanjakan, waktu Naismith, kemiringan rata-rata, bagian paling curam ±1 km, elevasi min/maks).
+2. **Tingkat kesulitan** dari profil jalur (Shenandoah difficulty rating + faktor kecuraman dan ketinggian).
 3. **Narasi otomatis** dari statistik → teks konten tiap jalur.
 4. **Preprocessing** (regex cleaning, case folding, stopword removal selektif, tanpa stemming).
 5. **SBERT** `paraphrase-multilingual-MiniLM-L12-v2` (384 dimensi) → embedding dokumen jalur dan per kalimat aspek.
-6. **Cosine similarity** antara query dan jalur → **skor hybrid** (cosine + kecocokan atribut GPX + kecocokan nama) → Top-N.
+6. **Pencarian**: nama gunung/daerah yang disebut = saringan; kata kriteria (landai, mudah, tercepat, ...) = urutan berdasarkan angka GPX; selebihnya diurutkan dengan **cosine similarity**.
 7. **Evaluasi** Precision@5 dan MRR.
+
+Versi penelitian (dataset 39 jalur di paper) tersimpan di tag git `penelitian-39-jalur`.
 """)
 
 code(r"""
@@ -53,20 +60,23 @@ if not os.path.isdir(REPO_DIR):
     subprocess.run(['git', 'clone', '--depth', '1', '""" + REPO + r"""', REPO_DIR], check=True)
 
 PY_DIR = os.path.join(REPO_DIR, 'python')
+DATA_DIR = os.path.join(REPO_DIR, 'dataset')
 GPX_DIR = os.path.join(REPO_DIR, 'webchat-api', 'gpx_db')
 if PY_DIR not in sys.path:
     sys.path.insert(0, PY_DIR)
 
 import warnings; warnings.filterwarnings('ignore')
-import inspect, re, hashlib, json, math
+import inspect, re, json
 import numpy as np
 import pandas as pd
+pd.set_option('display.max_colwidth', None)
 
 import processor        # GPX processing, Naismith, difficulty, narrative, preprocessing, SBERT
-import search_scoring   # hybrid scoring yang dipakai website
+import search_scoring   # ranking yang dipakai website (sama dengan RouteSearchService.php)
+import evaluate_search as ev
 
-print('Repository :', os.path.abspath(REPO_DIR))
-print('File GPX   :', len([f for f in os.listdir(GPX_DIR) if f.endswith('.gpx')]))
+print('Repository :', os.path.basename(os.path.abspath(REPO_DIR)))
+print('Dataset    :', sorted(os.listdir(DATA_DIR)))
 """)
 
 md(r"""
@@ -88,104 +98,87 @@ md(r"""
 ## 3. Statistik GPX, Naismith, dan tingkat kesulitan
 - **Jarak**: `gpx.length_3d()` (km). Elevasi dihaluskan dulu (`gpx.smooth(vertical=True)`) untuk mengurangi noise GPS.
 - **Total tanjakan**: jumlah selisih elevasi positif antar titik.
-- **Naismith**: `jarak/5 + tanjakan/600` (jam).
-- **Grade rata-rata**: `tanjakan / (jarak × 1000) × 100%`.
-- **Tingkat kesulitan** (bukan hanya grade): skor = √(tanjakan[ft] × 2 × jarak[mil]) — *Shenandoah National Park hiking difficulty rating* — dikali 1,15 bila grade rata-rata ≥ 25% dan 1,15 bila puncak ≥ 3.000 m.
+- **Naismith**: `jarak/5 + tanjakan/600` (jam), sama dengan paper.
+- **Kemiringan rata-rata**: `tanjakan / (jarak × 1000) × 100%`.
+- **Bagian paling curam**: kemiringan terbesar pada potongan ±1 km di sepanjang profil. Rata-rata menyembunyikan bagian curam pendek, misalnya lereng pasir Semeru.
+- **Tingkat kesulitan**: skor = √(tanjakan[ft] × 2 × jarak[mil]) — *Shenandoah National Park hiking difficulty rating* — dikali 1,15 bila kemiringan rata-rata ≥ 25% dan 1,15 bila puncak ≥ 3.000 m.
   Mudah < 75 ≤ Sedang < 200 ≤ Sulit < 460 ≤ Sangat Sulit; tanjakan ≥ 1.200 m minimal **Sulit**.
-  Alasannya: grade saja membuat jalur 40 km dengan rata-rata 6% (Semeru) tampak "sedang", sedangkan bukit 1 km dengan 20% tampak "sangat sulit".
+
+Rekaman GPX yang naik lalu turun lewat jalur yang sama, berupa loop, atau berisi beberapa track sudah dirapikan menjadi satu jalur dari basecamp sampai puncak (hanya membuang titik, tidak menggeser atau menambah titik GPS).
 """)
 
 code(r"""
 #@title Kode statistik, kesulitan, dan narasi (python/processor.py)
-for fn in (processor.calculate_statistics, processor.difficulty_score, processor.classify_difficulty, processor.generate_narrative):
+for fn in (processor.calculate_statistics, processor.steepest_section_grade, processor.difficulty_score,
+           processor.classify_difficulty, processor.generate_narrative):
     print(inspect.getsource(fn))
 """)
 
 md(r"""
-## 4. Membangun dataset dari file GPX
-Filter kualitas yang sama dengan perintah web `php artisan routes:import-gpx-dir`:
-- lewati file duplikat (hash sama) dan jalur yang sama (nama sama, atau statistik nyaris sama pada gunung yang sama);
-- lewati file gabungan beberapa jalur ("semua jalur", "4 jalur");
-- lewati GPX tanpa elevasi atau > 60 km (ikut merekam perjalanan kendaraan);
-- lewati elevasi tidak masuk akal: puncak > 3.800 m (salah satuan), titik terendah < 20% puncak (merekam perjalanan dari dataran rendah), tanjakan > 2× rentang elevasi atau grade > 35% (noise).
-
-File berawalan `Mt. ` adalah dataset awal paper: diproses lebih dulu dan, seperti di web, tidak melewati filter kualitas (filter hanya untuk file tambahan).
+## 4. Dataset jalur (sama dengan website)
+`dataset/routes.json` adalah hasil `php artisan dataset:export` dari database produksi: nama jalur, lokasi titik awal (OpenStreetMap Nominatim), statistik GPX, narasi, dan sumber datanya. `dataset/embeddings.csv` berisi embedding SBERT narasi yang tersimpan di database.
 """)
 
 code(r"""
-#@title Proses semua GPX → dataset jalur
-NAME_STOP = r'\b(mt|mount|gunung|gurung|via|jalur|to|bc|basecamp|puncak)\b'
+#@title Muat dataset
+raw = json.load(open(os.path.join(DATA_DIR, 'routes.json'), encoding='utf-8'))
+emb = pd.read_csv(os.path.join(DATA_DIR, 'embeddings.csv'), encoding='utf-8-sig')
+stored = {int(row[0]): [float(v) for v in row[1:]] for row in emb.itertuples(index=False)}
 
-def name_key(name):
-    words = sorted(set(re.findall(r'[a-z]+', re.sub(NAME_STOP, ' ', name.lower()))))
-    return ' '.join(words)
+routes = []
+for r in raw:
+    routes.append({
+        'id': r['route_id'], 'name': r['name'], 'mountain': r['mountain'], 'via': r['via'],
+        'province': r['province'], 'regency': r['regency'],
+        'distance_km': r['distance_km'], 'elevation_gain_m': r['elevation_gain_m'],
+        'naismith_duration_hour': r['naismith_duration_hour'], 'average_grade_pct': r['average_grade_pct'],
+        'steepest_grade_pct': r['steepest_grade_pct'], 'max_elevation_m': r['max_elevation_m'],
+        'difficulty': r['difficulty'], 'difficulty_score': r['difficulty_score'],
+        'narrative_text': r['narrative_text'], 'description': r['description'] or '',
+        'source': r['source'], 'sbert_embedding': stored.get(r['route_id']),
+    })
 
-def pretty_name(raw):
-    if raw.startswith('Mt. '):
-        return raw                                   # nama asli dataset paper
-    n = raw.replace('_', ' ')
-    n = re.sub(r'\s+\d{1,2}\s+[a-z]{3}\s+\d{4}$', '', n, flags=re.I)
-    n = re.sub(r'\s*\(\d+\)$', '', n)
-    n = re.sub(r'\s+-\s+', ' via ', n, count=1)
-    n = ' '.join(w[:1].upper() + w[1:] for w in n.split())
-    n = re.sub(r'\bvia\b', 'via', n, flags=re.I)
-    return n if n.startswith(('Gunung ', 'Bukit ', 'Puncak ')) else 'Gunung ' + n
-
-files = sorted(f for f in os.listdir(GPX_DIR) if f.endswith('.gpx'))
-files = [f for f in files if f.startswith('Mt. ')] + [f for f in files if not f.startswith('Mt. ')]
-
-routes, skipped, hashes = [], [], set()
-for f in files:
-    path = os.path.join(GPX_DIR, f)
-    h = hashlib.sha256(open(path, 'rb').read()).hexdigest()
-    if h in hashes:
-        skipped.append((f, 'file sama')); continue
-    if re.search(r'semua\s*jalur|\d\s*jalur', f, re.I):
-        skipped.append((f, 'gabungan beberapa jalur')); continue
-    r = processor.mode_ingest(path)
-    if not r.get('success'):
-        skipped.append((f, 'gagal diproses')); continue
-    km, gain, grade = r['distance_km'], r['elevation_gain_m'], r['average_grade_pct']
-    m = re.search(r'dari (\d+)m\s+hingga (\d+)m', r['narrative_text'])
-    lo, hi = (int(m.group(1)), int(m.group(2))) if m else (0, 0)
-    original = f.startswith('Mt. ')   # dataset paper: tidak difilter (sama seperti di web)
-    if not original and (gain <= 0 or km <= 0 or km > 60):
-        skipped.append((f, f'statistik tidak valid ({km} km, {gain} m)')); continue
-    if not original and (hi > 3800 or (hi > 1000 and lo < 0.2 * hi)):
-        skipped.append((f, f'elevasi tidak masuk akal {lo}-{hi} m')); continue
-    if not original and (grade > 35 or (hi - lo > 0 and gain > 2 * (hi - lo))):
-        skipped.append((f, f'elevasi noise ({gain} m tanjakan, rentang {hi - lo} m)')); continue
-    name = pretty_name(f[:-4]); key = name_key(name)
-    dup = next((x for x in routes if x['key'] == key or (set(x['key'].split()) & set(key.split())
-                and abs(x['distance_km'] - km) <= 0.03 * max(x['distance_km'], km)
-                and abs(x['elevation_gain_m'] - gain) <= 0.05 * max(x['elevation_gain_m'], gain, 1))), None)
-    if dup:
-        skipped.append((f, 'jalur sama dengan ' + dup['name'])); continue
-    hashes.add(h)
-    routes.append({'id': len(routes) + 1, 'name': name, 'key': key, 'file': f,
-                   'distance_km': km, 'elevation_gain_m': gain, 'naismith_duration_hour': r['naismith_duration_hour'],
-                   'average_grade_pct': grade, 'min_elevation': lo, 'max_elevation': hi,
-                   'difficulty': processor.classify_difficulty(km, gain, grade, hi),
-                   'difficulty_score': round(processor.difficulty_score(km, gain, grade, hi)),
-                   'narrative_text': r['narrative_text']})
-
-print(f'Jalur dipakai : {len(routes)}')
-print(f'Dilewati      : {len(skipped)}')
-pd.DataFrame(skipped, columns=['file', 'alasan']).groupby('alasan').size().sort_values(ascending=False).head(15)
+df = pd.DataFrame(routes)
+print(f"Jumlah jalur : {len(df)}  |  gunung/bukit: {df['mountain'].nunique()}")
+print('Provinsi     :', df['province'].value_counts().to_dict())
+print('Kesulitan    :', df['difficulty'].value_counts().reindex(['Mudah', 'Sedang', 'Sulit', 'Sangat Sulit']).to_dict())
+print('Sumber       :', df['source'].value_counts().to_dict())
+display(df[['id', 'name', 'regency', 'distance_km', 'elevation_gain_m', 'naismith_duration_hour',
+            'average_grade_pct', 'steepest_grade_pct', 'difficulty']].rename(columns={
+    'name': 'Nama', 'regency': 'Kabupaten', 'distance_km': 'Jarak (km)', 'elevation_gain_m': 'Tanjakan (m)',
+    'naismith_duration_hour': 'Naismith (jam)', 'average_grade_pct': 'Rata-rata (%)',
+    'steepest_grade_pct': 'Paling curam (%)', 'difficulty': 'Kesulitan'}).head(15))
 """)
 
 code(r"""
-#@title Dataset jalur
-df = pd.DataFrame([{k: r[k] for k in ('id', 'name', 'distance_km', 'elevation_gain_m', 'naismith_duration_hour',
-                                      'average_grade_pct', 'max_elevation', 'difficulty_score', 'difficulty')} for r in routes])
-df.columns = ['ID', 'Nama', 'Jarak (km)', 'Tanjakan (m)', 'Naismith (jam)', 'Grade (%)', 'Puncak (m)', 'Skor kesulitan', 'Kesulitan']
-display(df.sort_values('Skor kesulitan'))
-print(df['Kesulitan'].value_counts().reindex(['mudah', 'sedang', 'sulit', 'sangat sulit']))
+#@title Cek ulang: hitung statistik langsung dari file GPX (webchat-api/gpx_db)
+STOP = {'gunung', 'mt', 'mount', 'via', 'jalur', 'puncak', 'to', 'bc', 'basecamp', 'dan'}
+key = lambda name: ' '.join(sorted({w for w in re.findall(r'[a-z]+', name.lower())} - STOP))
+gpx_files = {}
+for f in os.listdir(GPX_DIR):
+    if f.endswith('.gpx'):
+        gpx_files.setdefault(key(f[:-4]), []).append(f)
+
+rows = []
+for r in routes:
+    hits = gpx_files.get(key(r['name']), [])
+    if len(hits) != 1:
+        continue
+    s = processor.mode_ingest(os.path.join(GPX_DIR, hits[0]))
+    if s.get('success'):
+        rows.append({'Nama': r['name'], 'Jarak dataset': r['distance_km'], 'Jarak GPX': s['distance_km'],
+                     'Tanjakan dataset': r['elevation_gain_m'], 'Tanjakan GPX': s['elevation_gain_m'],
+                     'Naismith dataset': r['naismith_duration_hour'], 'Naismith GPX': s['naismith_duration_hour']})
+check = pd.DataFrame(rows)
+same = (abs(check['Jarak dataset'] - check['Jarak GPX']) <= 0.05) & (abs(check['Tanjakan dataset'] - check['Tanjakan GPX']) <= 5)
+print(f"Jalur dengan file GPX yang cocok namanya: {len(check)} dari {len(routes)}")
+print(f"Statistik sama dengan dataset (selisih ≤ 0,05 km dan ≤ 5 m): {same.sum()} jalur")
+display(check.head(10))
 """)
 
 md(r"""
 ## 5. Representasi dokumen untuk SBERT
-- **Dokumen jalur** = `"Jalur pendakian {nama}. {narasi}"` → satu embedding (nama ikut masuk sehingga query "merbabu" bisa cocok secara semantik).
+- **Dokumen jalur** = `"Jalur pendakian {nama}. {narasi} {deskripsi}"` → satu embedding.
 - **Aspek** = setiap kalimat narasi (jarak, waktu, kemiringan, elevasi, kesulitan, kecocokan) + kalimat nama → satu embedding per aspek, agar query pendek seperti "jalur landai" dibandingkan dengan aspek yang paling relevan.
 - Query diproses dengan `preprocess_text` yang sama seperti paper.
 """)
@@ -196,11 +189,12 @@ model = processor.get_model()
 print('Dimensi embedding:', model.get_sentence_embedding_dimension())
 print(inspect.getsource(search_scoring.build_document))
 
+doc_vecs, aspect_vecs = {}, {}
 for r in routes:
     doc = search_scoring.build_document(r)
     vecs = model.encode([doc['text']] + doc['aspects'])
-    r['embedding'] = vecs[0].tolist()
-    r['aspect_embeddings'] = vecs[1:].tolist()
+    doc_vecs[r['id']] = vecs[0].tolist()
+    aspect_vecs[r['id']] = vecs[1:].tolist()
 
 contoh = search_scoring.build_document(routes[0])
 print('Contoh dokumen:', contoh['text'][:200], '...')
@@ -208,96 +202,103 @@ print('Jumlah aspek  :', len(contoh['aspects']))
 """)
 
 md(r"""
-## 6. Skor relevansi (hybrid)
-1. `semantik = 0,4 × cos(Q, dokumen) + 0,6 × max cos(Q, aspek)`, dengan `cos(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)`.
-2. Jika query memuat kata intent, skor dicampur dengan kecocokan atribut GPX (bobot 0,45):
-   *landai* → kemiringan rendah (0,4 grade + 0,3 tanjakan + 0,3 durasi); *pemula/mudah/santai* → sedikit tanjakan & singkat (0,2 / 0,4 / 0,4);
-   *curam/sulit/menantang* → kebalikannya; *singkat/tektok* dan *panjang/ekspedisi* → durasi. Negasi dibaca ("tidak terlalu curam" → landai).
-3. Jika query menyebut nama gunung/basecamp, skor dicampur dengan proporsi nama yang cocok (bobot 0,35).
-
-Atribut tidak diberikan pada GPX yang statistiknya tidak valid.
+## 6. Cara website mengurutkan hasil
+1. **Saringan nama gunung**: kalau query menyebut gunung ("merbabu", "arjuna" = Arjuno), hanya jalur gunung itu yang ditampilkan.
+2. **Saringan daerah**: kalau query menyebut provinsi atau kabupaten ("jawa barat", "jabar", "magelang"), hanya jalur di daerah itu.
+3. **Kata kriteria** menentukan urutan dengan angka GPX:
+   *landai* → bagian paling curam lalu kemiringan rata-rata naik; *curam/terjal* → kebalikannya;
+   *mudah/pemula/santai* → skor kesulitan naik; *sulit/berat/menantang* → turun;
+   *singkat/cepat/tektok* → waktu Naismith naik; *panjang/lama/ekspedisi* → turun.
+   Bentuk *ter-* dan *-nya* ikut terbaca (*tercepat, termudah, terlandai, landainya*), juga beberapa kata Inggris (*fastest, easiest*). Negasi membalik arti ("tidak terlalu curam" = landai).
+4. **Relevansi semantik** (selalu dihitung, dan menjadi urutan utama bila tidak ada kata kriteria):
+   `0,4 × cos(Q, dokumen) + 0,6 × max cos(Q, aspek)`, dengan `cos(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)`, dicampur kecocokan nama (0,35) dan daerah (0,4) bila disebut.
 """)
 
 code(r"""
-#@title Kode hybrid scoring (python/search_scoring.py)
+#@title Kode deteksi kata kriteria dan pengurutan (python/search_scoring.py)
+print(inspect.getsource(search_scoring.intent_base))
 print(inspect.getsource(search_scoring.detect_intents))
-print(inspect.getsource(search_scoring.attribute_score))
-print(inspect.getsource(search_scoring.hybrid_score))
+print(inspect.getsource(search_scoring.rank_routes))
+
+by_id = {r['id']: r for r in routes}
 
 def search(query, top_n=5):
     q = model.encode(search_scoring.query_text(query)).tolist()
-    scored = [(r, search_scoring.hybrid_score(query, q, r['embedding'], r['aspect_embeddings'], r, routes)['score']) for r in routes]
-    return sorted(scored, key=lambda x: -x[1])[:top_n]
+    ranked = search_scoring.rank_routes(query, q, routes, doc_vecs, aspect_vecs, limit=top_n)
+    return [(by_id[row['id']], row['score']) for row in ranked]
+
+for q in ['jalur tercepat ke merbabu', 'jalur landai di jawa barat', 'tidak terlalu curam']:
+    p = search_scoring.plan(q, routes)
+    print(f"{q!r}: kriteria={p['intents']} gunung={p['mountain_tokens']} "
+          f"daerah={sorted(p['regions']['provinces']) + sorted(p['regions']['regencies'])} -> {len(p['routes'])} jalur tersisa")
 """)
 
 code(r"""
 #@title 7. Coba pencarian (ubah query di kolom kanan)
-QUERY = "jalur landai untuk pemula"  #@param {type:"string"}
+QUERY = "jalur tercepat ke merbabu"  #@param {type:"string"}
 
 print(f"Query: {QUERY!r}\n")
 for i, (r, s) in enumerate(search(QUERY), 1):
-    print(f"{i}. {r['name']:<42} skor {s:.4f} | {r['distance_km']} km, {r['elevation_gain_m']} m, "
-          f"{r['naismith_duration_hour']} jam, grade {r['average_grade_pct']}%, {r['difficulty']}")
+    print(f"{i}. {r['name']:<44} skor {s:.3f} | {r['distance_km']} km, +{r['elevation_gain_m']} m, "
+          f"{r['naismith_duration_hour']} jam, rata-rata {r['average_grade_pct']}%, paling curam {r['steepest_grade_pct']}%, {r['difficulty']}")
 """)
 
 code(r"""
 #@title Contoh hasil beberapa query (Top-3)
 rows = []
-for q in ['jalur mudah untuk pemula', 'jalur landai', 'trek menantang elevasi tinggi', 'pendakian singkat 2-3 jam',
-          'pendakian panjang beberapa hari', 'jalur pemula merbabu', 'gede pangrango', 'kawah ijen']:
-    rows.append({'Query': q, 'Top-3 (skor)': ' | '.join(f"{r['name']} ({s:.2f})" for r, s in search(q, 3))})
-pd.set_option('display.max_colwidth', None)
+for q in ['jalur untuk pemula', 'jalur landai', 'jalur tercepat ke merbabu', 'jalur tersulit ke slamet',
+          'pendakian panjang beberapa hari', 'jalur pendek di jawa barat', 'gede pangrango', 'jalur dengan sabana luas']:
+    rows.append({'Query': q, 'Top-3': ' | '.join(f"{r['name']} ({s:.2f})" for r, s in search(q, 3))})
 display(pd.DataFrame(rows))
 """)
 
 md(r"""
 ## 8. Evaluasi
-Label relevansi diturunkan otomatis dari statistik GPX (`python/evaluate_search.py`), sehingga dapat direproduksi:
-- query *landai* / *tidak terlalu curam* → grade < 15% dan total tanjakan di sepertiga terendah;
-- query *pemula/mudah/santai* → total tanjakan di sepertiga terendah dan grade < 30%;
-- query *curam/sulit* → grade di sepertiga tertinggi; *singkat* / *panjang* → durasi Naismith sepertiga terendah / tertinggi;
-- query nama gunung → nama jalur mengandung nama gunung tersebut.
+Kalimat uji dan label relevansi dari `python/evaluate_search.py`, diurutkan dengan cara yang sama seperti website (`rank_routes`).
+
+Label relevansi diturunkan otomatis dari statistik GPX, sehingga dapat direproduksi:
+- *landai* → kemiringan rata-rata di sepertiga terendah; *curam* → sepertiga tertinggi;
+- *mudah/pemula* → skor kesulitan sepertiga terendah; *sulit* → sepertiga tertinggi;
+- *singkat* / *panjang* → waktu Naismith sepertiga terendah / tertinggi;
+- nama gunung → nama jalur memuat nama gunung itu; daerah → jalur di provinsi itu.
 
 Metrik: **Precision@5** (proporsi jalur relevan di 5 teratas) dan **MRR** (rata-rata 1/peringkat jalur relevan pertama).
 
-> **Catatan metodologi:** label relevansi dan boost atribut sama-sama diturunkan dari statistik GPX, sehingga angka ini mengukur *konsistensi ranking dengan definisi intent*, bukan penilaian manusia. Untuk naskah, lengkapi dengan label relevansi manual (misalnya penilaian pendaki/pakar) agar evaluasinya independen.
+> **Catatan metodologi:** label relevansi dan urutan kata kriteria sama-sama memakai statistik GPX, sehingga angka ini mengukur *konsistensi urutan dengan definisi kriteria*, bukan penilaian manusia.
 """)
 
 code(r"""
 #@title Precision@5 & MRR
-import evaluate_search as ev
+res, n_main, _ = ev.evaluate(routes, model, log=None)
+table = pd.DataFrame({
+    'Query': [row[0] for row in res['ranked']],
+    'P@5': [row[1] for row in res['ranked']],
+    'RR': [row[2] for row in res['ranked']],
+})
+table['Kelompok'] = ['utama'] * n_main + ['daerah'] * (len(table) - n_main)
+display(table)
 
-res = []
-for q, label in ev.QUERIES:
-    rel = ev.relevant_ids(routes, label)
-    ranked = [(r['id'], s) for r, s in search(q, top_n=len(routes))]
-    p5, rr = ev.metrics(ranked, rel)
-    res.append({'Query': q, 'Label': label, 'Jalur relevan': len(rel), 'P@5': p5, 'RR': rr, 'Skor top-1': round(ranked[0][1], 4)})
-ev_df = pd.DataFrame(res)
-display(ev_df)
-summary = {'Precision@5': ev_df['P@5'].mean(), 'MRR': ev_df['RR'].mean(), 'Skor top-1 rata-rata': ev_df['Skor top-1'].mean()}
-display(pd.Series(summary).round(3).to_frame('Nilai'))
+summary = []
+for group, part in (('utama', slice(0, n_main)), ('daerah', slice(n_main, None))):
+    rows = res['ranked'][part]
+    if rows:
+        summary.append({'Kelompok': group, 'Query': len(rows),
+                        'P@5': round(float(np.mean([r[1] for r in rows])), 3),
+                        'MRR': round(float(np.mean([r[2] for r in rows])), 3)})
+summary = pd.DataFrame(summary)
+display(summary)
 """)
 
 code(r"""
 #@title 9. Ringkasan (dihitung dari hasil di atas)
-print(f"Dataset    : {len(routes)} jalur dari {len(files)} file GPX ({len(skipped)} dilewati karena duplikat/data rusak)")
-print(f"Kesulitan  : " + ', '.join(f"{k} {v}" for k, v in df['Kesulitan'].value_counts().items()))
-print(f"Query uji  : {len(ev_df)}")
-print(f"Precision@5: {summary['Precision@5']:.3f}")
-print(f"MRR        : {summary['MRR']:.3f}")
-print(f"Skor top-1 : {summary['Skor top-1 rata-rata']:.3f}")
-""")
-
-code(r"""
-#@title 10. Export dataset ke CSV
-out = df.copy()
-out['Narasi'] = [r['narrative_text'] for r in routes]
-out.to_csv('rutestrip_routes.csv', index=False)
-print('Tersimpan: rutestrip_routes.csv')
-if IN_COLAB:
-    from google.colab import files
-    files.download('rutestrip_routes.csv')
+pick = lambda g, c: summary[summary['Kelompok'] == g][c].iloc[0]
+print(f"Dataset          : {len(routes)} jalur, {df['mountain'].nunique()} gunung/bukit")
+print(f"Kesulitan        : " + ', '.join(f"{k} {v}" for k, v in df['difficulty'].value_counts().items()))
+print(f"Query uji        : {n_main} utama + {len(table) - n_main} daerah")
+print(f"Precision@5      : {pick('utama', 'P@5'):.3f}")
+print(f"MRR              : {pick('utama', 'MRR'):.3f}")
+if (summary['Kelompok'] == 'daerah').any():
+    print(f"Query daerah     : P@5 {pick('daerah', 'P@5'):.3f}, MRR {pick('daerah', 'MRR'):.3f}")
 """)
 
 nb = nbf.v4.new_notebook()
