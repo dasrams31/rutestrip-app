@@ -1,0 +1,13 @@
+[
+ {
+  "route_id": 61,
+  "action": "replace",
+  "status": "COMPLETE",
+  "file": "061-gunung-merbabu-via-wekas.gpx",
+  "km_added": 0,
+  "new_max_ele": 3115,
+  "peak_name": "Merbabu",
+  "peak_ele": 3145,
+  "reason": "loop recording reduced to the one-way Wekas trail"
+ }
+]
