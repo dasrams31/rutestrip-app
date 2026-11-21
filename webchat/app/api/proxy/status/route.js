@@ -1,90 +1,67 @@
 import { NextResponse } from 'next/server';
 
-export const revalidate = 0; // Disable static caching for live status
+export const revalidate = 0; // live status, never cached by Next
+
+/*
+ * Live status for /system. Every value here is measured; nothing is estimated
+ * or hard-coded (the page shows these to hikers).
+ *
+ *  - fastapi_api: webchat-api (route data, weather, maps, GPX)
+ *  - ai_engine:   the engine that writes chat answers. Hermes when
+ *                 HERMES_API_BASE is set (with Gemini as fallback, like
+ *                 app/api/chat/route.js), otherwise Gemini alone.
+ *  - gemini / hermes_gateway: the individual checks behind ai_engine.
+ *
+ * The Gemini check lists models (no tokens used) and is cached for 60 s, so many
+ * open status pages don't hit Google every 30 s each.
+ */
+
+const API_BASE = process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010';
+const HERMES_BASE = (process.env.HERMES_API_BASE || process.env.OLLAMA_API_BASE || '').replace(/\/$/, '');
+const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
+const CHECK_TIMEOUT_MS = 5000;
+const GEMINI_CACHE_MS = 60000;
+
+let geminiCache = { at: 0, state: null };
+
+async function ping(url, init = {}) {
+  try {
+    const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(CHECK_TIMEOUT_MS), ...init });
+    return res.ok ? 'ONLINE' : 'OFFLINE';
+  } catch {
+    return 'OFFLINE';
+  }
+}
+
+async function checkGemini() {
+  if (!GEMINI_KEY) return 'NOT_CONFIGURED';
+  if (geminiCache.state && Date.now() - geminiCache.at < GEMINI_CACHE_MS) return geminiCache.state;
+  const state = await ping('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', {
+    headers: { 'x-goog-api-key': GEMINI_KEY },
+  });
+  geminiCache = { at: Date.now(), state };
+  return state;
+}
 
 export async function GET() {
-  let isFastapiOnline = false;
-  let isHermesOnline = false;
-  let totalSubscribers = 20;
+  const [fastapi, gemini, hermes] = await Promise.all([
+    ping(`${API_BASE}/api/stats/subscribers`, { headers: { Accept: 'application/json' } }),
+    checkGemini(),
+    HERMES_BASE
+      ? ping(`${HERMES_BASE}/v1/models`, {
+          headers: process.env.HERMES_API_KEY ? { Authorization: `Bearer ${process.env.HERMES_API_KEY}` } : {},
+        })
+      : Promise.resolve('NOT_CONFIGURED'),
+  ]);
 
-  // 1. Check FastAPI (Port 8000) & Subscribers stats
-  try {
-    const res8000 = await fetch(`${process.env.RUTESTRIP_API_BASE || 'http://127.0.0.1:8010'}/api/stats/subscribers`, {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-    });
-    if (res8000.ok) {
-      isFastapiOnline = true;
-      const data8000 = await res8000.json();
-      if (data8000.total_subscribers) {
-        totalSubscribers = data8000.total_subscribers;
-      }
-    }
-  } catch (err) {
-    console.error('Status check FastAPI 8000 error:', err);
-  }
+  // The chat can answer when at least one configured engine responds.
+  const aiEngine = hermes === 'ONLINE' || gemini === 'ONLINE' ? 'ONLINE' : 'OFFLINE';
 
-  // 2. Check Hermes Gateway (Port 20128)
-  try {
-    const hermesBase = process.env.HERMES_API_BASE || process.env.OLLAMA_API_BASE;
-    const hermesKey = process.env.HERMES_API_KEY;
-    const res20128 = hermesBase ? await fetch(`${hermesBase.replace(/\/$/, '')}/v1/models`, {
-      cache: 'no-store',
-      headers: hermesKey ? { Authorization: `Bearer ${hermesKey}` } : {},
-    }) : null;
-    if (res20128?.ok) {
-      isHermesOnline = true;
-    }
-  } catch (err) {
-    console.error('Status check Hermes 20128 error:', err);
-  }
+  const services = { fastapi_api: fastapi, ai_engine: aiEngine, gemini };
+  if (HERMES_BASE) services.hermes_gateway = hermes;
 
-  // Calculate dynamic variations for realtime CPU/Memory metrics matching exact VPS specs: 16 GB RAM & 50 GB SSD Storage
-  const now = Date.now();
-  const cpuPercent = Math.min(95, Math.max(8, 14.5 + (Math.sin(now / 5000) * 6.2) + (Math.cos(now / 11000) * 3.1)));
-  const memUsedMb = Math.min(15000, Math.max(2800, Math.floor(3450 + (Math.sin(now / 7000) * 180))));
-  const memTotalMb = 16384; // Exact 16 GB RAM
-  const memPercent = Math.round((memUsedMb / memTotalMb) * 100);
-
-  const statusResponse = {
-    status: 'success',
-    timestamp: new Date().toISOString(),
-    vps: {
-      cpu_percent: parseFloat(cpuPercent.toFixed(1)),
-      memory_percent: memPercent,
-      memory_used_mb: memUsedMb,
-      memory_total_mb: memTotalMb,
-      disk_percent: 28.4,
-      disk_used_gb: 14.2,
-      disk_total_gb: 50.0, // Exact 50 GB SSD
-      uptime_hours: 342,
-    },
-    services: {
-      fastapi_api: isFastapiOnline ? 'ONLINE' : 'OFFLINE',
-      rutestrip_bot: isFastapiOnline ? 'ONLINE' : 'OFFLINE',
-      hermes_gateway: isHermesOnline ? 'ONLINE' : 'OFFLINE',
-      router_9router: isHermesOnline ? 'ONLINE' : 'OFFLINE',
-      website_rutestrip: 'ONLINE',
-    },
-    bot_stats: {
-      total_subscribers: totalSubscribers,
-      gpx_database_count: 55,
-      active_cronjobs: 6,
-    },
-    ai_tokens: {
-      total_tokens_registered: 14,
-      total_ai_requests: 1284,
-      active_providers: [
-        'Hermes VPS Gateway (Port 20128)',
-        '9Router LLM Pool',
-        'Google Gemini 3.6 Flash',
-      ],
-    },
-  };
-
-  return NextResponse.json(statusResponse, {
-    headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    },
-  });
+  return NextResponse.json(
+    { status: 'success', timestamp: new Date().toISOString(), services },
+    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } },
+  );
 }

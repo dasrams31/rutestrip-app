@@ -186,3 +186,53 @@ jadi energi dikumpulkan di pita judul, dan gerak hanya kontur yang tergambar sek
   putih di atas kertas #f6f4ec sudah cukup sebagai elevasi.
 - `offline.html`: bahasa visual yang sama tanpa font web, karena halaman itu harus
   tampil saat tidak ada koneksi; judul "Sinyal hilang di jalur." dan satu tombol.
+
+## Keputusan desain halaman status
+
+Alasan satu baris per keputusan (antislop R-31) untuk `chat.rutestrip.ai.id/system`
+(`webchat/app/system/page.js`; `/monitoring` dialihkan ke sini). Dial ENERGY 2 /
+RHYTHM 2 / MOTION 1: halaman ini dibaca ulang tiap 30 detik, jadi gerak hanya akan
+bersaing dengan kabar statusnya.
+
+- Hanya data yang benar-benar diukur `/api/proxy/status`: `fastapi_api`,
+  `hermes_gateway`, dan `timestamp`; angka CPU, RAM, disk, uptime, pelanggan, jumlah
+  GPX, cronjob, permintaan AI, dan daftar provider di respons itu nilai tetap atau
+  salinan, jadi tidak ditampilkan (R-17, R-36).
+- Satu titik fokus: pita zamrud #053b30 berkontur dengan satu kalimat besar Barlow
+  Condensed (Semua layanan berjalan, Ada gangguan, Tidak bisa dihubungi), karena
+  pendaki cukup membaca satu kalimat itu dalam lima detik.
+- Kalimat di bawah judul menyebut akibatnya bagi pendaki (misalnya chat tetap
+  menjawab tanpa data jalur), bukan nama server, karena itu yang menentukan perlu
+  menunggu atau tidak.
+- Kuning #FCD34D hanya untuk langkah berikutnya: "Kembali ke chat" saat server
+  terjangkau, berganti "Coba hubungi lagi" saat tidak, supaya kuning tetap berarti
+  satu hal.
+- Layanan berupa baris dalam satu lembar putih, bukan kartu-kartu, karena tiga
+  layanan dibaca berurutan dari atas ke bawah seperti papan jalur.
+- Setiap baris punya garis pendek di tepi kiri seperti tanda cat di batang pohon
+  jalur, dan status selalu kata plus ikon dalam chip, tidak warna saja.
+- Situs chat dianggap berjalan bila status terbaca; kalau pemeriksaan gagal, dua
+  layanan lain jadi "Belum diketahui" dengan keadaan terakhir yang terlihat, karena
+  dari browser kami memang tidak tahu.
+- Bot Telegram dibuat kartu terpisah tanpa lampu status, karena bot tidak diperiksa
+  oleh endpoint ini dan kami tidak mau mengarang statusnya.
+- Detail teknis (komponen, alamat pemeriksaan, nilai mentah, waktu server, lama
+  pemeriksaan, galat terakhir) dilipat dalam `<details>` di bawah daftar, karena
+  hanya pengelola yang butuh.
+- Periksa otomatis tiap 30 detik (bukan 4 detik), berhenti saat tab tidak terlihat,
+  dan labelnya menyebut angka yang sama dengan kode; setelah 60 detik tanpa
+  pemeriksaan muncul catatan bahwa hasilnya sudah lama.
+- Muat awal memakai baris kerangka diam tanpa kilau, dan ikon putar hanya selama
+  memeriksa; keduanya mati dengan prefers-reduced-motion; tidak ada titik berdenyut.
+- Kontur di pita dibuat dengan resep yang sama seperti `rs-contours` (cincin
+  bertingkat, setiap cincin ke-5 lebih tebal) dan diam, supaya chat dan situs utama
+  terasa satu keluarga.
+- Barlow Condensed dimuat lewat `next/font` hanya di layout `/system` dengan
+  display=optional, seperti situs utama, agar judul tidak bergeser.
+- Bilah atas putih solid tanpa blur, tautan Chat dan Situs utama setinggi 44 px,
+  pemilih bahasa diperbesar ke 44 px; di bawah 400 px nama merek dan di bawah 560 px
+  tulisan "Situs utama" disembunyikan supaya muat di 320 px.
+- Radius 8 sampai 12 px, garis 1 px #dcd8c9, tanpa bayangan; tombol sakelar
+  bersudut 6 px, bukan pil, mengikuti arah "tanpa bentuk pil".
+- Warna amber dan merah hanya untuk tanda gangguan (ikon, chip, catatan), selalu
+  bersama kata, agar palet tetap zamrud, kertas, dan satu kuning.
