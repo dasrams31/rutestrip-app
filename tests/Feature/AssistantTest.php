@@ -116,7 +116,8 @@ class AssistantTest extends TestCase
     {
         Http::fake([
             '*' . self::GEMINI . 'model-a:*' => Http::response(['error' => ['code' => 429, 'status' => 'RESOURCE_EXHAUSTED']], 429),
-            '*' . self::GEMINI . 'model-b:*' => Http::response($this->sse('Jawaban dari model cadangan.')),
+            // A fresh response per call: a single stream body can only be read once.
+            '*' . self::GEMINI . 'model-b:*' => fn () => Http::response($this->sse('Jawaban dari model cadangan.')),
         ]);
         $calls = fn (string $model) => collect(Http::recorded())->filter(fn ($p) => str_contains($p[0]->url(), "models/{$model}:"))->count();
 
