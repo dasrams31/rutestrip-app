@@ -708,7 +708,26 @@ document.addEventListener('DOMContentLoaded', function () {
         .addTo(map).bindPopup(@js(__('Titik awal')));
     L.circleMarker(coords[coords.length - 1], { radius: 8, fillColor: '#f59e0b', color: '#fff', weight: 3, fillOpacity: 1 })
         .addTo(map).bindPopup(@js(__('Titik akhir')));
-    map.fitBounds(line.getBounds(), { padding: [30, 30] });
+    var fit = function () {
+        map.invalidateSize();
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+    };
+    fit();
+    // The box can still change size after this runs (fonts, grid, cards loading),
+    // which left the map zoomed far in. Re-fit until the user moves the map.
+    var userMoved = false;
+    map.once('zoomstart dragstart', function (e) { if (e.originalEvent || e.type === 'dragstart') userMoved = true; });
+    el.addEventListener('mousedown', function () { userMoved = true; }, { once: true });
+    el.addEventListener('touchstart', function () { userMoved = true; }, { once: true, passive: true });
+    window.addEventListener('load', function () { if (!userMoved) fit(); });
+    if ('ResizeObserver' in window) {
+        var lastW = el.clientWidth, lastH = el.clientHeight;
+        new ResizeObserver(function () {
+            if (userMoved || (el.clientWidth === lastW && el.clientHeight === lastH)) return;
+            lastW = el.clientWidth; lastH = el.clientHeight;
+            fit();
+        }).observe(el);
+    }
 });
 </script>
 @endif
