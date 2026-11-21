@@ -130,7 +130,15 @@ class AssistantController extends Controller
         $firstToken = max(1, (int) config('services.gemini.first_token_timeout_ms', 12000)) / 1000;
         $deadline   = microtime(true) + max(1, (int) config('services.gemini.total_timeout_ms', 30000)) / 1000;
 
+        $lastModel = end($models);
         foreach ($models as $model) {
+            // A model that just answered 429 (quota) is skipped for a minute so
+            // people don't wait for it to fail again; the last model is always tried.
+            $cooldownKey = 'assistant:cooldown:' . $model;
+            if ($model !== $lastModel && Cache::has($cooldownKey)) {
+                continue;
+            }
+
             $noThinkingKey = 'assistant:no-thinking:' . $model;
             $thinkingOff   = ! Cache::has($noThinkingKey);
 
@@ -146,6 +154,13 @@ class AssistantController extends Controller
                 [$text, $status, $error] = $this->callModel($key, $model, $system, $contents, $thinkingOff, min($firstToken, $remaining), $deadline);
                 if ($text !== '') {
                     return $text;
+                }
+
+                if ($status === 429) {
+                    // Quota/rate limit: expected now and then, skip this model briefly.
+                    Cache::put($cooldownKey, true, now()->addSeconds(60));
+                    Log::info("Assistant: Gemini {$model} hit its rate limit, skipped for 60 s");
+                    break;
                 }
 
                 Log::warning("Assistant: Gemini {$model} failed", ['status' => $status, 'error' => Str::limit((string) $error, 300)]);

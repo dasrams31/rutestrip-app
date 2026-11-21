@@ -608,6 +608,9 @@ class RouteConditionsService
     {
         return Http::timeout(5)
             ->connectTimeout(3)
+            // One quick retry when the connection itself fails (e.g. an SSL
+            // handshake timeout); HTTP error responses are not retried.
+            ->retry(2, 400, fn($e) => $e instanceof \Illuminate\Http\Client\ConnectionException, throw: false)
             ->acceptJson()
             ->withUserAgent(self::USER_AGENT);
     }

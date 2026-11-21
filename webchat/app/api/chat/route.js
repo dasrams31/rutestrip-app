@@ -22,6 +22,7 @@ const GEMINI_TOTAL_TIMEOUT_MS       = Number(process.env.GEMINI_TOTAL_TIMEOUT_MS
 const GEMINI_MAX_OUTPUT_TOKENS      = 1024;
 // Models that answered 400 to thinkingConfig (thinking cannot be disabled); remembered per process.
 const MODELS_WITHOUT_THINKING_CONFIG = new Set();
+const MODEL_COOLDOWN_UNTIL = new Map(); // model -> timestamp until which a 429'd model is skipped
 const HERMES_BASE  = process.env.HERMES_API_BASE || process.env.OLLAMA_API_BASE || '';
 const HERMES_MODEL = process.env.HERMES_MODEL || process.env.OLLAMA_MODEL || 'ag/gemini-3.6-flash-medium';
 const HERMES_KEY   = process.env.HERMES_API_KEY || '';
@@ -538,7 +539,11 @@ async function generateWithGemini(system, history, prompt, onDelta) {
   const deadline = Date.now() + GEMINI_TOTAL_TIMEOUT_MS;
   const errors = [];
 
+  const lastModel = GEMINI_MODELS[GEMINI_MODELS.length - 1];
   for (const modelName of GEMINI_MODELS) {
+    // A model that just answered 429 (quota) is skipped for a minute; the last one is always tried.
+    if (modelName !== lastModel && (MODEL_COOLDOWN_UNTIL.get(modelName) || 0) > Date.now()) continue;
+
     // Retry the same model once without thinkingConfig if it rejects thinkingBudget=0.
     for (let attempt = 0; attempt < 2; attempt++) {
       const remainingMs = deadline - Date.now();
@@ -559,8 +564,13 @@ async function generateWithGemini(system, history, prompt, onDelta) {
         return { text: r.text, model: modelName, first_token_ms: r.firstTokenMs };
       }
 
-      console.error(`Gemini ${modelName} failed:`, r.error || 'empty response');
       errors.push(`${modelName}: ${r.error || 'empty response'}`);
+      if (r.status === 429) {
+        MODEL_COOLDOWN_UNTIL.set(modelName, Date.now() + 60000);
+        console.warn(`Gemini ${modelName} hit its rate limit, skipped for 60 s`);
+        break;
+      }
+      console.error(`Gemini ${modelName} failed:`, r.error || 'empty response');
 
       if (withThinkingConfig && r.status === 400 && /thinking/i.test(r.error || '')) {
         MODELS_WITHOUT_THINKING_CONFIG.add(modelName);
