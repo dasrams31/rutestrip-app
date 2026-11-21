@@ -92,9 +92,16 @@
                         <code class="text-sm text-rs-z9 bg-rs-mist rounded px-1.5 py-0.5 break-all">{{ $cookie['name'] }}</code>
                     </div>
                     <p class="mt-2 text-rs-ink leading-relaxed">{{ $cookie['purpose'] }}</p>
-                    <dl class="mt-3 grid grid-cols-1 min-[420px]:grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                        <div class="flex gap-2"><dt class="text-rs-muted">{{ __('Berlaku') }}:</dt><dd class="text-rs-ink font-medium">{{ $cookie['life'] }}</dd></div>
-                        <div class="flex gap-2 min-w-0"><dt class="text-rs-muted">{{ __('Domain') }}:</dt><dd class="text-rs-ink font-medium break-all">{{ $cookie['domain'] }}</dd></div>
+                    {{-- Label above value: both columns line up in every card, whatever the text length --}}
+                    <dl class="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 gap-3 border-t border-rs-line pt-3 text-sm">
+                        <div class="min-w-0">
+                            <dt class="text-xs text-rs-muted">{{ __('Berlaku') }}</dt>
+                            <dd class="mt-0.5 text-rs-ink font-medium">{{ $cookie['life'] }}</dd>
+                        </div>
+                        <div class="min-w-0">
+                            <dt class="text-xs text-rs-muted">{{ __('Domain') }}</dt>
+                            <dd class="mt-0.5 text-rs-ink font-medium break-all">{{ $cookie['domain'] }}</dd>
+                        </div>
                     </dl>
                 </li>
                 @endforeach
