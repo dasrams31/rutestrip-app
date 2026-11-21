@@ -1296,8 +1296,9 @@
     "Rekaman naik lalu turun lewat jalur yang sama: bagian turunnya dibuang.": "The recording went up and came back down the same path: the way down was dropped.",
     "Rekaman berupa loop (turun lewat jalur lain): hanya jalur naiknya yang disimpan.": "The recording is a loop (down another path): only the way up was kept.",
     ":count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.": ":count routes were tidied automatically (way down, loops, side trips or extra tracks dropped). Details are in each route's file history.",
-    "Waktu jalan dari rumus Naismith, belum termasuk istirahat dan beban carrier.": "Walking time from Naismith's rule, without breaks or a heavy pack.",
     "Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik. Waktu istirahat dan beban carrier belum termasuk, jadi waktu di lapangan biasanya lebih lama.": "The estimate uses Naismith's rule, a hikers' rule of thumb: 1 hour for every 5 km, plus 1 hour for every 600 m of climbing. Breaks and a heavy pack are not included, so it usually takes longer on the trail.",
     "Diurutkan dari waktu jalan yang paling singkat (Naismith, belum termasuk istirahat).": "Sorted from the shortest walking time (Naismith, without breaks).",
-    "Diurutkan dari waktu jalan yang paling lama (Naismith, belum termasuk istirahat).": "Sorted from the longest walking time (Naismith, without breaks)."
+    "Diurutkan dari waktu jalan yang paling lama (Naismith, belum termasuk istirahat).": "Sorted from the longest walking time (Naismith, without breaks).",
+    "Waktu ke puncak": "Time to summit",
+    "Dihitung dengan rumus Naismith, belum termasuk istirahat dan beban carrier.": "Worked out with Naismith's rule, without breaks or a heavy pack."
 }

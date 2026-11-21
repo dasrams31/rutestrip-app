@@ -327,7 +327,7 @@
                             <dl class="mt-auto pt-4 {{ $big ? 'grid grid-cols-3 gap-3 sm:max-w-md' : 'flex flex-wrap gap-x-6 gap-y-2 [&_dd]:whitespace-nowrap' }}">
                                 <div><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $num($item['distance'], 1) }} km</dd></div>
                                 <div><dt class="text-xs text-rs-muted">{{ __('Puncak') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $item['summit'] ? $num($item['summit']) . ' m' : '-' }}</dd></div>
-                                <div><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $hoursLabel($item['hours']) }}</dd></div>
+                                <div><dt class="text-xs text-rs-muted">{{ ($item['to_summit'] ?? true) ? __('Waktu ke puncak') : __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $hoursLabel($item['hours']) }}</dd></div>
                             </dl>
                         </div>
                     </a>

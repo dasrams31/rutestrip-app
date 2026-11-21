@@ -116,7 +116,7 @@
             <dl class="mt-6 grid grid-cols-2 md:grid-cols-4 border-t border-white/25">
                 @foreach([
                     [__('Jarak'), $num($route->distance_km, 1) . ' km'],
-                    [__('Waktu jalan'), $hoursLabel($route->naismith_duration_hour)],
+                    [$route->duration_label, $hoursLabel($route->naismith_duration_hour)],
                     [__('Total naik'), $num($route->elevation_gain_m) . ' m'],
                     [__('Kemiringan rata-rata'), $num($route->average_grade_pct, 1) . '%'],
                 ] as [$term, $value])
@@ -135,7 +135,7 @@
             @if($route->naismith_duration_hour)
             {{-- Naismith assumes a fit walker without breaks; say so next to the number. --}}
             <p class="{{ $route->steepest_grade_pct !== null ? 'mt-1' : 'mt-3' }} text-sm text-[#d1fae5]">
-                {{ __('Waktu jalan dari rumus Naismith, belum termasuk istirahat dan beban carrier.') }}
+                {{ __('Dihitung dengan rumus Naismith, belum termasuk istirahat dan beban carrier.') }}
             </p>
             @endif
 

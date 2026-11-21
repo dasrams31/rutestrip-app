@@ -62,6 +62,7 @@ class SearchController extends Controller
                 'distance'   => (float) $r->distance_km,
                 'gain'       => (int) round((float) $r->elevation_gain_m),
                 'hours'      => (float) $r->naismith_duration_hour,
+                'to_summit'  => $r->summit_route !== false,
                 'summit'     => $r->max_elevation_m,
                 'likes'      => (int) $r->likes_count,
                 'basecamp'   => $conditions->basecampName($r),

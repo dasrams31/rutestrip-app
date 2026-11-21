@@ -111,6 +111,7 @@ class RouteController extends Controller
                 'naismith_duration_hour' => $result['naismith_duration_hour'] ?? null,
                 'average_grade_pct'      => $result['average_grade_pct'] ?? null,
                 'steepest_grade_pct'     => $result['steepest_grade_pct'] ?? null,
+                'summit_route'           => ! preg_match(GpxTrackCleaner::KEEP_WHOLE_PATTERN, $request->name),
                 'narrative_text'         => $narrativeText,
                 'sbert_embedding'        => $result['embedding'] ?? null,
             ]);
@@ -280,6 +281,7 @@ class RouteController extends Controller
                     'naismith_duration_hour' => $result['naismith_duration_hour'] ?? null,
                     'average_grade_pct'      => $result['average_grade_pct'] ?? null,
                     'steepest_grade_pct'     => $result['steepest_grade_pct'] ?? null,
+                    'summit_route'           => ! preg_match(GpxTrackCleaner::KEEP_WHOLE_PATTERN, $routeName),
                     'narrative_text'         => $result['narrative_text'] ?? null,
                     'sbert_embedding'        => $result['embedding'] ?? null,
                 ]);

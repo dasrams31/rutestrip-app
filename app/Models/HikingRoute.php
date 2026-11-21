@@ -44,6 +44,7 @@ class HikingRoute extends Model
         'image_path',
         'uploaded_by',
         'steepest_grade_pct',
+        'summit_route',
         'route_coordinates',
         'gpx_file_path',
         'distance_km',
@@ -64,6 +65,7 @@ class HikingRoute extends Model
         'sbert_embedding'        => 'array',
         'sbert_aspect_embeddings' => 'array',
         'route_coordinates'      => 'array',
+        'summit_route'           => 'boolean',
     ];
 
     protected static function booted(): void
@@ -102,6 +104,16 @@ class HikingRoute extends Model
         $hours   = floor($this->naismith_duration_hour);
         $minutes = round(($this->naismith_duration_hour - $hours) * 60);
         return __(':hours jam :minutes menit', ['hours' => $hours, 'minutes' => $minutes]);
+    }
+
+    /**
+     * Label for the Naismith time: "Waktu ke puncak" when the GPX runs from the
+     * trailhead to a summit, "Waktu jalan" for crater walks, crossings, loops
+     * and routes that stop short of the summit (summit_route = false).
+     */
+    public function getDurationLabelAttribute(): string
+    {
+        return $this->summit_route === false ? __('Waktu jalan') : __('Waktu ke puncak');
     }
 
     /**
