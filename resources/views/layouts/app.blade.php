@@ -166,7 +166,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=optional" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -195,7 +195,7 @@
         .rs-on-dark .rs-on-light :focus-visible { outline-color: var(--rs-z9); }
 
         /* Busy state of search buttons: both labels share one grid cell so the width never jumps. */
-        .rs-swap { display: inline-grid; }
+        .rs-swap { display: inline-grid; place-items: center; align-items: center; }
         .rs-swap > * { grid-area: 1 / 1; }
         .rs-swap > [hidden] { display: block; visibility: hidden; }
 

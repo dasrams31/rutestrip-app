@@ -357,14 +357,18 @@
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:pt-12 sm:pb-24 grid lg:grid-cols-12 gap-10 lg:gap-16">
             <div class="lg:col-span-5 lg:sticky lg:top-28 self-start">
-                <h2 id="how-title" class="rs-display uppercase text-[clamp(2.25rem,8vw,4rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Begini kami mencarikan jalurnya.') }}</h2>
-                <p class="mt-4 text-rs-muted leading-relaxed">{{ __('Kamu tidak perlu menebak kata kunci. Coba saja kalimat ini:') }}</p>
-                <form action="{{ route('search.submit') }}" method="POST" class="mt-5" data-search-form>
+                <h2 id="how-title" class="rs-display uppercase text-[clamp(2rem,6vw,3.25rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Begini kami mencarikan jalurnya.') }}</h2>
+                <p class="mt-4 max-w-md text-rs-muted leading-relaxed">{{ __('Kamu tidak perlu menebak kata kunci. Tulis saja seperti bercerita, misalnya:') }}</p>
+                <form action="{{ route('search.submit') }}" method="POST" class="mt-5 max-w-md" data-search-form>
                     @csrf
-                    <p class="rs-display text-3xl sm:text-4xl text-rs-ink border-l-4 border-rs-z7 pl-4">{{ __('"jalur landai untuk pemula"') }}</p>
+                    {{-- The example is shown as the search box it stands for, so it reads as "type this" --}}
+                    <div class="flex items-center gap-3 rounded-lg border-2 border-rs-z7/30 bg-white px-4 py-3">
+                        <x-icon name="search" class="w-5 h-5 shrink-0 text-rs-z7" />
+                        <span class="text-base sm:text-lg font-semibold text-rs-ink">{{ __('jalur landai untuk pemula') }}</span>
+                    </div>
                     <button type="submit" name="query" value="{{ __('jalur landai untuk pemula') }}" data-search-submit
-                            class="rs-swap mt-5 min-h-[48px] rounded-lg bg-rs-z7 px-5 font-semibold text-white hover:bg-rs-z9 transition-colors">
-                        <span data-idle>{{ __('Cari dengan kalimat ini') }}</span>
+                            class="rs-swap mt-3 w-full sm:w-auto min-h-[48px] rounded-lg bg-rs-z7 px-5 font-semibold text-white hover:bg-rs-z9 transition-colors">
+                        <span data-idle>{{ __('Coba cari kalimat ini') }}</span>
                         <span data-busy hidden>{{ __('Mencari jalur...') }}</span>
                     </button>
                     <p class="sr-only" role="status" aria-live="polite" data-search-status data-text="{{ __('Mencari jalur yang cocok, tunggu sebentar.') }}"></p>

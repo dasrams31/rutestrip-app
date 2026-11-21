@@ -8,7 +8,7 @@
 @push('head')
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {{-- Barlow Condensed (SIL OFL 1.1): drawn from road and trail signage, the "papan penunjuk jalur" voice. --}}
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=optional" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
 @endpush
 
 @push('styles')
