@@ -5,6 +5,7 @@ use App\Models\Comment;
 use App\Models\Favorite;
 use App\Models\HikingRoute;
 use App\Models\Rating;
+use App\Services\GpxTrackCleaner;
 use App\Services\GpxVersionService;
 use App\Services\PythonProcessorService;
 use Illuminate\Http\Request;
@@ -17,9 +18,11 @@ class RouteController extends Controller
 {
     private PythonProcessorService $pythonService;
     private GpxVersionService $gpxVersionService;
+    private GpxTrackCleaner $trackCleaner;
 
-    public function __construct(PythonProcessorService $pythonService, GpxVersionService $gpxVersionService)
+    public function __construct(PythonProcessorService $pythonService, GpxVersionService $gpxVersionService, GpxTrackCleaner $trackCleaner)
     {
+        $this->trackCleaner = $trackCleaner;
         $this->pythonService      = $pythonService;
         $this->gpxVersionService = $gpxVersionService;
     }
@@ -64,6 +67,7 @@ class RouteController extends Controller
             'description' => 'nullable|string|max:2000',
             'gpx_file'    => 'required|file|max:10240', // Max 10MB
             'change_log'  => 'nullable|string|max:1000',
+            'clean_track' => 'nullable|boolean',
         ]);
 
         // Validate file extension
@@ -82,6 +86,10 @@ class RouteController extends Controller
         $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
 
         try {
+            // Drop the way back down, loops, side trips and stray tracks before measuring.
+            $cleaning  = $request->boolean('clean_track', true) ? $this->trackCleaner->clean($fullPath, $request->name) : [];
+            $cleanNote = GpxTrackCleaner::summary($cleaning, 'id'); // the stored history note stays Indonesian
+
             // Process GPX with Python
             $result = $this->pythonService->ingest($fullPath);
 
@@ -111,11 +119,11 @@ class RouteController extends Controller
                 $route,
                 $filePath,
                 Auth::id(),
-                $request->input('change_log')
+                trim($request->input('change_log') . ' ' . $cleanNote) ?: null
             );
 
             return redirect()->route('routes.index')
-                ->with('success', __('Jalur pendakian berhasil ditambahkan!'));
+                ->with('success', trim(__('Jalur pendakian berhasil ditambahkan!') . ' ' . GpxTrackCleaner::summary($cleaning)));
 
         } catch (\Exception $e) {
             // Delete uploaded file if processing fails
@@ -219,6 +227,7 @@ class RouteController extends Controller
         $request->validate([
             'gpx_files'   => "required|array|min:1|max:{$maxFiles}",
             'gpx_files.*' => 'required|file|max:10240',
+            'clean_track' => 'nullable|boolean',
         ], [
             'gpx_files.required' => 'Pilih minimal satu file GPX (total ukuran maksimal ' . ini_get('post_max_size') . ').',
             'gpx_files.max'      => "Maksimal {$maxFiles} file per batch.",
@@ -238,7 +247,9 @@ class RouteController extends Controller
         $results = [
             'success' => [],
             'failed'  => [],
+            'cleaned' => [],
         ];
+        $clean = $request->boolean('clean_track', true);
 
         foreach ($request->file('gpx_files') as $gpxFile) {
             $originalName = $gpxFile->getClientOriginalName();
@@ -249,6 +260,8 @@ class RouteController extends Controller
             $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
 
             try {
+                $cleanNote = $clean ? GpxTrackCleaner::summary($this->trackCleaner->clean($fullPath, $routeName), 'id') : null;
+
                 // Process GPX with Python
                 $result = $this->pythonService->ingest($fullPath);
 
@@ -275,10 +288,13 @@ class RouteController extends Controller
                     $route,
                     $filePath,
                     Auth::id(),
-                    'Initial GPX upload from batch import.'
+                    trim('Initial GPX upload from batch import. ' . $cleanNote)
                 );
 
                 $results['success'][] = $originalName;
+                if ($cleanNote) {
+                    $results['cleaned'][] = ['file' => $originalName, 'note' => $cleanNote];
+                }
 
             } catch (\Exception $e) {
                 // Delete uploaded file if processing fails
@@ -292,17 +308,20 @@ class RouteController extends Controller
 
         $successCount = count($results['success']);
         $failedCount  = count($results['failed']);
+        $cleanedNote  = $results['cleaned']
+            ? ' ' . __(':count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.', ['count' => count($results['cleaned'])])
+            : '';
 
         if ($failedCount === 0) {
             return redirect()->route('routes.index')
-                ->with('success', __('Berhasil mengupload :count file GPX!', ['count' => $successCount]));
+                ->with('success', __('Berhasil mengupload :count file GPX!', ['count' => $successCount]) . $cleanedNote);
         } elseif ($successCount === 0) {
             return back()
                 ->withErrors(['gpx_files' => 'Semua file gagal diproses.'])
                 ->with('batch_results', $results);
         } else {
             return redirect()->route('routes.index')
-                ->with('warning', __('Berhasil: :ok file, Gagal: :failed file.', ['ok' => $successCount, 'failed' => $failedCount]))
+                ->with('warning', __('Berhasil: :ok file, Gagal: :failed file.', ['ok' => $successCount, 'failed' => $failedCount]) . $cleanedNote)
                 ->with('batch_results', $results);
         }
     }

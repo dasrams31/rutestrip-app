@@ -50,6 +50,8 @@
                 @enderror
             </div>
 
+            @include('partials.clean-track-toggle')
+
             <div class="rounded-lg bg-[#faf9f4] border rs-rule p-4 text-[0.9375rem]">
                 <p class="font-semibold">{{ __('Yang terjadi setelah diunggah') }}</p>
                 <p class="mt-1 rs-muted">{{ __('Angka jalur dihitung ulang, sidik file (hash SHA-256) dibuat, dan versi baru langsung jadi versi aktif.') }}</p>

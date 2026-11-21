@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\GpxVersion;
 use App\Models\HikingRoute;
 use App\Models\VerificationLog;
+use App\Services\GpxTrackCleaner;
 use App\Services\GpxVersionService;
 use App\Services\PythonProcessorService;
 use Illuminate\Http\Request;
@@ -19,7 +20,8 @@ class ProvenanceController extends Controller
 {
     public function __construct(
         private GpxVersionService $gpxVersionService,
-        private PythonProcessorService $pythonService
+        private PythonProcessorService $pythonService,
+        private GpxTrackCleaner $trackCleaner
     )
     {
     }
@@ -51,6 +53,7 @@ class ProvenanceController extends Controller
         $request->validate([
             'gpx_file'   => 'required|file|max:10240',
             'change_log' => 'required|string|max:1000',
+            'clean_track' => 'nullable|boolean',
         ]);
 
         $gpxFile   = $request->file('gpx_file');
@@ -66,6 +69,9 @@ class ProvenanceController extends Controller
         $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($filePath);
 
         try {
+            $cleaning  = $request->boolean('clean_track', true) ? $this->trackCleaner->clean($fullPath, $route->name) : [];
+            $cleanNote = GpxTrackCleaner::summary($cleaning, 'id');
+
             $result = $this->pythonService->ingest($fullPath);
 
             $route->update([
@@ -84,12 +90,12 @@ class ProvenanceController extends Controller
                 $route,
                 $filePath,
                 Auth::id(),
-                $request->input('change_log')
+                trim($request->input('change_log') . ' ' . $cleanNote)
             );
 
             return redirect()
                 ->route('routes.provenance', $route)
-                ->with('success', "Versi GPX v{$version->version_number} berhasil dibuat dan dijadikan versi aktif.");
+                ->with('success', trim("Versi GPX v{$version->version_number} berhasil dibuat dan dijadikan versi aktif. " . GpxTrackCleaner::summary($cleaning)));
         } catch (\Throwable $e) {
             Storage::disk('public')->delete($filePath);
 

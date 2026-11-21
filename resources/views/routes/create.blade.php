@@ -107,6 +107,8 @@
                     @enderror
                 </div>
 
+                @include('partials.clean-track-toggle')
+
                 <div class="pt-2 border-t rs-rule">
                     <p class="text-sm rs-muted mt-4">{{ __('Jalur ini akan tampil dengan tanda') }} <span class="font-semibold text-[#14231d] [overflow-wrap:anywhere]">{{ __('Diunggah oleh :name', ['name' => auth()->user()->name]) }}</span></p>
                     <button type="submit" class="rs-sign w-full sm:w-auto mt-4 text-base" id="submit-btn">

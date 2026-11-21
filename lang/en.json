@@ -1288,5 +1288,15 @@
     "sulit": "hard",
     "singkat": "short",
     "panjang": "long",
-    "Bagian paling curam: sekitar :grade% sepanjang 1 km.": "Steepest part: about :grade% over 1 km."
+    "Bagian paling curam: sekitar :grade% sepanjang 1 km.": "Steepest part: about :grade% over 1 km.",
+    "Rapikan jalur otomatis": "Tidy the route automatically",
+    "Kalau rekamannya naik lalu turun lagi, berupa loop, ada belokan yang balik ke titik sama, atau berisi beberapa track, kami simpan satu jalur saja dari basecamp sampai puncak. Titik GPS-nya tidak diubah, hanya dibuang yang tidak perlu. Nama jalur yang memuat kata loop atau lintas dibiarkan utuh.": "If the recording goes up and back down, is a loop, has detours that return to the same spot, or holds several tracks, we keep one route from the trailhead to the summit. GPS points are never moved, only the extra ones are dropped. Routes whose name contains loop or lintas are kept whole.",
+    ":count potongan rekaman terpisah dibuang (beberapa track atau lompatan GPS).": ":count separate pieces of recording dropped (extra tracks or GPS jumps).",
+    ":count bagian rekaman disambung jadi satu jalur.": ":count parts of the recording joined into one route.",
+    ":count cabang atau putaran yang kembali ke titik sama dibuang (:km km).": ":count side trips or loops back to the same spot dropped (:km km).",
+    "Jalur dirapikan otomatis: :actions Jarak :before km jadi :after km.": "Route tidied automatically: :actions Distance :before km became :after km.",
+    "Rekaman dari puncak ke bawah dibalik supaya jalurnya naik ke puncak.": "Recording ran from the summit down, so it was reversed to climb to the summit.",
+    "Rekaman naik lalu turun lewat jalur yang sama: bagian turunnya dibuang.": "The recording went up and came back down the same path: the way down was dropped.",
+    "Rekaman berupa loop (turun lewat jalur lain): hanya jalur naiknya yang disimpan.": "The recording is a loop (down another path): only the way up was kept.",
+    ":count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.": ":count routes were tidied automatically (way down, loops, side trips or extra tracks dropped). Details are in each route's file history."
 }

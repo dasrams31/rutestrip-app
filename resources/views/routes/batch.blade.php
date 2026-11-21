@@ -104,6 +104,8 @@
                     </ul>
                 </div>
 
+                @include('partials.clean-track-toggle')
+
                 <div id="progress-section" class="hidden rounded-lg border-2 border-[#047857] bg-[#ecfdf5] p-4" role="status" aria-live="polite">
                     <p class="font-semibold text-[#053b30] flex items-center gap-2">
                         <svg class="w-5 h-5 animate-spin motion-reduce:animate-none shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#a7f3d0" stroke-width="3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="#047857" stroke-width="3" stroke-linecap="round"/></svg>
