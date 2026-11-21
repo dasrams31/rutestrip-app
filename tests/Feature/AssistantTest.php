@@ -112,6 +112,27 @@ class AssistantTest extends TestCase
         Http::assertSent(fn (Request $r) => str_contains($r->url(), 'models/model-b:'));
     }
 
+    public function test_a_rate_limited_model_is_skipped_for_a_minute(): void
+    {
+        Http::fake([
+            '*' . self::GEMINI . 'model-a:*' => Http::response(['error' => ['code' => 429, 'status' => 'RESOURCE_EXHAUSTED']], 429),
+            '*' . self::GEMINI . 'model-b:*' => Http::response($this->sse('Jawaban dari model cadangan.')),
+        ]);
+        $calls = fn (string $model) => collect(Http::recorded())->filter(fn ($p) => str_contains($p[0]->url(), "models/{$model}:"))->count();
+
+        $this->ask(['message' => 'Pertanyaan pertama'])->assertOk();
+        $this->ask(['message' => 'Pertanyaan kedua'])->assertOk()->assertJsonPath('reply', 'Jawaban dari model cadangan.');
+
+        // model-a once (the 429), model-b twice: the second question skips model-a.
+        $this->assertSame(1, $calls('model-a'));
+        $this->assertSame(2, $calls('model-b'));
+
+        // After the cooldown model-a is tried again.
+        $this->travel(61)->seconds();
+        $this->ask(['message' => 'Pertanyaan ketiga'])->assertOk();
+        $this->assertSame(2, $calls('model-a'));
+    }
+
     public function test_retries_a_model_without_thinking_config_when_it_is_rejected(): void
     {
         Http::fake([
