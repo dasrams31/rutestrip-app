@@ -126,6 +126,12 @@
                 </div>
                 @endforeach
             </dl>
+            @if($route->steepest_grade_pct !== null)
+            {{-- The average hides short steep parts, so name the steepest stretch too. --}}
+            <p class="mt-3 text-sm text-[#d1fae5]">
+                {{ __('Bagian paling curam: sekitar :grade% sepanjang 1 km.', ['grade' => $num($route->steepest_grade_pct, 0)]) }}
+            </p>
+            @endif
 
             {{-- Likes work without login (guests use the rs_vid cookie). --}}
             <div class="mt-5 flex flex-wrap items-center gap-2"

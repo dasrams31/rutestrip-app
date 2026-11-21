@@ -41,6 +41,7 @@ class ReprocessRoutes extends Command
                 'elevation_gain_m'       => $result['elevation_gain_m'] ?? $route->elevation_gain_m,
                 'naismith_duration_hour' => $result['naismith_duration_hour'] ?? $route->naismith_duration_hour,
                 'average_grade_pct'      => $result['average_grade_pct'] ?? $route->average_grade_pct,
+                'steepest_grade_pct'     => $result['steepest_grade_pct'] ?? $route->steepest_grade_pct,
                 'narrative_text'         => $result['narrative_text'] ?? $route->narrative_text,
                 'route_coordinates'      => $result['route_coordinates'] ?? $route->route_coordinates,
             ]);

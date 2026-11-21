@@ -43,6 +43,7 @@ class HikingRoute extends Model
         'tips',
         'image_path',
         'uploaded_by',
+        'steepest_grade_pct',
         'route_coordinates',
         'gpx_file_path',
         'distance_km',

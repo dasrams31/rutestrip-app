@@ -75,6 +75,7 @@ class ProvenanceController extends Controller
                 'elevation_gain_m'       => $result['elevation_gain_m'] ?? null,
                 'naismith_duration_hour' => $result['naismith_duration_hour'] ?? null,
                 'average_grade_pct'      => $result['average_grade_pct'] ?? null,
+                'steepest_grade_pct'     => $result['steepest_grade_pct'] ?? null,
                 'narrative_text'         => $result['narrative_text'] ?? $route->narrative_text,
                 'sbert_embedding'        => $result['embedding'] ?? $route->sbert_embedding,
             ]);

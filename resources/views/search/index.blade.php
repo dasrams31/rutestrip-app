@@ -438,7 +438,7 @@
                     </summary>
                     <div class="px-4 pb-4 text-sm text-rs-muted leading-relaxed space-y-2">
                         <p>{{ __('Kalimatmu diubah menjadi 384 angka oleh model bahasa SBERT multibahasa (paraphrase-multilingual-MiniLM-L12-v2), lalu dibandingkan dengan gambaran setiap jalur memakai cosine similarity: 40% dari gambaran utuh dan 60% dari kalimat yang paling mirip.') }}</p>
-                        <p>{{ __('Kata seperti landai, curam, singkat, atau panjang dicek ke statistik GPX dengan bobot 45%. Nama gunung atau basecamp yang disebut dihitung dengan bobot 35%.') }}</p>
+                        <p>{{ __('Kalau kamu menyebut nama gunung atau daerah, hanya jalur di sana yang ditampilkan. Kata seperti landai, mudah, curam, singkat, atau panjang menentukan urutan dari statistik GPX, dan kemiripan kalimat hanya dipakai kalau angkanya sama.') }}</p>
                         <p>{{ __('Tingkat kesulitan memakai skor Shenandoah (akar dari tanjakan dalam kaki x 2 x jarak dalam mil), dinaikkan 15% untuk jalur sangat curam atau puncak di atas 3.000 m.') }}</p>
                         <p><a href="{{ route('architecture') }}" class="inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline underline-offset-4">{{ __('Lihat cara kerja sistemnya') }}</a></p>
                     </div>

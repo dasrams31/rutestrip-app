@@ -224,6 +224,44 @@ def classify_difficulty(distance_km, elevation_gain_m, average_grade_pct, max_el
     return "mudah"
 
 
+def _haversine_m(a, b):
+    import math
+    lat1, lon1, lat2, lon2 = map(math.radians, (a['lat'], a['lon'], b['lat'], b['lon']))
+    h = math.sin((lat2 - lat1) / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
+    return 2 * 6371000 * math.asin(math.sqrt(h))
+
+
+def steepest_section_grade(points, window_m=1000.0):
+    """Grade (%) of the steepest stretch of about `window_m` metres along the track.
+
+    The average grade hides short steep parts: Semeru via Ranu Pani averages
+    ~6% over 40 km but its last kilometres to Mahameru are far steeper. This
+    looks at every ~1 km stretch (elevation change / horizontal distance, up or
+    down) and returns the largest. Tracks shorter than the window use their
+    whole length. Keep in sync with hiking_routes.steepest_grade_pct."""
+    pts = [p for p in points if p.get('ele')]
+    if len(pts) < 2:
+        return 0.0
+    cum = [0.0]
+    for i in range(1, len(pts)):
+        cum.append(cum[-1] + _haversine_m(pts[i - 1], pts[i]))
+    total = cum[-1]
+    if total <= 0:
+        return 0.0
+    window = min(window_m, total)
+    best = 0.0
+    j = 0
+    for i in range(len(pts)):
+        while j < len(pts) - 1 and cum[j] - cum[i] < window:
+            j += 1
+        dist = cum[j] - cum[i]
+        if dist >= window * 0.9:
+            best = max(best, abs(pts[j]['ele'] - pts[i]['ele']) / dist * 100)
+        if cum[-1] - cum[i] < window:
+            break
+    return best
+
+
 def calculate_statistics(gpx, points):
     """Calculate hiking statistics from GPX data"""
     
@@ -265,6 +303,7 @@ def calculate_statistics(gpx, points):
         'elevation_gain_m': int(elevation_gain),
         'naismith_duration_hour': round(naismith_duration, 2),
         'average_grade_pct': round(average_grade, 2),
+        'steepest_grade_pct': round(steepest_section_grade(points), 1),
         'min_elevation': int(min_elevation),
         'max_elevation': int(max_elevation),
         'difficulty': difficulty
@@ -371,6 +410,7 @@ def mode_ingest(gpx_path):
             'elevation_gain_m': stats['elevation_gain_m'],
             'naismith_duration_hour': stats['naismith_duration_hour'],
             'average_grade_pct': stats['average_grade_pct'],
+            'steepest_grade_pct': stats['steepest_grade_pct'],
             'narrative_text': narrative,
             'embedding': embedding,
             'route_coordinates': route_coords

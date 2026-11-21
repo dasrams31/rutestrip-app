@@ -1,23 +1,30 @@
 """
 Offline evaluation of RuteStrip route search quality.
 
-Compares the original scoring (cosine between the preprocessed query and the
-stored narrative embedding) with the hybrid scoring used by the app
-(name-aware document text, aspect sentences, attribute-aware boost).
+Compares three rankings:
+    baseline  cosine between the preprocessed query and the stored narrative
+              embedding (the paper's method);
+    hybrid    the older hybrid_score() (name-aware document text, aspect
+              sentences, attribute percentiles blended into the score);
+    ranked    rank_routes(), what the website uses now (named mountain or place
+              = filter, intent words = deterministic order, SBERT breaks ties).
 
 Usage:
-    python evaluate_search.py --db ../database/database.sqlite
+    python evaluate_search.py --db ../database/database.sqlite [--labels new|old]
 
 Relevance labels are derived from the route statistics, so the evaluation is
-reproducible without manual annotation:
-    gentle queries -> average grade < 15% and total elevation gain in the
-                      lowest third ("landai")
-    easy queries   -> total elevation gain in the lowest third and average
-                      grade < 30% (beginner: little climbing, short)
-    hard queries   -> average grade in the highest third
+reproducible without manual annotation. --labels new (default) follows the
+current search rules:
+    gentle queries -> average grade in the lowest third ("landai")
+    easy queries   -> difficulty score (Shenandoah) in the lowest third
+    hard queries   -> difficulty score in the highest third
+    steep queries  -> average grade in the highest third ("curam", "terjal")
     short queries  -> Naismith duration in the lowest third
     long queries   -> Naismith duration in the highest third
     name queries   -> route name contains the mountain name
+--labels old keeps the earlier definitions for comparison with older runs
+(gentle: grade < 15% and gain in the lowest third; easy: gain in the lowest
+third and grade < 30%; hard and steep: grade in the highest third).
 """
 import argparse
 import json
@@ -27,14 +34,14 @@ import time
 import numpy as np
 
 import search_scoring as ss
-from processor import get_model, preprocess_text
+from processor import difficulty_score, get_model, preprocess_text
 
 QUERIES = [
     ("jalur landai", "gentle"),
     ("jalur untuk pemula", "easy"),
     ("pendakian santai dan mudah", "easy"),
     ("jalur ramah pemula tidak terlalu curam", "gentle"),
-    ("jalur curam dan menantang", "hard"),
+    ("jalur curam dan menantang", "steep"),
     ("jalur sulit untuk pendaki berpengalaman", "hard"),
     ("pendakian ekstrem", "hard"),
     ("pendakian singkat", "short"),
@@ -64,6 +71,8 @@ def load_routes(db_path):
     con.row_factory = sqlite3.Row
     cols = {c[1] for c in con.execute("PRAGMA table_info(hiking_routes)")}
     place = ", province, regency" if {"province", "regency"} <= cols else ""
+    if "steepest_grade_pct" in cols:
+        place += ", steepest_grade_pct"
     rows = con.execute(
         "SELECT id, name, distance_km, elevation_gain_m, naismith_duration_hour, average_grade_pct, "
         "narrative_text, description, sbert_embedding" + place + " FROM hiking_routes WHERE sbert_embedding IS NOT NULL"
@@ -77,7 +86,27 @@ def load_routes(db_path):
     return routes
 
 
-def relevant_ids(routes, label):
+def _thirds(routes, value):
+    values = sorted(value(r) for r in routes)
+    return values[len(values) // 3], values[(2 * len(values)) // 3]
+
+
+def relevant_ids(routes, label, labels="new"):
+    if label.startswith("region:") or label.startswith("name:") or labels == "old":
+        return relevant_ids_old(routes, "hard" if label == "steep" else label)
+    if label in ("easy", "hard"):
+        value = lambda r: difficulty_score(r["distance_km"], r["elevation_gain_m"], r["average_grade_pct"], ss._max_elevation(r))
+    elif label in ("gentle", "steep"):
+        value = lambda r: float(r["average_grade_pct"] or 0)
+    else:
+        value = lambda r: float(r["naismith_duration_hour"] or 0)
+    low_cut, high_cut = _thirds(routes, value)
+    if label in ("gentle", "easy", "short"):
+        return {r["id"] for r in routes if value(r) <= low_cut}
+    return {r["id"] for r in routes if value(r) >= high_cut}
+
+
+def relevant_ids_old(routes, label):
     if label.startswith("region:"):
         key = label.split(":", 1)[1]
         return {r["id"] for r in routes if (r.get("province") or "").lower() == key}
@@ -119,6 +148,7 @@ def metrics(ranked, rel, k=5):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", required=True)
+    ap.add_argument("--labels", choices=("new", "old"), default="new")
     args = ap.parse_args()
 
     routes = load_routes(args.db)
@@ -134,9 +164,10 @@ def main():
     if any(r.get("province") for r in routes):
         queries += REGION_QUERIES
 
-    rows = {"baseline": [], "hybrid": []}
+    rows = {"baseline": [], "hybrid": [], "ranked": []}
+    names = {r["id"]: r["name"] for r in routes}
     for query, label in queries:
-        rel = relevant_ids(routes, label)
+        rel = relevant_ids(routes, label, args.labels)
         q_base = model.encode(preprocess_text(query)).tolist()
         base_ranked = sorted(((r["id"], cos(q_base, r["sbert_embedding"])) for r in routes), key=lambda x: -x[1])
 
@@ -147,21 +178,20 @@ def main():
             scored.append((r["id"], s["score"]))
         hyb_ranked = sorted(scored, key=lambda x: -x[1])
 
-        if label in ("gentle", "easy"):
-            names = {r["id"]: r["name"] for r in routes}
-            print(f"  {query!r}: top3 = {[names[rid] for rid, _ in hyb_ranked[:3]]}")
+        new_ranked = [(row["id"], row["score"]) for row in ss.rank_routes(query, q_vec, routes, doc_vecs, aspect_vecs)]
+        print(f"  {query!r}: top3 = {[names[rid] for rid, _ in new_ranked[:3]]}")
 
-        for name, ranked in (("baseline", base_ranked), ("hybrid", hyb_ranked)):
+        for name, ranked in (("baseline", base_ranked), ("hybrid", hyb_ranked), ("ranked", new_ranked)):
             p5, rr = metrics(ranked, rel)
-            rows[name].append((query, p5, rr, ranked[0][1], np.mean([s for _, s in ranked[:5]])))
+            rows[name].append((query, p5, rr, ranked[0][1] if ranked else 0.0, np.mean([s for _, s in ranked[:5]]) if ranked else 0.0))
 
     print(f"routes={len(routes)} queries={len(queries)} index_ms={index_ms:.0f}")
-    print(f"{'query':42s} {'P@5 base':>8s} {'P@5 hyb':>8s} {'top1 base':>9s} {'top1 hyb':>9s}")
-    for (q, p5b, _, t1b, _), (_, p5h, _, t1h, _) in zip(rows["baseline"], rows["hybrid"]):
-        print(f"{q:42s} {p5b:8.2f} {p5h:8.2f} {t1b:9.3f} {t1h:9.3f}")
+    print(f"{'query':42s} {'P@5 base':>8s} {'P@5 hyb':>8s} {'P@5 rank':>8s} {'MRR rank':>8s}")
+    for (q, p5b, *_), (_, p5h, *_), (_, p5r, rrr, *_) in zip(rows["baseline"], rows["hybrid"], rows["ranked"]):
+        print(f"{q:42s} {p5b:8.2f} {p5h:8.2f} {p5r:8.2f} {rrr:8.2f}")
     n_main = len(QUERIES)
     for label, sl in (("", slice(0, n_main)), (" region", slice(n_main, None))):
-        for name in ("baseline", "hybrid"):
+        for name in ("baseline", "hybrid", "ranked"):
             part = rows[name][sl]
             if not part:
                 continue

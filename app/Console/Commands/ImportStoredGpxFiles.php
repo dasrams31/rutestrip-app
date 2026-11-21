@@ -47,6 +47,7 @@ class ImportStoredGpxFiles extends Command
                     'elevation_gain_m'       => $result['elevation_gain_m'] ?? null,
                     'naismith_duration_hour' => $result['naismith_duration_hour'] ?? null,
                     'average_grade_pct'      => $result['average_grade_pct'] ?? null,
+                    'steepest_grade_pct'     => $result['steepest_grade_pct'] ?? null,
                     'narrative_text'         => $result['narrative_text'] ?? null,
                     'sbert_embedding'        => $result['embedding'] ?? null,
                 ]);

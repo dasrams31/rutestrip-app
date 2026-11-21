@@ -197,8 +197,11 @@ class SearchController extends Controller
                 throw new \RuntimeException('Embedding query kosong atau tidak valid.');
             }
 
-            // Hybrid relevance (SBERT cosine on document + aspects, intent and name match)
-            $results = $this->routeSearch->rank($query, $queryEmbedding, $routes->map(fn($r) => clone $r), 10);
+            // Named mountain / place = filter; intent words = order; SBERT relevance otherwise.
+            // "all_routes" comes from the "search all routes" link and skips the filters.
+            $applyFilters = ! $request->boolean('all_routes');
+            $results      = $this->routeSearch->rank($query, $queryEmbedding, $routes->map(fn($r) => clone $r), 10, $applyFilters);
+            $plan         = $this->routeSearch->plan($query, $routes, $applyFilters);
 
             $searchTime = round((microtime(true) - $startTime) * 1000, 2);
 
@@ -214,12 +217,11 @@ class SearchController extends Controller
                 \App\Models\SearchStat::record($query);
             }
 
-            // Be explicit when the user asks for gentle/beginner routes but the
-            // dataset has none below the narrative's "landai" threshold (5%).
-            $intents = $this->routeSearch->detectIntents($query);
-            $notice  = null;
-            if (in_array('gentle', $intents, true) && $routes->min('average_grade_pct') >= 5) {
-                $notice = __('Jalur yang benar-benar landai (kemiringan rata-rata di bawah 5%) belum ada di database. Ini jalur yang paling ringan: tanjakannya paling sedikit dan waktunya paling singkat.');
+            // Be explicit when gentle routes are asked for but none of the routes left
+            // is below the narrative's "landai" threshold (5%).
+            $notice = null;
+            if ($plan['sort'] === 'gentle' && $plan['routes']->min('average_grade_pct') >= 5) {
+                $notice = __('Belum ada jalur yang benar-benar landai (kemiringan rata-rata di bawah 5%). Urutan dimulai dari jalur dengan kemiringan rata-rata paling kecil.');
             }
 
             return view('search.results', [
@@ -227,7 +229,8 @@ class SearchController extends Controller
                 'results'    => $results,
                 'searchTime' => $searchTime,
                 'notice'     => $notice,
-                'intents'    => $intents,
+                'intents'    => $plan['intents'],
+                'plan'       => collect($plan)->except(['routes', 'names'])->all(),
             ]);
 
         } catch (\Throwable $e) {

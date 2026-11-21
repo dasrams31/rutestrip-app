@@ -49,7 +49,7 @@ class RouteSearchTest extends TestCase
         $this->assertSame(2, $fake->calls);
     }
 
-    public function test_gentle_query_prefers_low_grade_short_routes_over_long_ones(): void
+    public function test_gentle_query_orders_by_average_grade(): void
     {
         $emb = [1.0, 0.0, 0.0];
         $routes = collect([
@@ -64,8 +64,8 @@ class RouteSearchTest extends TestCase
 
         $ranked = app(RouteSearchService::class)->rank('jalur landai', $emb, $routes, 3);
 
-        $this->assertSame('Gunung Merbabu via Selo', $ranked->first()->name);
-        $this->assertSame('Gunung Slamet via Dipajaya', $ranked->last()->name);
+        // "landai" = lowest average grade first (owner's rule), even for a long route.
+        $this->assertSame(['Gunung Semeru', 'Gunung Merbabu via Selo', 'Gunung Slamet via Dipajaya'], $ranked->pluck('name')->all());
     }
 
     public function test_more_specific_name_match_ranks_higher(): void
@@ -80,8 +80,8 @@ class RouteSearchTest extends TestCase
 
         $ranked = app(RouteSearchService::class)->rank('sumbing via butuh', $emb, $routes, 3);
 
-        $this->assertSame('Mt. Sumbing via Butuh Kaliangkrik', $ranked->first()->name);
-        $this->assertSame('Mt. Merbabu via Selo', $ranked->last()->name);
+        // A named mountain is a filter: only Sumbing routes, the named basecamp first.
+        $this->assertSame(['Mt. Sumbing via Butuh Kaliangkrik', 'Mt. Sumbing via Garung'], $ranked->pluck('name')->all());
     }
 
     private function placedRoutes(array $places): \Illuminate\Support\Collection

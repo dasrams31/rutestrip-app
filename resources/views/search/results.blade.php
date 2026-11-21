@@ -21,6 +21,34 @@
     };
     $difficultyLevel = fn ($level) => match ($level) { 'Mudah' => 1, 'Sedang' => 2, 'Sulit' => 3, default => 4 };
     $intents = $intents ?? [];
+    $plan = $plan ?? [];
+    $sortBy = $plan['sort'] ?? null;
+    // "A", "A dan B", "A, B dan C"
+    $joinList = fn (array $items) => count($items) > 1
+        ? implode(', ', array_slice($items, 0, -1)) . ' ' . __('dan') . ' ' . end($items)
+        : implode('', $items);
+    // What the query filtered on, and what decided the order (shown above the cards).
+    $mountainNames = $joinList(array_column(($plan['mountain_filter'] ?? false) ? $plan['mountains'] : [], 'label'));
+    $placeNames = $joinList($plan['region_labels'] ?? []);
+    $filterLine = match (true) {
+        $mountainNames !== '' && $placeNames !== '' => __('Hanya jalur :mountains di :places.', ['mountains' => $mountainNames, 'places' => $placeNames]),
+        $mountainNames !== '' => __('Hanya jalur :mountains.', ['mountains' => $mountainNames]),
+        $placeNames !== '' => __('Hanya jalur di :places.', ['places' => $placeNames]),
+        default => null,
+    };
+    $sortLine = match ($sortBy) {
+        'gentle' => __('Diurutkan dari yang paling landai.'),
+        'steep' => __('Diurutkan dari yang paling curam.'),
+        'easy' => __('Diurutkan dari yang paling mudah.'),
+        'hard' => __('Diurutkan dari yang paling sulit.'),
+        'short' => __('Diurutkan dari waktu jalan yang paling singkat.'),
+        'long' => __('Diurutkan dari waktu jalan yang paling lama.'),
+        default => null,
+    };
+    $intentWords = ['gentle' => __('landai'), 'steep' => __('curam'), 'easy' => __('mudah'), 'hard' => __('sulit'), 'short' => __('singkat'), 'long' => __('panjang')];
+    $alsoLine = ! empty($plan['also'])
+        ? __('Jalur yang juga :what didahulukan.', ['what' => $joinList(array_map(fn ($i) => $intentWords[$i], $plan['also']))])
+        : null;
     $suggestions = [
         __('Jalur landai untuk pemula'),
         __('Pendakian singkat 2-3 jam'),
@@ -100,6 +128,25 @@
             <a href="{{ route('routes.index') }}" class="mt-5 inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline underline-offset-4">{{ __('Lihat semua jalur') }}</a>
         </div>
         @else
+        @if($filterLine || $sortLine)
+        <div class="mb-6 space-y-1 text-sm sm:text-base text-rs-ink" data-search-plan>
+            @if($filterLine)
+            <div class="flex flex-wrap items-center gap-x-4">
+                <p class="font-semibold">{{ $filterLine }}</p>
+                <form action="{{ route('search.submit') }}" method="POST" data-search-form>
+                    @csrf
+                    <input type="hidden" name="query" value="{{ $query }}">
+                    <input type="hidden" name="all_routes" value="1">
+                    <button type="submit" class="inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline underline-offset-4 hover:text-rs-z9">{{ __('Cari di semua jalur') }}</button>
+                </form>
+            </div>
+            @endif
+            @if($sortLine)
+            <p>{{ $sortLine }}@if($alsoLine) {{ $alsoLine }}@endif</p>
+            @endif
+        </div>
+        @endif
+
         @if(!empty($notice))
         <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 border-l-4 border-l-amber-600 px-4 py-3 text-sm text-amber-950 flex items-start gap-3" role="note">
             <x-icon name="exclamation" class="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
@@ -128,11 +175,12 @@
                 $level = $difficultyLevel($route->difficulty_level);
                 $grade = $num($route->average_grade_pct, 1) . '%';
                 $gain = $num($route->elevation_gain_m);
-                // One sentence on why it showed up, from the numbers the question was about.
-                $why = match (true) {
-                    (bool) array_intersect($intents, ['gentle', 'easy', 'hard']) => __('Kemiringan rata-rata :grade, total naik :gain m.', ['grade' => $grade, 'gain' => $gain]),
-                    in_array('short', $intents, true) => __('Sekitar :time jalan kaki sampai puncak.', ['time' => $hoursLabel($route->naismith_duration_hour)]),
-                    in_array('long', $intents, true) => __('Panjang jalurnya :km km.', ['km' => $num($route->distance_km, 1)]),
+                // One sentence on why it showed up, from the numbers that set the order.
+                $why = match ($sortBy) {
+                    'gentle', 'steep' => __('Kemiringan rata-rata :grade, total naik :gain m.', ['grade' => $grade, 'gain' => $gain]),
+                    'easy', 'hard' => __('Total naik :gain m sepanjang :km km.', ['gain' => $gain, 'km' => $num($route->distance_km, 1)]),
+                    'short' => __('Sekitar :time jalan kaki sampai puncak.', ['time' => $hoursLabel($route->naismith_duration_hour)]),
+                    'long' => __('Sekitar :time jalan kaki, panjang jalur :km km.', ['time' => $hoursLabel($route->naismith_duration_hour), 'km' => $num($route->distance_km, 1)]),
                     default => null,
                 };
                 $gpxStatus = $route->activeGpxVersion?->verification_status;
@@ -196,7 +244,7 @@
             <div class="px-4 pb-4 text-sm text-rs-muted leading-relaxed space-y-2">
                 <p>{{ __('Label cocok berasal dari skor 0 sampai 100: Sangat cocok mulai 70, Cocok mulai 50, Lumayan cocok mulai 30.') }}</p>
                 <p>{{ __('Kalimatmu diubah menjadi 384 angka oleh model bahasa SBERT multibahasa (paraphrase-multilingual-MiniLM-L12-v2), lalu dibandingkan dengan gambaran setiap jalur memakai cosine similarity: 40% dari gambaran utuh dan 60% dari kalimat yang paling mirip.') }}</p>
-                <p>{{ __('Kata seperti landai, curam, singkat, atau panjang dicek ke statistik GPX dengan bobot 45%. Nama gunung atau basecamp yang disebut dihitung dengan bobot 35%.') }}</p>
+                <p>{{ __('Kalau kamu menyebut nama gunung atau daerah, hanya jalur di sana yang ditampilkan. Kata seperti landai, mudah, curam, singkat, atau panjang menentukan urutan dari statistik GPX, dan kemiripan kalimat hanya dipakai kalau angkanya sama.') }}</p>
                 @isset($searchTime)
                 <p>{{ __('Pencarian ini selesai dalam :ms milidetik.', ['ms' => $num($searchTime)]) }}</p>
                 @endisset

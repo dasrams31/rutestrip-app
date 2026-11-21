@@ -1,0 +1,756 @@
+{
+ "query_vector": [
+  1.0,
+  0.25,
+  0.1
+ ],
+ "routes": [
+  {
+   "id": 1,
+   "name": "Mt. Merbabu via Selo",
+   "province": "Jawa Tengah",
+   "regency": "Boyolali",
+   "distance_km": 11.1,
+   "elevation_gain_m": 1424,
+   "naismith_duration_hour": 4.59,
+   "average_grade_pct": 12.84,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1424 meter dengan ketinggian dari 1811m hingga 3128m.",
+   "embedding": [
+    0.46,
+    -0.16,
+    0.29
+   ],
+   "aspect_embeddings": [
+    [
+     0.26,
+     0.18,
+     0.03
+    ],
+    [
+     0.25,
+     0.16,
+     -0.27
+    ]
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Mt. Merbabu via Suwanting",
+   "province": "Jawa Tengah",
+   "regency": "Magelang",
+   "distance_km": 12.06,
+   "elevation_gain_m": 1778,
+   "naismith_duration_hour": 5.38,
+   "average_grade_pct": 14.75,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1778 meter dengan ketinggian dari 1358m hingga 3124m.",
+   "embedding": [
+    0.55,
+    -0.24,
+    -0.22
+   ],
+   "aspect_embeddings": [
+    [
+     0.54,
+     0.44,
+     -0.19
+    ],
+    [
+     0.38,
+     0.26,
+     0.55
+    ]
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Gunung Merbabu via Wekas",
+   "province": "Jawa Tengah",
+   "regency": "Kabupaten Semarang",
+   "distance_km": 10.1,
+   "elevation_gain_m": 1425,
+   "naismith_duration_hour": 4.39,
+   "average_grade_pct": 14.11,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1425 meter dengan ketinggian dari 1760m hingga 3110m.",
+   "embedding": [
+    0.66,
+    0.06,
+    0.58
+   ],
+   "aspect_embeddings": [
+    [
+     0.24,
+     0.47,
+     -0.04
+    ],
+    [
+     0.32,
+     -0.19,
+     -0.02
+    ]
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Gunung Merbabu via Grenden",
+   "province": "Jawa Tengah",
+   "regency": "Magelang",
+   "distance_km": 11.5,
+   "elevation_gain_m": 1597,
+   "naismith_duration_hour": 4.96,
+   "average_grade_pct": 13.89,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1597 meter dengan ketinggian dari 1563m hingga 3124m.",
+   "embedding": [
+    0.85,
+    -0.14,
+    0.22
+   ],
+   "aspect_embeddings": [
+    [
+     0.71,
+     0.04,
+     0.19
+    ],
+    [
+     0.25,
+     -0.25,
+     -0.11
+    ]
+   ]
+  },
+  {
+   "id": 5,
+   "name": "Mt. Sumbing via Bowongso",
+   "province": "Jawa Tengah",
+   "regency": "Wonosobo",
+   "distance_km": 17.55,
+   "elevation_gain_m": 2079,
+   "naismith_duration_hour": 6.98,
+   "average_grade_pct": 11.85,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 2079 meter dengan ketinggian dari 1416m hingga 3294m.",
+   "embedding": [
+    0.74,
+    0.08,
+    -0.02
+   ],
+   "aspect_embeddings": [
+    [
+     0.67,
+     0.11,
+     -0.03
+    ],
+    [
+     0.84,
+     0.33,
+     -0.08
+    ]
+   ]
+  },
+  {
+   "id": 6,
+   "name": "Gunung Sumbing via Garung",
+   "province": "Jawa Tengah",
+   "regency": "Temanggung",
+   "distance_km": 16.04,
+   "elevation_gain_m": 1963,
+   "naismith_duration_hour": 6.48,
+   "average_grade_pct": 12.25,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1963 meter dengan ketinggian dari 1382m hingga 3266m.",
+   "embedding": [
+    0.66,
+    0.17,
+    0.49
+   ],
+   "aspect_embeddings": [
+    [
+     0.78,
+     -0.04,
+     0.58
+    ],
+    [
+     0.29,
+     0.08,
+     0.38
+    ]
+   ]
+  },
+  {
+   "id": 7,
+   "name": "Gunung Sumbing via Banaran",
+   "province": "Jawa Tengah",
+   "regency": "Temanggung",
+   "distance_km": 5.28,
+   "elevation_gain_m": 1666,
+   "naismith_duration_hour": 3.83,
+   "average_grade_pct": 31.55,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1666 meter dengan ketinggian dari 1560m hingga 3214m.",
+   "embedding": [
+    0.32,
+    0.14,
+    -0.26
+   ],
+   "aspect_embeddings": [
+    [
+     0.73,
+     0.39,
+     0.22
+    ],
+    [
+     0.9,
+     -0.02,
+     0.33
+    ]
+   ]
+  },
+  {
+   "id": 8,
+   "name": "Gunung Arjuna via Lawang",
+   "province": "Jawa Timur",
+   "regency": "Kabupaten Malang",
+   "distance_km": 10.56,
+   "elevation_gain_m": 2536,
+   "naismith_duration_hour": 6.34,
+   "average_grade_pct": 24.03,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 2536 meter dengan ketinggian dari 852m hingga 3340m.",
+   "embedding": [
+    0.68,
+    0.22,
+    0.11
+   ],
+   "aspect_embeddings": [
+    [
+     0.87,
+     0.55,
+     0.13
+    ],
+    [
+     0.73,
+     -0.25,
+     0.33
+    ]
+   ]
+  },
+  {
+   "id": 9,
+   "name": "Mt. Arjuno via Tretes",
+   "province": "Jawa Timur",
+   "regency": "Pasuruan",
+   "distance_km": 25.48,
+   "elevation_gain_m": 2355,
+   "naismith_duration_hour": 9.02,
+   "average_grade_pct": 9.25,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 2355 meter dengan ketinggian dari 800m hingga 3132m.",
+   "embedding": [
+    0.72,
+    0.59,
+    0.44
+   ],
+   "aspect_embeddings": [
+    [
+     0.43,
+     0.05,
+     0.3
+    ],
+    [
+     0.22,
+     0.12,
+     -0.15
+    ]
+   ]
+  },
+  {
+   "id": 10,
+   "name": "Puncak Upas via Sukawana (Trek 11)",
+   "province": "Jawa Barat",
+   "regency": "Bandung Barat",
+   "distance_km": 8,
+   "elevation_gain_m": 536,
+   "naismith_duration_hour": 2.49,
+   "average_grade_pct": 6.7,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 536 meter dengan ketinggian dari 1547m hingga 2072m.",
+   "embedding": [
+    0.29,
+    -0.25,
+    0.39
+   ],
+   "aspect_embeddings": [
+    [
+     0.3,
+     -0.08,
+     0.05
+    ],
+    [
+     0.9,
+     -0.23,
+     0.1
+    ]
+   ]
+  },
+  {
+   "id": 11,
+   "name": "Bukit Sikendil via Sibajag",
+   "province": "Jawa Tengah",
+   "regency": "Wonosobo",
+   "distance_km": 1.24,
+   "elevation_gain_m": 255,
+   "naismith_duration_hour": 0.68,
+   "average_grade_pct": 20.58,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 255 meter dengan ketinggian dari 1689m hingga 1889m.",
+   "embedding": [
+    0.64,
+    0.5,
+    0.44
+   ],
+   "aspect_embeddings": [
+    [
+     0.89,
+     -0.05,
+     0.07
+    ],
+    [
+     0.49,
+     0.5,
+     0.56
+    ]
+   ]
+  },
+  {
+   "id": 12,
+   "name": "Kawah Ijen via Sunrise View Trek",
+   "province": "Jawa Timur",
+   "regency": "Banyuwangi",
+   "distance_km": 1.9,
+   "elevation_gain_m": 98,
+   "naismith_duration_hour": 0.54,
+   "average_grade_pct": 5.16,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 98 meter dengan ketinggian dari 2299m hingga 2379m.",
+   "embedding": [
+    0.32,
+    -0.14,
+    -0.09
+   ],
+   "aspect_embeddings": [
+    [
+     0.39,
+     0.14,
+     0.23
+    ],
+    [
+     0.41,
+     -0.3,
+     0.08
+    ]
+   ]
+  },
+  {
+   "id": 13,
+   "name": "Gunung Ijen",
+   "province": "Jawa Timur",
+   "regency": "Bondowoso",
+   "distance_km": 10.2,
+   "elevation_gain_m": 688,
+   "naismith_duration_hour": 3.19,
+   "average_grade_pct": 6.75,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 688 meter dengan ketinggian dari 1876m hingga 2379m.",
+   "embedding": [
+    0.5,
+    0.21,
+    0.56
+   ],
+   "aspect_embeddings": [
+    [
+     0.75,
+     0.16,
+     0.26
+    ],
+    [
+     0.74,
+     -0.25,
+     0.51
+    ]
+   ]
+  },
+  {
+   "id": 14,
+   "name": "Mt. Semeru",
+   "province": "Jawa Timur",
+   "regency": "Lumajang",
+   "distance_km": 39.8,
+   "elevation_gain_m": 2356,
+   "naismith_duration_hour": 11.89,
+   "average_grade_pct": 5.92,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 2356 meter dengan ketinggian dari 2114m hingga 3623m.",
+   "embedding": [
+    0.82,
+    0.49,
+    0.42
+   ],
+   "aspect_embeddings": [
+    [
+     0.51,
+     0.06,
+     -0.21
+    ],
+    [
+     0.71,
+     -0.24,
+     -0.24
+    ]
+   ]
+  },
+  {
+   "id": 15,
+   "name": "Gunung Anak Krakatau",
+   "province": "Lampung",
+   "regency": "Lampung Selatan",
+   "distance_km": 3.85,
+   "elevation_gain_m": 469,
+   "naismith_duration_hour": 1.55,
+   "average_grade_pct": 12.18,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 469 meter dengan ketinggian dari 4m hingga 324m.",
+   "embedding": [
+    0.37,
+    -0.15,
+    0.01
+   ],
+   "aspect_embeddings": [
+    [
+     0.24,
+     -0.3,
+     -0.16
+    ],
+    [
+     0.28,
+     0.03,
+     -0.28
+    ]
+   ]
+  },
+  {
+   "id": 16,
+   "name": "Gunung Andong via Gogik",
+   "province": "Jawa Tengah",
+   "regency": "Magelang",
+   "distance_km": 0.92,
+   "elevation_gain_m": 252,
+   "naismith_duration_hour": 0.6,
+   "average_grade_pct": 27.5,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 252 meter dengan ketinggian dari 1249m hingga 1501m.",
+   "embedding": [
+    0.9,
+    0.25,
+    -0.17
+   ],
+   "aspect_embeddings": [
+    [
+     0.4,
+     0.01,
+     0.03
+    ],
+    [
+     0.3,
+     0.46,
+     0.59
+    ]
+   ]
+  },
+  {
+   "id": 17,
+   "name": "Mt. Slamet via Dipajaya",
+   "province": "Jawa Tengah",
+   "regency": "Pemalang",
+   "distance_km": 6.61,
+   "elevation_gain_m": 1870,
+   "naismith_duration_hour": 4.44,
+   "average_grade_pct": 28.31,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 1870 meter dengan ketinggian dari 1579m hingga 3420m.",
+   "embedding": [
+    0.57,
+    0.14,
+    -0.22
+   ],
+   "aspect_embeddings": [
+    [
+     0.28,
+     0.01,
+     -0.06
+    ],
+    [
+     0.86,
+     -0.15,
+     -0.28
+    ]
+   ]
+  },
+  {
+   "id": 18,
+   "name": "Gunung Prau via Wates",
+   "province": "Jawa Tengah",
+   "regency": "Temanggung",
+   "distance_km": 75.0,
+   "elevation_gain_m": 797,
+   "naismith_duration_hour": 2.09,
+   "average_grade_pct": 20.9,
+   "narrative_text": "Jalur pendakian. Total kenaikan elevasi 797 meter dengan ketinggian dari 1724m hingga 2516m.",
+   "embedding": [
+    0.96,
+    0.18,
+    -0.17
+   ],
+   "aspect_embeddings": [
+    [
+     0.63,
+     -0.28,
+     0.18
+    ],
+    [
+     0.98,
+     0.48,
+     0.33
+    ]
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "query": "jalur landai",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Mt. Semeru",
+    "Puncak Upas via Sukawana (Trek 11)",
+    "Gunung Ijen",
+    "Mt. Arjuno via Tretes",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Anak Krakatau",
+    "Gunung Sumbing via Garung",
+    "Mt. Merbabu via Selo",
+    "Gunung Merbabu via Grenden"
+   ]
+  },
+  {
+   "query": "jalur untuk pemula",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Gunung Andong via Gogik",
+    "Bukit Sikendil via Sibajag",
+    "Gunung Anak Krakatau",
+    "Puncak Upas via Sukawana (Trek 11)",
+    "Gunung Ijen",
+    "Gunung Sumbing via Banaran",
+    "Gunung Merbabu via Wekas",
+    "Mt. Merbabu via Selo",
+    "Mt. Slamet via Dipajaya"
+   ]
+  },
+  {
+   "query": "jalur sulit",
+   "expected": [
+    "Mt. Semeru",
+    "Mt. Arjuno via Tretes",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Sumbing via Garung",
+    "Gunung Arjuna via Lawang",
+    "Mt. Merbabu via Suwanting",
+    "Gunung Merbabu via Grenden",
+    "Mt. Slamet via Dipajaya",
+    "Mt. Merbabu via Selo",
+    "Gunung Merbabu via Wekas"
+   ]
+  },
+  {
+   "query": "jalur curam",
+   "expected": [
+    "Gunung Sumbing via Banaran",
+    "Mt. Slamet via Dipajaya",
+    "Gunung Andong via Gogik",
+    "Gunung Arjuna via Lawang",
+    "Bukit Sikendil via Sibajag",
+    "Mt. Merbabu via Suwanting",
+    "Gunung Merbabu via Wekas",
+    "Gunung Merbabu via Grenden",
+    "Mt. Merbabu via Selo",
+    "Gunung Sumbing via Garung"
+   ]
+  },
+  {
+   "query": "pendakian singkat",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Gunung Andong via Gogik",
+    "Bukit Sikendil via Sibajag",
+    "Gunung Anak Krakatau",
+    "Puncak Upas via Sukawana (Trek 11)",
+    "Gunung Ijen",
+    "Gunung Sumbing via Banaran",
+    "Gunung Merbabu via Wekas",
+    "Mt. Slamet via Dipajaya",
+    "Mt. Merbabu via Selo"
+   ]
+  },
+  {
+   "query": "jalur panjang untuk ekspedisi",
+   "expected": [
+    "Mt. Semeru",
+    "Mt. Arjuno via Tretes",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Sumbing via Garung",
+    "Gunung Arjuna via Lawang",
+    "Mt. Merbabu via Suwanting",
+    "Gunung Merbabu via Grenden",
+    "Mt. Merbabu via Selo",
+    "Mt. Slamet via Dipajaya",
+    "Gunung Merbabu via Wekas"
+   ]
+  },
+  {
+   "query": "merbabu",
+   "expected": [
+    "Gunung Merbabu via Grenden",
+    "Mt. Merbabu via Selo",
+    "Gunung Merbabu via Wekas",
+    "Mt. Merbabu via Suwanting"
+   ]
+  },
+  {
+   "query": "gunung slamet",
+   "expected": [
+    "Mt. Slamet via Dipajaya"
+   ]
+  },
+  {
+   "query": "sumbing via garung",
+   "expected": [
+    "Gunung Sumbing via Garung",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Sumbing via Banaran"
+   ]
+  },
+  {
+   "query": "Arjuna",
+   "expected": [
+    "Gunung Arjuna via Lawang",
+    "Mt. Arjuno via Tretes"
+   ]
+  },
+  {
+   "query": "puncak upas",
+   "expected": [
+    "Puncak Upas via Sukawana (Trek 11)"
+   ]
+  },
+  {
+   "query": "bukit sikendil",
+   "expected": [
+    "Bukit Sikendil via Sibajag"
+   ]
+  },
+  {
+   "query": "merbabu atau sumbing",
+   "expected": [
+    "Mt. Sumbing via Bowongso",
+    "Gunung Merbabu via Grenden",
+    "Mt. Merbabu via Selo",
+    "Gunung Sumbing via Banaran",
+    "Gunung Sumbing via Garung",
+    "Gunung Merbabu via Wekas",
+    "Mt. Merbabu via Suwanting"
+   ]
+  },
+  {
+   "query": "jalur landai di merbabu",
+   "expected": [
+    "Mt. Merbabu via Selo",
+    "Gunung Merbabu via Grenden",
+    "Gunung Merbabu via Wekas",
+    "Mt. Merbabu via Suwanting"
+   ]
+  },
+  {
+   "query": "jalur yang tidak terlalu curam",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Mt. Semeru",
+    "Puncak Upas via Sukawana (Trek 11)",
+    "Gunung Ijen",
+    "Mt. Arjuno via Tretes",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Anak Krakatau",
+    "Gunung Sumbing via Garung",
+    "Mt. Merbabu via Selo",
+    "Gunung Merbabu via Grenden"
+   ]
+  },
+  {
+   "query": "jalur di jawa barat",
+   "expected": [
+    "Puncak Upas via Sukawana (Trek 11)"
+   ]
+  },
+  {
+   "query": "pendakian dekat Banyuwangi",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek"
+   ]
+  },
+  {
+   "query": "jalur pemula di jawa timur",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Gunung Ijen",
+    "Gunung Arjuna via Lawang",
+    "Mt. Arjuno via Tretes",
+    "Mt. Semeru"
+   ]
+  },
+  {
+   "query": "pemandangan sabana",
+   "expected": [
+    "Gunung Arjuna via Lawang",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Andong via Gogik",
+    "Gunung Prau via Wates",
+    "Gunung Merbabu via Grenden",
+    "Mt. Slamet via Dipajaya",
+    "Bukit Sikendil via Sibajag",
+    "Mt. Semeru",
+    "Gunung Ijen",
+    "Mt. Merbabu via Selo"
+   ]
+  },
+  {
+   "query": "jalur landai untuk pemula",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Puncak Upas via Sukawana (Trek 11)",
+    "Gunung Ijen",
+    "Gunung Anak Krakatau",
+    "Mt. Semeru",
+    "Mt. Arjuno via Tretes",
+    "Mt. Sumbing via Bowongso",
+    "Gunung Sumbing via Garung",
+    "Mt. Merbabu via Selo",
+    "Gunung Merbabu via Grenden"
+   ]
+  },
+  {
+   "query": "gunung anak krakatau",
+   "expected": [
+    "Gunung Anak Krakatau"
+   ]
+  },
+  {
+   "query": "jalur untuk anak",
+   "expected": [
+    "Kawah Ijen via Sunrise View Trek",
+    "Gunung Andong via Gogik",
+    "Bukit Sikendil via Sibajag",
+    "Gunung Anak Krakatau",
+    "Puncak Upas via Sukawana (Trek 11)",
+    "Gunung Ijen",
+    "Gunung Sumbing via Banaran",
+    "Gunung Merbabu via Wekas",
+    "Mt. Merbabu via Selo",
+    "Mt. Slamet via Dipajaya"
+   ]
+  }
+ ]
+}

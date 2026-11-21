@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 import search_scoring
-from processor import classify_difficulty as processor_difficulty, grade_description
+from processor import classify_difficulty as processor_difficulty, grade_description, steepest_section_grade
 
 CACHE_FILE = "/tmp/routes_cache.json"
 
@@ -84,6 +84,7 @@ def calculate_statistics(gpx, points):
         'elevation_gain_m': int(gain_m),
         'naismith_duration_hour': round_trip_hrs,
         'average_grade_pct': round(grade, 2),
+        'steepest_grade_pct': round(steepest_section_grade(points), 1),
         'min_elevation': int(min_ele),
         'max_elevation': int(max_ele),
         'difficulty': processor_difficulty(dist_km, gain_m, grade, max_ele)
@@ -167,16 +168,6 @@ class RecommendationSystem:
             return []
         self._load_model()
         q_emb = self.model.encode(search_scoring.query_text(query)).tolist()
-        flat = [
-            {
-                'name': it['name'],
-                'average_grade_pct': it['stats'].get('average_grade_pct'),
-                'naismith_duration_hour': it['stats'].get('naismith_duration_hour'),
-                'elevation_gain_m': it['stats'].get('elevation_gain_m'),
-                'distance_km': it['stats'].get('distance_km'),
-            }
-            for it in self.db
-        ]
 
         # Extraction for numerical hard constraints (e.g. "dibawah 15km", "dibawah 6 jam")
         max_dist = None
@@ -184,21 +175,29 @@ class RecommendationSystem:
         if m_dist:
             max_dist = float(m_dist.group(1))
 
-        results = []
-        for item, flat_item in zip(self.db, flat):
-            if max_dist and item['stats']['distance_km'] > max_dist:
-                continue
-            # Hybrid relevance: SBERT document + aspect cosine, attribute and name match
-            sim = search_scoring.hybrid_score(
-                query, q_emb, item['embedding'], item.get('aspect_embeddings') or [], flat_item, flat
-            )['score']
-            results.append({
-                'item': item,
-                'similarity': float(sim)
-            })
+        items = [it for it in self.db if not (max_dist and it['stats']['distance_km'] > max_dist)]
+        flat = [
+            {
+                'id': i,
+                'name': it['name'],
+                'average_grade_pct': it['stats'].get('average_grade_pct'),
+                'steepest_grade_pct': it['stats'].get('steepest_grade_pct'),
+                'naismith_duration_hour': it['stats'].get('naismith_duration_hour'),
+                'elevation_gain_m': it['stats'].get('elevation_gain_m'),
+                'distance_km': it['stats'].get('distance_km'),
+                'max_elevation_m': it['stats'].get('max_elevation'),
+            }
+            for i, it in enumerate(items)
+        ]
 
-        results.sort(key=lambda x: x['similarity'], reverse=True)
-        return results[:top_n]
+        # Same ranking as the website: named mountain = filter, intent words = order
+        ranked = search_scoring.rank_routes(
+            query, q_emb, flat,
+            [it['embedding'] for it in items],
+            [it.get('aspect_embeddings') or [] for it in items],
+            limit=top_n,
+        )
+        return [{'item': items[row['id']], 'similarity': float(row['score'])} for row in ranked]
 
 if __name__ == '__main__':
     import sys

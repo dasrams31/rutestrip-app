@@ -100,6 +100,9 @@ untuk membaca angka, bukan ditonton.
   bagi pendaki; angkanya tetap ada di title dan teks pembaca layar.
 - Kartu hasil memberi satu kalimat "kenapa muncul" dari angka yang ditanya
   (kemiringan, waktu, jarak), supaya rekomendasi bisa dicek, bukan dipercaya.
+- Di atas kartu hasil ada satu baris "Hanya jalur Gunung X" (dengan tautan "Cari di
+  semua jalur") dan satu baris "Diurutkan dari yang paling landai", karena urutan
+  yang tidak dijelaskan terasa acak; kalimat "kenapa muncul" memakai angka yang sama.
 - Jalur pilihan di landing hanya jejak yang benar-benar terlihat seperti jalur
   (minimal 40 titik, kotak batas tidak tipis, tidak naik-turun di garis yang sama),
   karena garis lurus atau garis bolak-balik terlihat seperti data rusak.
