@@ -1,0 +1,829 @@
+{
+ "3": {
+  "route_id": "3",
+  "name": "Mt. Arjuno via Tretes",
+  "peak_name": "Puncak Ogal Agil",
+  "peak_ele": 3339,
+  "old_max_ele": 3133,
+  "old_dist_to_peak_m": 2301,
+  "action": "replace",
+  "status": "EXTENDED_REVIEW",
+  "method": "extended",
+  "file": "review/003-mt-arjuno-via-tretes.gpx",
+  "png": "review/003.png",
+  "standard_tier_fail": "OSM connection is 4.1 km (> 3.0 km limit)",
+  "base_mode": "round trip -> one way",
+  "ways": [
+   1253888947,
+   1311051100,
+   815498853,
+   1253888948,
+   1253883957
+  ],
+  "km_added": 4.05,
+  "km_cut": 8.25,
+  "attach_gap_m": 59,
+  "descent_m": 61,
+  "net_ascent_m": 828,
+  "height_gap_m": 854,
+  "net_ascent_pct": 97,
+  "detour_ratio": 1.71,
+  "straight_km": 2.37,
+  "evidence_share_pct": 97,
+  "evidence": [
+   "name 'Jalur Pendakian Gunung Arjuno via Cangar'",
+   "route=hiking relation 17256535",
+   "route=hiking relation 17256566",
+   "route=hiking relation 17256644"
+  ],
+  "snaps": 0,
+  "candidates_tested": 1,
+  "rejected_candidates": [],
+  "highways": [
+   "footway",
+   "path"
+  ],
+  "reason": "extended tier: +4.05 km on OSM footway/path ways, descent 61 m, net ascent 97% of the 854 m gap, detour 1.71x, hiking evidence on 97% of length",
+  "new_max_ele": 3322,
+  "new_km": 11.55,
+  "new_dist_to_peak_m": 0,
+  "max_jump_m": 67,
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1253888947",
+   "https://www.openstreetmap.org/way/1311051100",
+   "https://www.openstreetmap.org/way/815498853",
+   "https://www.openstreetmap.org/way/1253888948",
+   "https://www.openstreetmap.org/way/1253883957"
+  ]
+ },
+ "5": {
+  "route_id": "5",
+  "name": "Mt. Ciremai via Linggasana",
+  "peak_name": "Gunung Cereme",
+  "peak_ele": 3078,
+  "old_max_ele": 3003,
+  "old_dist_to_peak_m": 594,
+  "base_mode": "round trip -> one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1253667801,
+   672088121
+  ],
+  "km_added": 0.78,
+  "km_cut": 0.04,
+  "attach_gap_m": 59,
+  "snaps": 0,
+  "reason": "connected along 2 OSM way(s)",
+  "new_max_ele": 3055,
+  "new_km": 8.27,
+  "new_dist_to_peak_m": 14,
+  "max_jump_m": 59,
+  "file": "replace/005-mt-ciremai-via-linggasana.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1253667801",
+   "https://www.openstreetmap.org/way/672088121"
+  ]
+ },
+ "27": {
+  "route_id": "27",
+  "name": "Gunung Butak via Tuyomerto",
+  "peak_name": "Gunung Buthak",
+  "peak_ele": 2868,
+  "old_max_ele": 2738,
+  "old_dist_to_peak_m": 264,
+  "base_mode": "truncated at nearest point",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   819114229
+  ],
+  "km_added": 0.59,
+  "km_cut": 0.66,
+  "attach_gap_m": 29,
+  "snaps": 1,
+  "reason": "connected along 1 OSM way(s)",
+  "new_max_ele": 2847,
+  "new_km": 14.99,
+  "new_dist_to_peak_m": 2,
+  "max_jump_m": 385,
+  "file": "replace/027-gunung-butak-via-tuyomerto.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/819114229"
+  ]
+ },
+ "56": {
+  "route_id": "56",
+  "name": "Gunung Liman via Pulosari",
+  "peak_name": "Liman",
+  "peak_ele": 2563,
+  "old_max_ele": 2340,
+  "old_dist_to_peak_m": 2789,
+  "base_mode": "round trip -> one way",
+  "completion_fail": "OSM connection is 3.8 km (> 3.0 km limit)",
+  "action": "cannot_complete",
+  "cls_after": "CANNOT_COMPLETE",
+  "reason": "OSM connection is 3.8 km (> 3.0 km limit); no OSM hiking relation / named trail from the same trailhead reaches the summit",
+  "replacement_candidates": [
+   {
+    "kind": "relation",
+    "ids": [
+     17256368
+    ],
+    "name": "Gunung Liman (Pulosari BC)",
+    "start_gap_m": 0,
+    "peak_dist_m": 2789
+   },
+   {
+    "kind": "ways",
+    "ids": [
+     1209751020,
+     1253862835
+    ],
+    "name": "Jalur Pendakian Gunung Ngliman Wilis via Kare",
+    "start_gap_m": 0,
+    "peak_dist_m": 2789
+   }
+  ],
+  "extended_fail": "no candidate path satisfies the climb/detour rules (3.7 km: descent 251 m, net ascent 94%; 3.8 km: descent 257 m, net ascent 94%; 3.8 km: descent 254 m, net ascent 94%; 3.8 km: descent 259 m, net ascent 94%)"
+ },
+ "63": {
+  "route_id": "63",
+  "name": "Gunung Papandayan",
+  "peak_name": "Papandayan",
+  "peak_ele": 2623,
+  "old_max_ele": 2515,
+  "old_dist_to_peak_m": 1024,
+  "base_mode": "truncated at nearest point",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1300664058,
+   1565175368
+  ],
+  "km_added": 2.12,
+  "km_cut": 0.03,
+  "attach_gap_m": 49,
+  "snaps": 0,
+  "reason": "connected along 2 OSM way(s)",
+  "new_max_ele": 2639,
+  "new_km": 3.44,
+  "new_dist_to_peak_m": 24,
+  "max_jump_m": 77,
+  "file": "replace/063-gunung-papandayan.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1300664058",
+   "https://www.openstreetmap.org/way/1565175368"
+  ]
+ },
+ "65": {
+  "route_id": "65",
+  "name": "Gunung Penanggungan",
+  "peak_name": "Gunung Penanggungan",
+  "peak_ele": 1653,
+  "old_max_ele": 1161,
+  "old_dist_to_peak_m": 932,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1565694232,
+   1313767740,
+   1565694209,
+   1565694210,
+   888000506,
+   1253890704
+  ],
+  "km_added": 1.1,
+  "km_cut": 0.06,
+  "attach_gap_m": 59,
+  "snaps": 0,
+  "reason": "connected along 6 OSM way(s)",
+  "new_max_ele": 1640,
+  "new_km": 3.39,
+  "new_dist_to_peak_m": 7,
+  "max_jump_m": 59,
+  "file": "replace/065-gunung-penanggungan.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1565694232",
+   "https://www.openstreetmap.org/way/1313767740",
+   "https://www.openstreetmap.org/way/1565694209",
+   "https://www.openstreetmap.org/way/1565694210",
+   "https://www.openstreetmap.org/way/888000506",
+   "https://www.openstreetmap.org/way/1253890704"
+  ]
+ },
+ "67": {
+  "route_id": "67",
+  "name": "Gunung Raung via Sumberwringin",
+  "peak_name": "Raung",
+  "peak_ele": 3332,
+  "old_max_ele": 3171,
+  "old_dist_to_peak_m": 2123,
+  "base_mode": "round trip -> one way",
+  "completion_fail": "track end is not connected to the OSM path network leading to the peak",
+  "action": "cannot_complete",
+  "cls_after": "CANNOT_COMPLETE",
+  "reason": "track end is not connected to the OSM path network leading to the peak; no OSM hiking relation / named trail from the same trailhead reaches the summit",
+  "replacement_candidates": [
+   {
+    "kind": "relation",
+    "ids": [
+     17256724
+    ],
+    "name": "Gunung Raung (Sumberwringin BC)",
+    "start_gap_m": 0,
+    "peak_dist_m": 2120
+   },
+   {
+    "kind": "ways",
+    "ids": [
+     81467487,
+     1306125040
+    ],
+    "name": "Jalur pendakian Gunung Raung via Sumberwringin",
+    "start_gap_m": 0,
+    "peak_dist_m": 2120
+   }
+  ]
+ },
+ "85": {
+  "route_id": "85",
+  "name": "Bukit Gragal via Cembor",
+  "peak_name": "Gragal Hill",
+  "peak_ele": 1480,
+  "old_max_ele": 1228,
+  "old_dist_to_peak_m": 654,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   887415794,
+   1301455130,
+   1301455131,
+   1301455132,
+   1301468232,
+   1301455134
+  ],
+  "km_added": 0.92,
+  "km_cut": 0.1,
+  "attach_gap_m": 42,
+  "snaps": 0,
+  "reason": "connected along 6 OSM way(s)",
+  "new_max_ele": 1458,
+  "new_km": 3.32,
+  "new_dist_to_peak_m": 36,
+  "max_jump_m": 46,
+  "file": "replace/085-bukit-gragal-via-cembor.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/887415794",
+   "https://www.openstreetmap.org/way/1301455130",
+   "https://www.openstreetmap.org/way/1301455131",
+   "https://www.openstreetmap.org/way/1301455132",
+   "https://www.openstreetmap.org/way/1301468232",
+   "https://www.openstreetmap.org/way/1301455134"
+  ]
+ },
+ "86": {
+  "route_id": "86",
+  "name": "Bukit Watu Jengger",
+  "peak_name": "Puncak Watu Jengger",
+  "peak_ele": 1100,
+  "old_max_ele": 996,
+  "old_dist_to_peak_m": 613,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   894294532
+  ],
+  "km_added": 0.67,
+  "km_cut": 0.04,
+  "attach_gap_m": 43,
+  "snaps": 0,
+  "reason": "connected along 1 OSM way(s)",
+  "new_max_ele": 1071,
+  "new_km": 3.38,
+  "new_dist_to_peak_m": 2,
+  "max_jump_m": 44,
+  "file": "replace/086-bukit-watu-jengger.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/894294532"
+  ]
+ },
+ "88": {
+  "route_id": "88",
+  "name": "Gunung Andong via Gogik",
+  "peak_name": "Gunung Andong",
+  "peak_ele": 1719,
+  "old_max_ele": 1503,
+  "old_dist_to_peak_m": 610,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   794701425,
+   1079337490
+  ],
+  "km_added": 0.77,
+  "km_cut": 0.04,
+  "attach_gap_m": 56,
+  "snaps": 0,
+  "reason": "connected along 2 OSM way(s)",
+  "new_max_ele": 1718,
+  "new_km": 1.51,
+  "new_dist_to_peak_m": 7,
+  "max_jump_m": 56,
+  "file": "replace/088-gunung-andong-via-gogik.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/794701425",
+   "https://www.openstreetmap.org/way/1079337490"
+  ]
+ },
+ "90": {
+  "route_id": "90",
+  "name": "Gunung Arjuno via Telih",
+  "peak_name": "Puncak Ogal Agil",
+  "peak_ele": 3339,
+  "old_max_ele": 3155,
+  "old_dist_to_peak_m": 948,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1388690887,
+   1388690888,
+   1253888948,
+   1253883957
+  ],
+  "km_added": 1.12,
+  "km_cut": 0.05,
+  "attach_gap_m": 46,
+  "snaps": 0,
+  "reason": "connected along 4 OSM way(s)",
+  "new_max_ele": 3322,
+  "new_km": 6.76,
+  "new_dist_to_peak_m": 0,
+  "max_jump_m": 52,
+  "file": "replace/090-gunung-arjuno-via-telih.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1388690887",
+   "https://www.openstreetmap.org/way/1388690888",
+   "https://www.openstreetmap.org/way/1253888948",
+   "https://www.openstreetmap.org/way/1253883957"
+  ]
+ },
+ "104": {
+  "route_id": "104",
+  "name": "Gunung Liman via Kare",
+  "peak_name": "Liman",
+  "peak_ele": 2563,
+  "old_max_ele": 2340,
+  "old_dist_to_peak_m": 2788,
+  "base_mode": "one way",
+  "completion_fail": "OSM connection is 3.8 km (> 3.0 km limit)",
+  "action": "cannot_complete",
+  "cls_after": "CANNOT_COMPLETE",
+  "reason": "OSM connection is 3.8 km (> 3.0 km limit); no OSM hiking relation / named trail from the same trailhead reaches the summit",
+  "replacement_candidates": [
+   {
+    "kind": "relation",
+    "ids": [
+     17256368
+    ],
+    "name": "Gunung Liman (Pulosari BC)",
+    "start_gap_m": 0,
+    "peak_dist_m": 2789
+   },
+   {
+    "kind": "ways",
+    "ids": [
+     1209751020,
+     1253862835
+    ],
+    "name": "Jalur Pendakian Gunung Ngliman Wilis via Kare",
+    "start_gap_m": 0,
+    "peak_dist_m": 2789
+   }
+  ],
+  "extended_fail": "no candidate path satisfies the climb/detour rules (3.7 km: descent 251 m, net ascent 94%; 3.8 km: descent 257 m, net ascent 94%; 3.8 km: descent 254 m, net ascent 94%; 3.8 km: descent 259 m, net ascent 94%)"
+ },
+ "106": {
+  "route_id": "106",
+  "name": "Gunung Merbabu via Cuntel",
+  "peak_name": "Gunung Merbabu",
+  "peak_ele": 3145,
+  "old_max_ele": 2841,
+  "old_dist_to_peak_m": 1403,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1253733659,
+   1253733658,
+   1274478386,
+   1165092333,
+   1253733657
+  ],
+  "km_added": 1.83,
+  "km_cut": 0.01,
+  "attach_gap_m": 31,
+  "snaps": 0,
+  "reason": "connected along 5 OSM way(s)",
+  "new_max_ele": 3125,
+  "new_km": 5.07,
+  "new_dist_to_peak_m": 7,
+  "max_jump_m": 31,
+  "file": "replace/106-gunung-merbabu-via-cuntel.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1253733659",
+   "https://www.openstreetmap.org/way/1253733658",
+   "https://www.openstreetmap.org/way/1274478386",
+   "https://www.openstreetmap.org/way/1165092333",
+   "https://www.openstreetmap.org/way/1253733657"
+  ]
+ },
+ "107": {
+  "route_id": "107",
+  "name": "Gunung Merbabu via Wonolelo",
+  "peak_name": "Gunung Merbabu",
+  "peak_ele": 3145,
+  "old_max_ele": 2731,
+  "old_dist_to_peak_m": 1201,
+  "base_mode": "truncated at nearest point",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1253731695,
+   1274478384,
+   1253731694,
+   1431662964,
+   1165092331,
+   1253733657
+  ],
+  "km_added": 1.4,
+  "km_cut": 0.03,
+  "attach_gap_m": 43,
+  "snaps": 0,
+  "reason": "connected along 6 OSM way(s)",
+  "new_max_ele": 3120,
+  "new_km": 3.99,
+  "new_dist_to_peak_m": 8,
+  "max_jump_m": 50,
+  "file": "replace/107-gunung-merbabu-via-wonolelo.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1253731695",
+   "https://www.openstreetmap.org/way/1274478384",
+   "https://www.openstreetmap.org/way/1253731694",
+   "https://www.openstreetmap.org/way/1431662964",
+   "https://www.openstreetmap.org/way/1165092331",
+   "https://www.openstreetmap.org/way/1253733657"
+  ]
+ },
+ "109": {
+  "route_id": "109",
+  "name": "Gunung Muria",
+  "peak_name": "Puncak Natas Angin Gunung Muria",
+  "peak_ele": 1515,
+  "old_max_ele": 1237,
+  "old_dist_to_peak_m": 773,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1302239599
+  ],
+  "km_added": 1.09,
+  "km_cut": 0.05,
+  "attach_gap_m": 54,
+  "snaps": 0,
+  "reason": "connected along 1 OSM way(s)",
+  "new_max_ele": 1491,
+  "new_km": 2.87,
+  "new_dist_to_peak_m": 0,
+  "max_jump_m": 66,
+  "file": "replace/109-gunung-muria.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1302239599"
+  ]
+ },
+ "113": {
+  "route_id": "113",
+  "name": "Gunung Penanggungan via Genting",
+  "peak_name": "Gunung Penanggungan",
+  "peak_ele": 1653,
+  "old_max_ele": 1107,
+  "old_dist_to_peak_m": 1153,
+  "base_mode": "truncated at nearest point",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1222182861,
+   1300218753,
+   1222182862,
+   1313767741,
+   1565694232,
+   1313767740,
+   1565694209,
+   1565694210,
+   888000506,
+   1253890704
+  ],
+  "km_added": 1.74,
+  "km_cut": 0.0,
+  "attach_gap_m": 51,
+  "snaps": 0,
+  "reason": "connected along 10 OSM way(s)",
+  "new_max_ele": 1640,
+  "new_km": 5.3,
+  "new_dist_to_peak_m": 7,
+  "max_jump_m": 51,
+  "file": "replace/113-gunung-penanggungan-via-genting.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1222182861",
+   "https://www.openstreetmap.org/way/1300218753",
+   "https://www.openstreetmap.org/way/1222182862",
+   "https://www.openstreetmap.org/way/1313767741",
+   "https://www.openstreetmap.org/way/1565694232",
+   "https://www.openstreetmap.org/way/1313767740",
+   "https://www.openstreetmap.org/way/1565694209",
+   "https://www.openstreetmap.org/way/1565694210",
+   "https://www.openstreetmap.org/way/888000506",
+   "https://www.openstreetmap.org/way/1253890704"
+  ]
+ },
+ "115": {
+  "route_id": "115",
+  "name": "Gunung Penanggungan via Tamiajeng",
+  "peak_name": "Gunung Penanggungan",
+  "peak_ele": 1653,
+  "old_max_ele": 1003,
+  "old_dist_to_peak_m": 1321,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   889374889,
+   1565694226,
+   1565694229,
+   1310814295
+  ],
+  "km_added": 1.49,
+  "km_cut": 0.0,
+  "attach_gap_m": 50,
+  "snaps": 0,
+  "reason": "connected along 4 OSM way(s)",
+  "new_max_ele": 1640,
+  "new_km": 3.48,
+  "new_dist_to_peak_m": 7,
+  "max_jump_m": 64,
+  "file": "replace/115-gunung-penanggungan-via-tamiajeng.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/889374889",
+   "https://www.openstreetmap.org/way/1565694226",
+   "https://www.openstreetmap.org/way/1565694229",
+   "https://www.openstreetmap.org/way/1310814295"
+  ]
+ },
+ "117": {
+  "route_id": "117",
+  "name": "Gunung Prau via Wates",
+  "peak_name": "Gunung Prau",
+  "peak_ele": 2600,
+  "old_max_ele": 2516,
+  "old_dist_to_peak_m": 863,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1301696861,
+   1301696859,
+   1301696860,
+   1301696857,
+   1301696856,
+   686335392,
+   1162120713
+  ],
+  "km_added": 0.99,
+  "km_cut": 0.02,
+  "attach_gap_m": 53,
+  "snaps": 0,
+  "reason": "connected along 7 OSM way(s)",
+  "new_max_ele": 2589,
+  "new_km": 4.61,
+  "new_dist_to_peak_m": 2,
+  "max_jump_m": 54,
+  "file": "replace/117-gunung-prau-via-wates.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1301696861",
+   "https://www.openstreetmap.org/way/1301696859",
+   "https://www.openstreetmap.org/way/1301696860",
+   "https://www.openstreetmap.org/way/1301696857",
+   "https://www.openstreetmap.org/way/1301696856",
+   "https://www.openstreetmap.org/way/686335392",
+   "https://www.openstreetmap.org/way/1162120713"
+  ]
+ },
+ "123": {
+  "route_id": "123",
+  "name": "Gunung Sindoro via Kalitengah",
+  "peak_name": "Gunung Sindoro",
+  "peak_ele": 3136,
+  "old_max_ele": 2705,
+  "old_dist_to_peak_m": 938,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1431669271,
+   1431669272,
+   1190765409
+  ],
+  "km_added": 1.04,
+  "km_cut": 0.0,
+  "attach_gap_m": 47,
+  "snaps": 0,
+  "reason": "connected along 3 OSM way(s)",
+  "new_max_ele": 3146,
+  "new_km": 3.64,
+  "new_dist_to_peak_m": 65,
+  "max_jump_m": 47,
+  "file": "replace/123-gunung-sindoro-via-kalitengah.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1431669271",
+   "https://www.openstreetmap.org/way/1431669272",
+   "https://www.openstreetmap.org/way/1190765409"
+  ]
+ },
+ "126": {
+  "route_id": "126",
+  "name": "Gunung Slamet via Sawangan",
+  "peak_name": "Gunung Slamet",
+  "peak_ele": 3428,
+  "old_max_ele": 2426,
+  "old_dist_to_peak_m": 2537,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1302033236,
+   1302034676,
+   1302033237,
+   1432341507
+  ],
+  "km_added": 2.67,
+  "km_cut": 0.06,
+  "attach_gap_m": 55,
+  "snaps": 0,
+  "reason": "connected along 4 OSM way(s)",
+  "new_max_ele": 3308,
+  "new_km": 5.55,
+  "new_dist_to_peak_m": 360,
+  "max_jump_m": 55,
+  "file": "replace/126-gunung-slamet-via-sawangan.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1302033236",
+   "https://www.openstreetmap.org/way/1302034676",
+   "https://www.openstreetmap.org/way/1302033237",
+   "https://www.openstreetmap.org/way/1432341507"
+  ]
+ },
+ "129": {
+  "route_id": "129",
+  "name": "Gunung Sumbing via Mangli",
+  "peak_name": "Gunung Sumbing",
+  "peak_ele": 3320,
+  "old_max_ele": 2660,
+  "old_dist_to_peak_m": 1330,
+  "base_mode": "one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   1253687331,
+   1253687330
+  ],
+  "km_added": 1.44,
+  "km_cut": 0.0,
+  "attach_gap_m": 56,
+  "snaps": 0,
+  "reason": "connected along 2 OSM way(s)",
+  "new_max_ele": 3249,
+  "new_km": 4.02,
+  "new_dist_to_peak_m": 342,
+  "max_jump_m": 65,
+  "file": "replace/129-gunung-sumbing-via-mangli.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/1253687331",
+   "https://www.openstreetmap.org/way/1253687330"
+  ]
+ },
+ "130": {
+  "route_id": "130",
+  "name": "Gunung Telomoyo via Arsal",
+  "peak_name": "Gunung Telomoyo",
+  "peak_ele": 1894,
+  "old_max_ele": 1762,
+  "old_dist_to_peak_m": 306,
+  "base_mode": "truncated at nearest point",
+  "completion_fail": "track end is not connected to the OSM path network leading to the peak",
+  "action": "cannot_complete",
+  "cls_after": "CANNOT_COMPLETE",
+  "reason": "track end is not connected to the OSM path network leading to the peak; no OSM hiking relation / named trail from the same trailhead reaches the summit",
+  "replacement_candidates": [
+   {
+    "kind": "ways",
+    "ids": [
+     1079337488
+    ],
+    "name": "Trek Telomoyo via Arsal",
+    "start_gap_m": 0,
+    "peak_dist_m": 306
+   }
+  ]
+ },
+ "4": {
+  "route_id": "4",
+  "name": "Mt. Ciremai via Apuy",
+  "peak_name": "Gunung Cereme",
+  "peak_ele": 3078,
+  "old_max_ele": 3011,
+  "old_dist_to_peak_m": 528,
+  "base_mode": "round trip -> one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   672088120,
+   1334986919
+  ],
+  "km_added": 0.68,
+  "km_cut": 0.1,
+  "attach_gap_m": 59,
+  "snaps": 0,
+  "reason": "connected along 2 OSM way(s)",
+  "new_max_ele": 3058,
+  "new_km": 5.85,
+  "new_dist_to_peak_m": 13,
+  "max_jump_m": 59,
+  "file": "replace/004-mt-ciremai-via-apuy.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/672088120",
+   "https://www.openstreetmap.org/way/1334986919"
+  ]
+ },
+ "6": {
+  "route_id": "6",
+  "name": "Mt. Ciremai via Palutungan",
+  "peak_name": "Gunung Cereme",
+  "peak_ele": 3078,
+  "old_max_ele": 3053,
+  "old_dist_to_peak_m": 520,
+  "base_mode": "round trip -> one way",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   672088120,
+   1334986919
+  ],
+  "km_added": 0.68,
+  "km_cut": 0.11,
+  "attach_gap_m": 60,
+  "snaps": 0,
+  "reason": "connected along 2 OSM way(s)",
+  "new_max_ele": 3058,
+  "new_km": 9.43,
+  "new_dist_to_peak_m": 13,
+  "max_jump_m": 60,
+  "file": "replace/006-mt-ciremai-via-palutungan.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/672088120",
+   "https://www.openstreetmap.org/way/1334986919"
+  ]
+ },
+ "28": {
+  "route_id": "28",
+  "name": "Gunung Ciremai via Linggarjati Palutungan",
+  "peak_name": "Gunung Cereme",
+  "peak_ele": 3078,
+  "old_max_ele": 3119,
+  "old_dist_to_peak_m": 509,
+  "base_mode": "truncated at nearest point",
+  "action": "replace",
+  "method": "completion",
+  "ways": [
+   672088121
+  ],
+  "km_added": 0.73,
+  "km_cut": 0.73,
+  "attach_gap_m": 60,
+  "snaps": 0,
+  "reason": "connected along 1 OSM way(s)",
+  "new_max_ele": 3055,
+  "new_km": 8.82,
+  "new_dist_to_peak_m": 14,
+  "max_jump_m": 158,
+  "file": "replace/028-gunung-ciremai-via-linggarjati-palutungan.gpx",
+  "source_urls": [
+   "https://www.openstreetmap.org/way/672088121"
+  ]
+ }
+}

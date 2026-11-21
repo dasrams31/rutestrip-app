@@ -1,0 +1,134 @@
+{
+ "_doc": "Manual decisions for audit_summits.py, keyed by route_id. peak_node = OSM node id of the intended summit; peak_ele = summit elevation to use when the node has no/wrong ele; peak_names = names to match instead of the route's mountain; class = force a class (NOT_A_SUMMIT_ROUTE needs a reason); note = shown in the report.",
+ "_caveats": [
+  "Track elevations of the original (phone/watch) GPX files are often 50-150 m off; the vertical test therefore also uses DEM-vs-DEM at the closest track point when the peak node's ele agrees with the DEM there.",
+  "SRTM 30 m smooths sharp summits: DEM summit heights are typically 10-60 m lower than the surveyed height, so new/replacement GPX max elevation can be below the official peak height even when the track reaches the summit marker.",
+  "Peak nodes imported from NGA-GNS (source=NGA-GNS) are frequently mislocated by hundreds of metres; they are only used when no better node exists (e.g. Gunung Watupayon, Gunung Salak Dua).",
+  "Summit access changes: Semeru (Mahameru) summit access and Anak Krakatau landings are frequently restricted by the park authorities; these routes are COMPLETE geometrically, but check current status before promoting them.",
+  "OSM data reflects what volunteers mapped; a path present in OSM is not a guarantee that the trail is open or safe. New trails were filtered for access=no and names containing Nonaktif/ditutup/tutup/closed, and Merapi summit routes were skipped.",
+  "Nothing was downloaded from community/third-party GPX sites; routes not completable from OSM are listed under 'Perlu GPX dari komunitas'."
+ ],
+ "3": {
+  "peak_node": 11333639567,
+  "peak_ele": 3339,
+  "note": "Arjuno summit = Puncak Ogal Agil (3,339 m). The Tretes track goes to Welirang instead."
+ },
+ "24": {
+  "peak_node": 11333639567,
+  "peak_ele": 3339
+ },
+ "25": {
+  "peak_node": 11333639567,
+  "peak_ele": 3339
+ },
+ "41": {
+  "peak_node": 11333639567,
+  "peak_ele": 3339
+ },
+ "42": {
+  "peak_node": 11333639567,
+  "peak_ele": 3339
+ },
+ "90": {
+  "peak_node": 11333639567,
+  "peak_ele": 3339
+ },
+ "37": {
+  "peak_node": 449697393,
+  "peak_ele": 3156,
+  "note": "Welirang summit: OSM node 449697393 ('Arjuno-Welirang', placed on the Welirang summit; its ele tag 3339 is Arjuno's height). Welirang = 3,156 m."
+ },
+ "78": {
+  "peak_node": 449697393,
+  "peak_ele": 3156,
+  "note": "Welirang summit: OSM node 449697393 ('Arjuno-Welirang', placed on the Welirang summit; its ele tag 3339 is Arjuno's height). Welirang = 3,156 m."
+ },
+ "18": {
+  "class": "COMPLETE",
+  "reason": "passes 221 m from the Gunung Slamet node on the summit rim (DEM at the closest track point 3,343 m, above the node's DEM); the GPX elevations are ~140 m too low vs the DEM (max 3,153 m), so the vertical test fails on GPS data only. Re-elevating the file with a DEM is recommended."
+ },
+ "53": {
+  "class": "NOT_A_SUMMIT_ROUTE",
+  "reason": "Kawah Ijen walk from Paltuding to the crater rim (~2,380 m) and the crater; the OSM 'Gunung Ijen' node sits over the crater lake and the complex's high point (Gunung Merapi, 2,799 m) is a different, rarely climbed summit."
+ },
+ "135": {
+  "class": "NOT_A_SUMMIT_ROUTE",
+  "reason": "Sunrise View Trek is a viewpoint walk on the Ijen crater rim, not a summit climb."
+ },
+ "75": {
+  "class": "NOT_A_SUMMIT_ROUTE",
+  "reason": "Tangkuban Parahu walk ends at the Kawah Ratu crater rim (public endpoint, ~1,890 m); the summit point (2,084 m) on the far rim is not the destination of this route."
+ },
+ "134": {
+  "class": "NOT_A_SUMMIT_ROUTE",
+  "reason": "'Claket - Asitaba Trail' (Pacet, Mojokerto) is a forest/village trail between Claket and Asitaba; it does not lead to a summit (nearest peak 1.5 km away, 380 m higher)."
+ },
+ "133": {
+  "class": "NOT_A_SUMMIT_ROUTE",
+  "reason": "Cisadon trail (Sentul, Bogor) is a ridge/forest traverse to the Cisadon village area, not a summit climb (OSM ways 'Cisadon Trail')."
+ },
+ "67": {
+  "peak_node": 5846266478,
+  "peak_ele": 3332,
+  "note": "Raung true summit (Puncak Sejati, 3,332 m) = OSM node 5846266478; node 546451027 lies over the caldera (DEM 2,864 m). The Sumberwringin track ends on the eastern rim (Puncak 17/Bendera area, ~3,170 m); OSM has no path from there along the rim to Puncak Sejati."
+ },
+ "121": {
+  "peak_node": 5846266478,
+  "peak_ele": 3332
+ },
+ "69": {
+  "peak_node": 1070156648,
+  "peak_ele": 2180,
+  "note": "Intended summit is Puncak Salak II (2,180 m); OSM node from NGA-GNS, DEM 2,148 m at the node."
+ },
+ "70": {
+  "peak_node": 1070156648,
+  "peak_ele": 2180,
+  "note": "The OSM relation 'Gunung Salak via Ajisaka' ends at Puncak Salak II (2,180 m), a recognised summit of Gunung Salak; Salak I (2,211 m) is 1.7 km further along the ridge."
+ },
+ "71": {
+  "peak_node": 1070181978
+ },
+ "122": {
+  "peak_node": 1070181978
+ },
+ "101": {
+  "peak_node": 2285856108,
+  "peak_ele": 2958,
+  "note": "Gede summit = node 'Puncak Gunung Gede'; the 'Gunung Gede' volcano node sits over the crater (DEM 2,681 m)."
+ },
+ "80": {
+  "peak_node": 5964072251
+ },
+ "138": {
+  "peak_node": 5964072251
+ },
+ "132": {
+  "peak_node": 1070162566,
+  "note": "Destination is Gunung Watupayon (NGA-GNS node, DEM 1,495 m), not the main Muria summit."
+ },
+ "136": {
+  "peak_node": 7949943518,
+  "note": "Destination is Argo Jembangan / Punuk Sapi (1,381 m), a Muria summit."
+ },
+ "137": {
+  "peak_node": 9452454647,
+  "note": "Destination is Puncak Argopuro (Lasem, 800 m)."
+ },
+ "109": {
+  "peak_node": 12060967340,
+  "note": "OSM ways 'Jalur Pendakian Gunung Muria' end at Pertapaan Eyang Begawan Abiyoso (1,233 m); nearest Muria summit on that ridge is Puncak Natas Angin (1,515 m)."
+ },
+ "104": {
+  "note": "Possible duplicate: every point of this track lies on route 56 (same trailhead -7.77942,111.71704; it is the outbound half of route 56's round trip)."
+ },
+ "56": {
+  "note": "Route 104 (via Kare) is the same path (outbound half of this round trip)."
+ },
+ "28": {
+  "note": "Original is a Linggarjati -> Palutungan traverse; the replacement is the Linggarjati ascent to the summit only (Palutungan is route 6)."
+ },
+ "130": {
+  "note": "Track ends at Puncak Ismoyo (1,740 m); the OSM paths near the Telomoyo summit are not connected to it in the OSM path/footway/track network."
+ }
+}
