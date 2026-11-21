@@ -204,7 +204,7 @@
             <div class="max-w-3xl">
                 <p class="text-sm sm:text-base font-semibold text-[#a7f3d0]">{{ __('Jalur pendakian gunung di Pulau Jawa') }}</p>
                 <h1 id="hero-title" class="rs-display mt-3 uppercase text-[clamp(2.6rem,11vw,6.25rem)] leading-[0.9] [text-wrap:balance]">
-                    {{ __('Bilang saja mau mendaki yang seperti apa.') }}
+                    {{ __('Bilang saja mau mendaki ke Gunung Mana?') }}
                 </h1>
                 <p class="mt-4 sm:mt-5 text-base sm:text-lg text-[#d1fae5] max-w-xl leading-relaxed">
                     @if($routeCount > 0)

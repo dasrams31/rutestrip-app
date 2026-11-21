@@ -476,7 +476,6 @@
     "provinsi": "provinces",
     "km total panjang jalur": "km of trail in total",
     "Jalur pendakian gunung di Pulau Jawa": "Mountain hiking trails on Java",
-    "Bilang saja mau mendaki yang seperti apa.": "Just tell us what kind of climb you want.",
     "Tulis seperti bicara ke teman satu rombongan, misalnya \"jalur landai untuk pemula\". RuteStrip mencocokkannya dengan data GPX :count jalur: jarak, total tanjakan, kemiringan, dan estimasi waktu.": "Write it the way you would tell a friend on your team, for example \"gentle trail for beginners\". RuteStrip matches it against the GPX data of :count trails: distance, total ascent, grade, and estimated time.",
     "Tulis seperti bicara ke teman satu rombongan, misalnya \"jalur landai untuk pemula\". RuteStrip mencocokkannya dengan data GPX setiap jalur: jarak, total tanjakan, kemiringan, dan estimasi waktu.": "Write it the way you would tell a friend on your team, for example \"gentle trail for beginners\". RuteStrip matches it against the GPX data of every trail: distance, total ascent, grade, and estimated time.",
     "Jalur seperti apa yang kamu cari?": "What kind of trail are you looking for?",
@@ -1094,5 +1093,6 @@
     "Jalur dihapus dari favoritmu.": "Trail removed from your favourites.",
     "Jalur disimpan ke favoritmu.": "Trail saved to your favourites.",
     "Kamu tidak perlu menebak kata kunci. Tulis saja seperti bercerita, misalnya:": "No need to guess keywords. Just write it the way you would say it, for example:",
-    "Coba cari kalimat ini": "Search with this sentence"
+    "Coba cari kalimat ini": "Search with this sentence",
+    "Bilang saja mau mendaki ke Gunung Mana?": "Just tell us: which mountain do you want to climb?"
 }
