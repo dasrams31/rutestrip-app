@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="RuteStrip fix_loop_routes" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>Gunung Gede via Sukatani</name>
-    <desc>Track: OpenStreetMap relation 17252297, (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
-    <link href="https://www.openstreetmap.org/relation/17252297"><text>OpenStreetMap relation 17252297</text></link>
+    <desc>Gunung Gede via Sukatani: one-way trailhead -&gt; Puncak Gunung Gede from the ORIGINAL recording (OpenStreetMap), no added geometry. kept start -&gt; Gede summit; dropped 1.18 km after the summit. Evidence: dropped part runs on the Cibodas trail: 100% of it within 30 m of route #51 (Gede Pangrango via Cibodas), heading to Kandang Badak; kept trailhead is 409 m from OSM village 'Gunung Putri' (the Gunung Putri basecamp lies in Desa Sukatani, Pacet); kept track on OSM relation 'Gunung Gede (Sukatani to Bumi Perkemahan)' (100%), relation 'Tele Selatan to Sukatani' (100%); OSM node 'Sukatani' is 1.69 km from the kept trailhead. OSM data (c) OpenStreetMap contributors, ODbL 1.0.</desc>
+    <link href="https://www.openstreetmap.org/relation/17252297"><text>original source</text></link>
   </metadata>
   <trk>
     <name>Gunung Gede via Sukatani</name>
@@ -225,46 +225,6 @@
       <trkpt lat="-6.790366" lon="106.983446"><ele>2929.0</ele></trkpt>
       <trkpt lat="-6.790132" lon="106.983328"><ele>2943.0</ele></trkpt>
       <trkpt lat="-6.789928" lon="106.983150"><ele>2947.0</ele></trkpt>
-      <trkpt lat="-6.789899" lon="106.982904"><ele>2945.0</ele></trkpt>
-      <trkpt lat="-6.789921" lon="106.982634"><ele>2942.0</ele></trkpt>
-      <trkpt lat="-6.789910" lon="106.982362"><ele>2942.0</ele></trkpt>
-      <trkpt lat="-6.789898" lon="106.982091"><ele>2947.0</ele></trkpt>
-      <trkpt lat="-6.789875" lon="106.981821"><ele>2945.0</ele></trkpt>
-      <trkpt lat="-6.789832" lon="106.981552"><ele>2940.0</ele></trkpt>
-      <trkpt lat="-6.789788" lon="106.981284"><ele>2936.0</ele></trkpt>
-      <trkpt lat="-6.789651" lon="106.981060"><ele>2933.0</ele></trkpt>
-      <trkpt lat="-6.789490" lon="106.980842"><ele>2925.0</ele></trkpt>
-      <trkpt lat="-6.789380" lon="106.980596"><ele>2914.0</ele></trkpt>
-      <trkpt lat="-6.789244" lon="106.980362"><ele>2904.0</ele></trkpt>
-      <trkpt lat="-6.789057" lon="106.980167"><ele>2890.0</ele></trkpt>
-      <trkpt lat="-6.788883" lon="106.979959"><ele>2886.0</ele></trkpt>
-      <trkpt lat="-6.788717" lon="106.979745"><ele>2877.0</ele></trkpt>
-      <trkpt lat="-6.788544" lon="106.979537"><ele>2874.0</ele></trkpt>
-      <trkpt lat="-6.788333" lon="106.979371"><ele>2864.0</ele></trkpt>
-      <trkpt lat="-6.788103" lon="106.979230"><ele>2857.0</ele></trkpt>
-      <trkpt lat="-6.787891" lon="106.979071"><ele>2855.0</ele></trkpt>
-      <trkpt lat="-6.787701" lon="106.978878"><ele>2854.0</ele></trkpt>
-      <trkpt lat="-6.787487" lon="106.978715"><ele>2851.0</ele></trkpt>
-      <trkpt lat="-6.787246" lon="106.978597"><ele>2847.0</ele></trkpt>
-      <trkpt lat="-6.786991" lon="106.978508"><ele>2838.0</ele></trkpt>
-      <trkpt lat="-6.786735" lon="106.978422"><ele>2827.0</ele></trkpt>
-      <trkpt lat="-6.786494" lon="106.978302"><ele>2814.0</ele></trkpt>
-      <trkpt lat="-6.786276" lon="106.978144"><ele>2801.0</ele></trkpt>
-      <trkpt lat="-6.786074" lon="106.977965"><ele>2800.0</ele></trkpt>
-      <trkpt lat="-6.785983" lon="106.977726"><ele>2799.0</ele></trkpt>
-      <trkpt lat="-6.785846" lon="106.977495"><ele>2792.0</ele></trkpt>
-      <trkpt lat="-6.785672" lon="106.977295"><ele>2778.0</ele></trkpt>
-      <trkpt lat="-6.785479" lon="106.977105"><ele>2762.0</ele></trkpt>
-      <trkpt lat="-6.785301" lon="106.976903"><ele>2748.0</ele></trkpt>
-      <trkpt lat="-6.785197" lon="106.976657"><ele>2736.0</ele></trkpt>
-      <trkpt lat="-6.785008" lon="106.976465"><ele>2710.0</ele></trkpt>
-      <trkpt lat="-6.784873" lon="106.976230"><ele>2696.0</ele></trkpt>
-      <trkpt lat="-6.784755" lon="106.975986"><ele>2684.0</ele></trkpt>
-      <trkpt lat="-6.784618" lon="106.975757"><ele>2671.0</ele></trkpt>
-      <trkpt lat="-6.784391" lon="106.975616"><ele>2662.0</ele></trkpt>
-      <trkpt lat="-6.784180" lon="106.975469"><ele>2653.0</ele></trkpt>
-      <trkpt lat="-6.784118" lon="106.975225"><ele>2641.0</ele></trkpt>
-      <trkpt lat="-6.783870" lon="106.975178"><ele>2624.0</ele></trkpt>
     </trkseg>
   </trk>
 </gpx>

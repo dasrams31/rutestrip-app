@@ -1,0 +1,79 @@
+{
+ "25": {
+  "name": "Gunung Arjuno via Tambak Watu",
+  "before_km": 12.14,
+  "after_km": 12.16,
+  "kept": "all 6 track parts joined in file order (gaps between parts 0, 0, 14, 0, 0 m); already one-way trailhead -> summit",
+  "evidence": "74% of points within 60 m of OSM Purwosari trail (relation 'Gunung Arjuno (Purwosari BC)'); Tambak Watu is the Purwosari basecamp, the first ~2.6 km below the OSM way are the basecamp approach; kept track on OSM relation 'Gunung Arjuno (Purwosari BC)' (74%), way 'Jalur Pendakian Gunung Arjuno via Purwosari' (70%); OSM node 'Tambaksari' is 2.20 km from the kept trailhead"
+ },
+ "42": {
+  "name": "Gunung Arjuno via Purwosari",
+  "before_km": 13.31,
+  "after_km": 6.64,
+  "kept": "recording = junction(3085 m) -> summit -> junction -> down to 1195 m -> same path back up (median 0 m from the way down); kept the way down, reversed: 1195 m -> summit",
+  "evidence": "100% of kept points within 60 m of OSM ways 'Jalur Pendakian Gunung Arjuno via Purwosari' (relation 'Gunung Arjuno (Purwosari BC)'); kept trailhead is 19 m from the lower end of OSM way 815499577 (via Purwosari); 100% of kept points within 30 m of route #25 (Arjuno via Tambak Watu = the same Purwosari trail, which starts ~2.6 km lower at the basecamp)"
+ },
+ "51": {
+  "name": "Gunung Gede Pangrango via Cibodas",
+  "before_km": 20.65,
+  "after_km": 12.98,
+  "kept": "recording = Kandang Badak -> down to Cibodas (1363 m) -> same path back up -> Pangrango -> back to Kandang Badak -> Gede -> part way down; kept the contiguous part Cibodas -> Pangrango -> Kandang Badak -> Gede summit (13 m from the Gede node), as recorded, without the return",
+  "evidence": "passes OSM locality 'Kandang Badak' at 25 m; kept trailhead (lowest point, 1363 m) is 248 m from OSM camp_site 'Bumi Perkemahan Mandalawangi' at the Cibodas park gate; name 'Gede Pangrango': both summits kept in recorded order; the Kandang Badak <-> Pangrango spur is walked twice (it is a dead end); kept track on OSM relation 'Gunung Gede and Pangrango' (100%), relation 'Gunung Gede (Sukatani to Bumi Perkemahan)' (60%), relation 'Tele Selatan to Sukatani' (51%), relation 'Ciberum Waterfall' (18%)"
+ },
+ "101": {
+  "name": "Gunung Gede via Sukatani",
+  "before_km": 7.73,
+  "after_km": 6.49,
+  "kept": "kept start -> Gede summit; dropped 1.18 km after the summit",
+  "evidence": "dropped part runs on the Cibodas trail: 100% of it within 30 m of route #51 (Gede Pangrango via Cibodas), heading to Kandang Badak; kept trailhead is 409 m from OSM village 'Gunung Putri' (the Gunung Putri basecamp lies in Desa Sukatani, Pacet); kept track on OSM relation 'Gunung Gede (Sukatani to Bumi Perkemahan)' (100%), relation 'Tele Selatan to Sukatani' (100%); OSM node 'Sukatani' is 1.69 km from the kept trailhead"
+ },
+ "72": {
+  "name": "Gunung Sindoro via Sigedang",
+  "before_km": 10.14,
+  "after_km": 4.79,
+  "kept": "recording goes up one trail and down another; kept the second half (summit -> end), reversed",
+  "evidence": "OSM ways named ~'sigedang': 59% of the kept half vs 3% of the dropped half within 60 m (way 1190765409 'Jalur Pendakian Gunung Sindoro via Sigedang'); dropped half lies on OSM way 'Jalur Pendakian Gunung Sindoro via Ndoroarum' (52%); note: OSM relation 17253830 'Gunung Sindoro (Sigedang Route)' covers both halves (it maps the same loop), so it is not used"
+ },
+ "76": {
+  "name": "Gunung Ungaran via Mawar",
+  "before_km": 6.85,
+  "after_km": 4.02,
+  "kept": "recording goes up one trail and down another; kept the first half (start -> summit)",
+  "evidence": "OSM ways named ~'mawar': 95% of the kept half vs 0% of the dropped half within 60 m (way 1162079316 'Trek Ungaran via Mawar', way 1164496653 'Trek Ungaran via Mawar', way 1164496654 'Trek Ungaran via Mawar', way 1164587736 'Trek Ungaran via Mawar', way 1164685383 'Trek Ungaran via Mawar', way 1237721986 'Trek Ungaran via Mawar'); dropped half lies on OSM way 'Trek Ungaran via Perantunan' (67%); note: OSM relation 17254387 'Gunung Ungaran (Mawar BC)' covers both halves (it maps the same loop), so it is not used"
+ },
+ "79": {
+  "name": "Gunung Wilis",
+  "before_km": 24.36,
+  "after_km": 4.66,
+  "kept": "no 'via' in name: kept the uploader's start -> summit (4.47 km); dropped the rest (18.97 km: down another trail to 800 m, then back up the same way (median 2 m off) and down the way up)",
+  "evidence": "kept part on OSM way 'Jalur Pendaki Gunung Wilis' (100%), relation 'Gunung Wilis' (100%); dropped part on OSM way 'Jalur Pendaki Gunung Wilis' (100%), relation 'Gunung Wilis' (100%)"
+ },
+ "110": {
+  "name": "Gunung Panderman",
+  "before_km": 1.42,
+  "after_km": 1.42,
+  "kept": "no change: already one-way trailhead -> summit (start-end gap is just the trail length)",
+  "evidence": "100% of points within 60 m of OSM way 229484471 'Jalur pendakian Gunung Panderman'; its ends are 0 m / 0 m from the track ends"
+ },
+ "119": {
+  "name": "Gunung Rakutak",
+  "before_km": 6.76,
+  "after_km": 4.54,
+  "kept": "no 'via' in name: kept the uploader's start -> summit (4.39 km); dropped the rest (2.11 km: down another trail to 1380 m)",
+  "evidence": "kept part on OSM way 'Jalur pendakian Gn. Rakutak' (100%); dropped part on OSM way 'Jalur pendakian Gn. Rakutak' (100%)"
+ },
+ "30": {
+  "name": "Gunung Guntur Masigit via Tanjung Karya",
+  "before_km": 9.93,
+  "after_km": 8.72,
+  "kept": "kept track part 1 (trailhead -> camp area) joined to part 4 (camp -> Masigit summit) at their closest approach (28 m); dropped parts 2, 3, 5 and wandering at the camp (1.17 km)",
+  "evidence": "kept track on OSM relation 'Gunung Guntur (Masigit)' (26%); OSM node 'Tanjung Karya' is 0.45 km from the kept trailhead"
+ },
+ "31": {
+  "name": "Gunung Guntur Masigit via Warung Tanjung",
+  "before_km": 9.47,
+  "after_km": 7.8,
+  "kept": "dropped the first 3 recorded positions (0.13 km) before a 504 m straight jump; every point was stored twice (duplicates removed)",
+  "evidence": "kept track on OSM relation 'Gunung Guntur (Masigit)' (34%)"
+ }
+}
