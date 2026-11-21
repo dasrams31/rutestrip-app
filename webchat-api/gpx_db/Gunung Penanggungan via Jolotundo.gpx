@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="RuteStrip osm_hiking_to_gpx.py" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="RuteStrip route fix" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>Gunung Penanggungan via Jolotundo</name>
-    <desc>Track: OpenStreetMap ways named "Penanggungan via Jolotundo (Jalur Baru)" (6 ways), (c) OpenStreetMap contributors, ODbL 1.0. Elevation: SRTM 30 m via OpenTopoData.</desc>
-    <link href="https://www.openstreetmap.org/way/889111119"><text>OpenStreetMap ways named "Penanggungan via Jolotundo (Jalur Baru)" (6 ways)</text></link>
+    <desc>Ascent only (trailhead to summit). The original recording went up and came back down the same path; the descent half was removed. GPS points are unchanged.</desc>
   </metadata>
   <trk>
     <name>Gunung Penanggungan via Jolotundo</name>
@@ -59,20 +58,6 @@
       <trkpt lat="-7.615543" lon="112.618893"><ele>1613.0</ele></trkpt>
       <trkpt lat="-7.615457" lon="112.619151"><ele>1621.0</ele></trkpt>
       <trkpt lat="-7.615438" lon="112.619416"><ele>1627.0</ele></trkpt>
-      <trkpt lat="-7.615383" lon="112.619149"><ele>1620.0</ele></trkpt>
-      <trkpt lat="-7.615329" lon="112.618882"><ele>1607.0</ele></trkpt>
-      <trkpt lat="-7.615275" lon="112.618616"><ele>1586.0</ele></trkpt>
-      <trkpt lat="-7.615220" lon="112.618349"><ele>1554.0</ele></trkpt>
-      <trkpt lat="-7.615117" lon="112.618114"><ele>1534.0</ele></trkpt>
-      <trkpt lat="-7.614911" lon="112.617939"><ele>1514.0</ele></trkpt>
-      <trkpt lat="-7.614837" lon="112.617683"><ele>1491.0</ele></trkpt>
-      <trkpt lat="-7.614865" lon="112.617485"><ele>1479.0</ele></trkpt>
-      <trkpt lat="-7.615025" lon="112.617704"><ele>1500.0</ele></trkpt>
-      <trkpt lat="-7.615184" lon="112.617924"><ele>1520.0</ele></trkpt>
-      <trkpt lat="-7.615286" lon="112.617955"><ele>1524.0</ele></trkpt>
-      <trkpt lat="-7.615289" lon="112.617691"><ele>1508.0</ele></trkpt>
-      <trkpt lat="-7.615068" lon="112.617583"><ele>1493.0</ele></trkpt>
-      <trkpt lat="-7.614841" lon="112.617452"><ele>1477.0</ele></trkpt>
     </trkseg>
   </trk>
 </gpx>

@@ -106,6 +106,10 @@ class ApplyRoutePlan extends Command
 
     private function changeLog(array $entry): string
     {
+        if (! empty($entry['note'])) {
+            return Str::limit($entry['note'], 1000);
+        }
+
         $parts = ['Jalur dilengkapi sampai puncak memakai jalan setapak OpenStreetMap (audit puncak).'];
         if (! empty($entry['km_added'])) {
             $parts[] = sprintf('Tambahan %.2f km.', $entry['km_added']);
