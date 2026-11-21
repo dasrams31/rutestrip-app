@@ -204,7 +204,7 @@
             <div class="max-w-3xl">
                 <p class="text-sm sm:text-base font-semibold text-[#a7f3d0]">{{ __('Jalur pendakian gunung di Pulau Jawa') }}</p>
                 <h1 id="hero-title" class="rs-display mt-3 uppercase text-[clamp(2.6rem,11vw,6.25rem)] leading-[0.9] [text-wrap:balance]">
-                    {{ __('Bilang saja mau mendaki ke Gunung Mana?') }}
+                    {{ __('Hari ini mau mendaki ke gunung mana?') }}
                 </h1>
                 <p class="mt-4 sm:mt-5 text-base sm:text-lg text-[#d1fae5] max-w-xl leading-relaxed">
                     @if($routeCount > 0)
@@ -355,8 +355,9 @@
             </g>
         </svg>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:pt-12 sm:pb-24 grid lg:grid-cols-12 gap-10 lg:gap-16">
-            <div class="lg:col-span-5 lg:sticky lg:top-28 self-start">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 grid lg:grid-cols-12 items-start gap-10 lg:gap-16">
+            {{-- Not sticky: the heading and the first step start on the same line --}}
+            <div class="lg:col-span-5">
                 <h2 id="how-title" class="rs-display uppercase text-[clamp(2rem,6vw,3.25rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Begini kami mencarikan jalurnya.') }}</h2>
                 <p class="mt-4 max-w-md text-rs-muted leading-relaxed">{{ __('Kamu tidak perlu menebak kata kunci. Tulis saja seperti bercerita, misalnya:') }}</p>
                 <form action="{{ route('search.submit') }}" method="POST" class="mt-5 max-w-md" data-search-form>

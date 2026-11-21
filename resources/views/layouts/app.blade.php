@@ -173,7 +173,7 @@
             --rs-ink: #14231d; --rs-muted: #4b5d55; --rs-z9: #053b30; --rs-z8: #0b4a3c; --rs-z7: #047857;
             --rs-paper: #f6f4ec; --rs-line: #dedbcd; --rs-sun: #FCD34D;
             /* Height taken by the bottom banner (cookie notice or install prompt); floating buttons sit above it. */
-            --rs-banner-h: 0px;
+            --rs-banner-h: 0px; --rs-fab-lift: 0px;
         }
         [x-cloak] { display: none !important; }
 
@@ -671,7 +671,13 @@
             };
             var sync = function () {
                 var open = !cookieBox.hidden || !installBox.hidden;
-                root.style.setProperty('--rs-banner-h', open ? (dock.offsetHeight + 8) + 'px' : '0px');
+                var h = open ? (dock.offsetHeight + 8) + 'px' : '0px';
+                root.style.setProperty('--rs-banner-h', h);
+                // Floating buttons sit in the bottom corners (~112px wide); only lift them
+                // when the banner reaches a corner (phones), not when it is centred (desktop).
+                var r = dock.getBoundingClientRect();
+                var hitsCorner = r.left < 112 || r.right > window.innerWidth - 112;
+                root.style.setProperty('--rs-fab-lift', open && hitsCorner ? h : '0px');
             };
             if ('ResizeObserver' in window) new ResizeObserver(sync).observe(dock);
             window.addEventListener('resize', sync);

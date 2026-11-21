@@ -9,7 +9,7 @@
     - right: "Asisten RuteStrip" (Q&A chatbot about this project, POST /assistant, no login needed)
     Only one panel is open at a time; Escape or the backdrop closes it. Hidden in print.
     The AI web chat (chat.rutestrip.ai.id) is reached from the navbar and the mobile tab bar.
-    Bottom offsets add var(--rs-banner-h) (height of a visible bottom banner, set on <html>).
+    Bottom offsets add var(--rs-fab-lift): the bottom banner height when it reaches a corner (phones), else 0; set on <html> by the layout.
 --}}
 @php
     $faUser     = auth()->user();
@@ -54,23 +54,23 @@
 @endphp
 <style>
     .rs-fab { position: fixed; z-index: 45; width: 56px; height: 56px; border-radius: 9999px;
-              bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 12px + var(--rs-banner-h, 0px)); }
+              bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 12px + var(--rs-fab-lift, 0px)); }
     .rs-fab-left { left: calc(12px + env(safe-area-inset-left, 0px)); }
     .rs-fab-right { right: calc(12px + env(safe-area-inset-right, 0px)); }
-    .rs-panel { position: fixed; z-index: 70; inset: 0; bottom: var(--rs-banner-h, 0px); display: flex; flex-direction: column; background: #fff;
+    .rs-panel { position: fixed; z-index: 70; inset: 0; bottom: var(--rs-fab-lift, 0px); display: flex; flex-direction: column; background: #fff;
                 padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-    .rs-panel-sheet { inset: auto 0 0 0; bottom: var(--rs-banner-h, 0px); border-radius: 1.25rem 1.25rem 0 0; box-shadow: 0 -12px 40px rgba(15, 23, 42, .18); }
+    .rs-panel-sheet { inset: auto 0 0 0; bottom: var(--rs-fab-lift, 0px); border-radius: 1.25rem 1.25rem 0 0; box-shadow: 0 -12px 40px rgba(15, 23, 42, .18); }
     html.rs-fa-lock, html.rs-fa-lock body { overflow: hidden; }
     @media (max-width: 767.98px) { .rs-fab-hide-sm { display: none !important; } }
     @media (min-width: 768px) {
-        .rs-fab { bottom: calc(24px + var(--rs-banner-h, 0px)); }
+        .rs-fab { bottom: calc(24px + var(--rs-fab-lift, 0px)); }
         .rs-fab-left { left: 24px; }
         .rs-fab-right { right: 24px; }
         .rs-fa-open .rs-fab { z-index: 68; }
-        .rs-panel { inset: auto; bottom: calc(96px + var(--rs-banner-h, 0px)); width: 380px;
-                    height: min(600px, calc(100vh - 176px - var(--rs-banner-h, 0px))); padding: 0;
+        .rs-panel { inset: auto; bottom: calc(96px + var(--rs-fab-lift, 0px)); width: 380px;
+                    height: min(600px, calc(100vh - 176px - var(--rs-fab-lift, 0px))); padding: 0;
                     border: 1px solid #e2e8f0; border-radius: 1rem; overflow: hidden; box-shadow: 0 24px 60px -12px rgba(15, 23, 42, .35); }
-        .rs-panel-chat { height: min(560px, calc(100vh - 176px - var(--rs-banner-h, 0px))); }
+        .rs-panel-chat { height: min(560px, calc(100vh - 176px - var(--rs-fab-lift, 0px))); }
         .rs-panel-left { left: 24px; }
         .rs-panel-right { right: 24px; }
         .rs-panel-sheet { height: auto; }
