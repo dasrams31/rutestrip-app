@@ -45,6 +45,14 @@ def test_rules():
     assert ss.detect_intents("jalur yang tidak terlalu curam") == {"gentle"}
     assert ss.detect_intents("jalur landai tapi curam") == set()
     assert ss.detect_intents("gunung anak krakatau") == set()
+    for query, expected in {
+        "jalur tercepat ke merbabu": {"short"}, "fastest route": {"short"}, "cepatnya": {"short"},
+        "jalur termudah": {"easy"}, "teringan": {"easy"}, "jalur tersulit": {"hard"}, "terlandai": {"gentle"},
+        "tercuram": {"steep"}, "jalur terjal": {"steep"}, "terpanjang": {"long"}, "jalur tidak tercepat": {"long"},
+        "puncak tertinggi": set(), "terang": set(),
+    }.items():
+        assert ss.detect_intents(query) == expected, query
+    assert _rank(data, "jalur tercepat ke merbabu")[0] == _rank(data, "jalur cepat ke merbabu")[0]
     assert len(_rank(data, "merbabu", 50, apply_filters=False)[0]) == 18
     # hybrid_score() is kept for older callers
     r = data["routes"][0]

@@ -135,6 +135,28 @@ class RouteSearchRankingTest extends TestCase
         }
     }
 
+    public function test_superlatives_slang_and_english_read_as_the_same_intent(): void
+    {
+        $search = app(RouteSearchService::class);
+        $cases = [
+            'jalur tercepat ke merbabu' => ['short'], 'tersingkat' => ['short'], 'yang paling pendek' => ['short'],
+            'fastest route' => ['short'], 'jalur yang cepet' => ['short'], 'cepatnya' => ['short'],
+            'jalur termudah' => ['easy'], 'teringan' => ['easy'], 'gampang buat pemula' => ['easy'], 'easiest' => ['easy'],
+            'jalur tersulit' => ['hard'], 'terberat' => ['hard'], 'susah' => ['hard'],
+            'terlandai' => ['gentle'], 'landainya' => ['gentle'], 'tercuram' => ['steep'], 'jalur terjal' => ['steep'],
+            'terpanjang' => ['long'], 'terjauh' => ['long'], 'terlama' => ['long'],
+            'jalur tidak tercepat' => ['long'], 'puncak tertinggi' => [], 'terang' => [],
+        ];
+        foreach ($cases as $query => $expected) {
+            $this->assertSame($expected, $search->detectIntents($query), $query);
+        }
+
+        $this->assertSame(
+            $this->rank('jalur cepat ke merbabu')->pluck('name')->all(),
+            $this->rank('jalur tercepat ke merbabu')->pluck('name')->all()
+        );
+    }
+
     public function test_routes_with_broken_statistics_go_last_when_an_intent_sets_the_order(): void
     {
         foreach (['jalur landai', 'jalur untuk pemula', 'jalur curam', 'pendakian singkat', 'jalur panjang'] as $query) {

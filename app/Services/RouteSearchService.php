@@ -48,13 +48,20 @@ class RouteSearchService
         'lampung' => ['lampung'],
     ];
 
+    /**
+     * Base words per intent. Superlatives and "-nya" forms are matched through
+     * intentBase() ("tercepat", "termudah", "teringan", "landainya"), so they are not listed.
+     */
     private const INTENT_WORDS = [
-        'gentle' => ['landai', 'datar', 'melandai'],
-        'easy'   => ['mudah', 'pemula', 'santai', 'ringan', 'keluarga', 'aman', 'pertama', 'awam', 'anak'],
-        'hard'   => ['sulit', 'menantang', 'ekstrem', 'ekstrim', 'berat', 'berpengalaman', 'expert', 'teknis'],
-        'steep'  => ['curam', 'terjal'],
-        'short'  => ['pendek', 'singkat', 'cepat', 'tektok', 'sebentar'],
-        'long'   => ['panjang', 'lama', 'ekspedisi', 'jauh', 'lintas', 'traverse'],
+        'gentle' => ['landai', 'datar', 'melandai', 'gentle', 'gentlest', 'flat'],
+        'easy'   => ['mudah', 'pemula', 'santai', 'ringan', 'keluarga', 'aman', 'pertama', 'awam', 'anak', 'gampang',
+                     'easy', 'easiest', 'beginner', 'beginners'],
+        'hard'   => ['sulit', 'menantang', 'ekstrem', 'ekstrim', 'berat', 'berpengalaman', 'expert', 'teknis', 'susah', 'sukar',
+                     'hard', 'hardest', 'difficult', 'challenging'],
+        'steep'  => ['curam', 'terjal', 'steep', 'steepest'],
+        'short'  => ['pendek', 'singkat', 'cepat', 'tektok', 'sebentar', 'cepet', 'bentar', 'kilat',
+                     'short', 'shortest', 'quick', 'quickest', 'fast', 'fastest'],
+        'long'   => ['panjang', 'lama', 'ekspedisi', 'jauh', 'lintas', 'traverse', 'long', 'longest'],
     ];
 
     /** Which intent decides the order when several are asked; the rest only break ties. */
@@ -291,8 +298,9 @@ class RouteSearchService
             if ($i > 0 && in_array($word, self::MOUNTAIN_AMBIGUOUS, true) && in_array($words[$i - 1], self::MOUNTAIN_PREFIXES, true)) {
                 continue;
             }
+            $base = $this->intentBase($word);
             foreach (self::INTENT_WORDS as $intent => $vocab) {
-                if (in_array($word, $vocab, true)) {
+                if ($base !== null && in_array($base, $vocab, true)) {
                     $prev    = array_slice($words, max(0, $i - 2), $i - max(0, $i - 2));
                     $negated = (bool) array_intersect($prev, self::NEGATIONS);
                     $intents[$negated ? self::OPPOSITE[$intent] : $intent] = true;
@@ -308,6 +316,35 @@ class RouteSearchService
         }
 
         return array_keys($intents);
+    }
+
+    /**
+     * The intent word behind a query word, or null: the word itself, without
+     * "-nya" ("landainya"), and without the superlative "ter-" ("tercepat",
+     * "termudah"; "teringan" is ter- + ringan).
+     */
+    private function intentBase(string $word): ?string
+    {
+        static $all = null;
+        $all ??= array_flip(array_merge(...array_values(self::INTENT_WORDS)));
+
+        $forms = [$word];
+        if (strlen($word) > 5 && str_ends_with($word, 'nya')) {
+            $forms[] = substr($word, 0, -3);
+        }
+        foreach ($forms as $form) {
+            if (strlen($form) > 5 && str_starts_with($form, 'ter')) {
+                $forms[] = substr($form, 3);
+                $forms[] = 'r' . substr($form, 3);
+            }
+        }
+        foreach ($forms as $form) {
+            if (isset($all[$form])) {
+                return $form;
+            }
+        }
+
+        return null;
     }
 
     /**

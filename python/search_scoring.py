@@ -34,13 +34,18 @@ W_ASPECT = 0.6       # max cosine(query, aspect sentence)
 W_ATTR = 0.45        # share of the order position in the shown score when an intent is detected
 W_NAME = 0.35        # share of name match when a mountain/basecamp is named
 
+# Base words per intent. Superlatives and "-nya" forms are matched through
+# intent_base() ("tercepat", "termudah", "teringan", "landainya"), so they are not listed.
 INTENT_WORDS = {
-    "gentle": ["landai", "datar", "melandai"],
-    "easy": ["mudah", "pemula", "santai", "ringan", "keluarga", "aman", "pertama", "awam", "anak"],
-    "hard": ["sulit", "menantang", "ekstrem", "ekstrim", "berat", "berpengalaman", "expert", "teknis"],
-    "steep": ["curam", "terjal"],
-    "short": ["pendek", "singkat", "cepat", "tektok", "sebentar"],
-    "long": ["panjang", "lama", "ekspedisi", "jauh", "lintas", "traverse"],
+    "gentle": ["landai", "datar", "melandai", "gentle", "gentlest", "flat"],
+    "easy": ["mudah", "pemula", "santai", "ringan", "keluarga", "aman", "pertama", "awam", "anak", "gampang",
+             "easy", "easiest", "beginner", "beginners"],
+    "hard": ["sulit", "menantang", "ekstrem", "ekstrim", "berat", "berpengalaman", "expert", "teknis", "susah", "sukar",
+             "hard", "hardest", "difficult", "challenging"],
+    "steep": ["curam", "terjal", "steep", "steepest"],
+    "short": ["pendek", "singkat", "cepat", "tektok", "sebentar", "cepet", "bentar", "kilat",
+              "short", "shortest", "quick", "quickest", "fast", "fastest"],
+    "long": ["panjang", "lama", "ekspedisi", "jauh", "lintas", "traverse", "long", "longest"],
 }
 ALL_INTENT_WORDS = {w for words in INTENT_WORDS.values() for w in words}
 
@@ -118,6 +123,19 @@ def query_text(query: str) -> str:
     return preprocess_text(query, remove_stopwords=True)
 
 
+def intent_base(word: str):
+    """The intent word behind a query word, or None: the word itself, without
+    "-nya" ("landainya"), and without the superlative "ter-" ("tercepat",
+    "termudah"; "teringan" is ter- + ringan)."""
+    forms = [word]
+    if len(word) > 5 and word.endswith("nya"):
+        forms.append(word[:-3])
+    for form in list(forms):
+        if len(form) > 5 and form.startswith("ter"):
+            forms += [form[3:], "r" + form[3:]]
+    return next((f for f in forms if f in ALL_INTENT_WORDS), None)
+
+
 def detect_intents(query: str) -> set:
     """Intent words. A negation in the previous two words flips the intent
     ("tidak terlalu curam" -> gentle, "tidak sulit" -> easy); a mountain name after
@@ -128,8 +146,9 @@ def detect_intents(query: str) -> set:
     for i, word in enumerate(words):
         if i > 0 and word in MOUNTAIN_AMBIGUOUS and words[i - 1] in MOUNTAIN_PREFIXES:
             continue
+        base = intent_base(word)
         for intent, vocab in INTENT_WORDS.items():
-            if word in vocab:
+            if base is not None and base in vocab:
                 negated = any(w in NEGATIONS for w in words[max(0, i - 2):i])
                 intents.add(OPPOSITE[intent] if negated else intent)
     if intents & {"hard", "steep"} and intents & {"gentle", "easy"}:
