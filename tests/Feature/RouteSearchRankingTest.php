@@ -319,7 +319,7 @@ class RouteSearchRankingTest extends TestCase
         $this->post(route('search.submit'), ['query' => 'pendakian singkat di jawa timur'])
             ->assertOk()
             ->assertSee('Hanya jalur di Jawa Timur.')
-            ->assertSee('Diurutkan dari waktu jalan yang paling singkat.');
+            ->assertSee('Diurutkan dari waktu jalan yang paling singkat (Naismith, belum termasuk istirahat).');
 
         $this->post(route('search.submit'), ['query' => 'merbabu atau sumbing'])
             ->assertSee('Hanya jalur Gunung Merbabu dan Gunung Sumbing.')

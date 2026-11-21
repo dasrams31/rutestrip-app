@@ -41,8 +41,8 @@
         'steep' => __('Diurutkan dari yang paling curam.'),
         'easy' => __('Diurutkan dari yang paling mudah.'),
         'hard' => __('Diurutkan dari yang paling sulit.'),
-        'short' => __('Diurutkan dari waktu jalan yang paling singkat.'),
-        'long' => __('Diurutkan dari waktu jalan yang paling lama.'),
+        'short' => __('Diurutkan dari waktu jalan yang paling singkat (Naismith, belum termasuk istirahat).'),
+        'long' => __('Diurutkan dari waktu jalan yang paling lama (Naismith, belum termasuk istirahat).'),
         default => null,
     };
     $intentWords = ['gentle' => __('landai'), 'steep' => __('curam'), 'easy' => __('mudah'), 'hard' => __('sulit'), 'short' => __('singkat'), 'long' => __('panjang')];

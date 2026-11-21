@@ -132,6 +132,12 @@
                 {{ __('Bagian paling curam: sekitar :grade% sepanjang 1 km.', ['grade' => $num($route->steepest_grade_pct, 0)]) }}
             </p>
             @endif
+            @if($route->naismith_duration_hour)
+            {{-- Naismith assumes a fit walker without breaks; say so next to the number. --}}
+            <p class="{{ $route->steepest_grade_pct !== null ? 'mt-1' : 'mt-3' }} text-sm text-[#d1fae5]">
+                {{ __('Waktu jalan dari rumus Naismith, belum termasuk istirahat dan beban carrier.') }}
+            </p>
+            @endif
 
             {{-- Likes work without login (guests use the rs_vid cookie). --}}
             <div class="mt-5 flex flex-wrap items-center gap-2"

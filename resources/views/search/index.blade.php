@@ -403,7 +403,7 @@
                             ],
                             [
                                 'title' => __('Waktu jalan dihitung dari GPX'),
-                                'text' => __('Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik. Waktu istirahat belum termasuk.'),
+                                'text' => __('Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik. Waktu istirahat dan beban carrier belum termasuk, jadi waktu di lapangan biasanya lebih lama.'),
                             ],
                         ];
                     @endphp

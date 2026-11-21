@@ -621,7 +621,6 @@
     "Kami cek ke angka aslinya": "We check the real numbers",
     "Kalau kamu menulis landai, curam, singkat, atau panjang, kami cocokkan juga dengan kemiringan, total tanjakan, dan waktu jalan setiap jalur. Nama gunung atau basecamp yang kamu sebut ikut didahulukan.": "If you write gentle, steep, short or long, we also match it against each trail's slope, total climb and walking time. A mountain or basecamp you name is put first.",
     "Waktu jalan dihitung dari GPX": "Walking time comes from the GPX",
-    "Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik. Waktu istirahat belum termasuk.": "The estimate uses Naismith's rule, a hikers' rule of thumb: 1 hour for every 5 km, plus 1 hour for every 600 m of climbing. Breaks are not included.",
     ":km km dan :gain m naik, sekitar :time jalan kaki. Tingkat kesulitannya: :level.": ":km km and :gain m of climbing, about :time on foot. Difficulty: :level.",
     "Cara kami mencocokkan (untuk yang penasaran)": "How we match (for the curious)",
     "Kalimatmu diubah menjadi 384 angka oleh model bahasa SBERT multibahasa (paraphrase-multilingual-MiniLM-L12-v2), lalu dibandingkan dengan gambaran setiap jalur memakai cosine similarity: 40% dari gambaran utuh dan 60% dari kalimat yang paling mirip.": "Your sentence is turned into 384 numbers by a multilingual SBERT language model (paraphrase-multilingual-MiniLM-L12-v2), then compared with every trail's summary using cosine similarity: 40% from the whole summary and 60% from its closest sentence.",
@@ -1278,8 +1277,6 @@
     "Diurutkan dari yang paling curam.": "Sorted from the steepest slope.",
     "Diurutkan dari yang paling mudah.": "Sorted from the easiest.",
     "Diurutkan dari yang paling sulit.": "Sorted from the hardest.",
-    "Diurutkan dari waktu jalan yang paling singkat.": "Sorted from the shortest walking time.",
-    "Diurutkan dari waktu jalan yang paling lama.": "Sorted from the longest walking time.",
     "Jalur yang juga :what didahulukan.": "Routes that are also :what come first.",
     "dan": "and",
     "landai": "gentle",
@@ -1298,5 +1295,9 @@
     "Rekaman dari puncak ke bawah dibalik supaya jalurnya naik ke puncak.": "Recording ran from the summit down, so it was reversed to climb to the summit.",
     "Rekaman naik lalu turun lewat jalur yang sama: bagian turunnya dibuang.": "The recording went up and came back down the same path: the way down was dropped.",
     "Rekaman berupa loop (turun lewat jalur lain): hanya jalur naiknya yang disimpan.": "The recording is a loop (down another path): only the way up was kept.",
-    ":count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.": ":count routes were tidied automatically (way down, loops, side trips or extra tracks dropped). Details are in each route's file history."
+    ":count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.": ":count routes were tidied automatically (way down, loops, side trips or extra tracks dropped). Details are in each route's file history.",
+    "Waktu jalan dari rumus Naismith, belum termasuk istirahat dan beban carrier.": "Walking time from Naismith's rule, without breaks or a heavy pack.",
+    "Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik. Waktu istirahat dan beban carrier belum termasuk, jadi waktu di lapangan biasanya lebih lama.": "The estimate uses Naismith's rule, a hikers' rule of thumb: 1 hour for every 5 km, plus 1 hour for every 600 m of climbing. Breaks and a heavy pack are not included, so it usually takes longer on the trail.",
+    "Diurutkan dari waktu jalan yang paling singkat (Naismith, belum termasuk istirahat).": "Sorted from the shortest walking time (Naismith, without breaks).",
+    "Diurutkan dari waktu jalan yang paling lama (Naismith, belum termasuk istirahat).": "Sorted from the longest walking time (Naismith, without breaks)."
 }
