@@ -227,7 +227,7 @@
                     <dl class="mt-4 pt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-rs-line">
                         <div><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $num($route->distance_km, 1) }} km</dd></div>
                         <div><dt class="text-xs text-rs-muted">{{ __('Total naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $gain }} m</dd></div>
-                        <div><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $hoursLabel($route->naismith_duration_hour) }}</dd></div>
+                        <div><dt class="text-xs text-rs-muted">{{ __('Waktu naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $hoursLabel($route->naismith_duration_hour) }}</dd></div>
                         <div><dt class="text-xs text-rs-muted">{{ __('Kemiringan rata-rata') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink">{{ $grade }}</dd></div>
                     </dl>
                     <p class="mt-4 text-xs text-rs-muted truncate">{{ __('Diunggah oleh') }} <span class="font-semibold text-rs-ink">{{ $route->uploader_name }}</span></p>

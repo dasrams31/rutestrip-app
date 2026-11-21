@@ -96,7 +96,7 @@
                     <dl class="mt-4 pt-4 grid grid-cols-3 gap-3 border-t border-rs-line">
                         <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $num($similar->distance_km, 1) }} km</dd></div>
                         <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Total naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $num($similar->elevation_gain_m) }} m</dd></div>
-                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $hoursLabel($similar->naismith_duration_hour) }}</dd></div>
+                        <div class="min-w-0"><dt class="text-xs text-rs-muted">{{ __('Waktu naik') }}</dt><dd class="rs-display rs-num text-xl text-rs-ink whitespace-nowrap">{{ $hoursLabel($similar->naismith_duration_hour) }}</dd></div>
                     </dl>
                 </div>
             </li>

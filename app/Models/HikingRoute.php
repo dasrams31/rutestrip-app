@@ -105,6 +105,35 @@ class HikingRoute extends Model
     }
 
     /**
+     * Naismith time to field time. Naismith (5 km/h + 1 h per 600 m up) has no rests
+     * and no heavy pack. Commonly cited basecamp-to-summit times for seven routes
+     * (Merbabu Selo, Lawu Cemoro Sewu, Sindoro Kledung, Semeru, Prau Wates,
+     * Penanggungan Tamiajeng, Gede via Gunung Putri) are 1.25-1.8x (low end) and
+     * 1.6-2.4x (high end) their Naismith time; the medians are 1.35 and 1.8.
+     * See docs/waktu-lapangan.md.
+     */
+    public const FIELD_FACTOR_LOW = 1.4;
+    public const FIELD_FACTOR_HIGH = 1.8;
+
+    /**
+     * Likely time up with rests and a pack, in hours rounded to half hours, or null.
+     *
+     * @return array{0: float, 1: float}|null
+     */
+    public function getFieldHoursRangeAttribute(): ?array
+    {
+        $hours = (float) $this->naismith_duration_hour;
+        if ($hours <= 0) {
+            return null;
+        }
+
+        $low  = max(0.5, floor($hours * self::FIELD_FACTOR_LOW * 2) / 2);
+        $high = max($low + 0.5, ceil($hours * self::FIELD_FACTOR_HIGH * 2) / 2);
+
+        return [$low, $high];
+    }
+
+    /**
      * Get formatted grade
      */
     public function getFormattedGradeAttribute(): string

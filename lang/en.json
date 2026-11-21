@@ -1298,5 +1298,10 @@
     "Rekaman dari puncak ke bawah dibalik supaya jalurnya naik ke puncak.": "Recording ran from the summit down, so it was reversed to climb to the summit.",
     "Rekaman naik lalu turun lewat jalur yang sama: bagian turunnya dibuang.": "The recording went up and came back down the same path: the way down was dropped.",
     "Rekaman berupa loop (turun lewat jalur lain): hanya jalur naiknya yang disimpan.": "The recording is a loop (down another path): only the way up was kept.",
-    ":count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.": ":count routes were tidied automatically (way down, loops, side trips or extra tracks dropped). Details are in each route's file history."
+    ":count jalur dirapikan otomatis (bagian turun, loop, cabang, atau track ganda dibuang). Rinciannya ada di riwayat file tiap jalur.": ":count routes were tidied automatically (way down, loops, side trips or extra tracks dropped). Details are in each route's file history.",
+    "Waktu naik": "Time up",
+    "waktu naik :h jam (Naismith)": "time up :h h (Naismith)",
+    "Waktu naik dihitung dengan rumus Naismith, tanpa istirahat. Dengan carrier dan istirahat, biasanya sekitar :low–:high jam sampai puncak.": "Time up uses the Naismith rule, without rests. With a pack and rests, it usually takes about :low–:high hours to the summit.",
+    "Waktu naik dihitung dari GPX": "Time up is worked out from the GPX",
+    "Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik, dari basecamp sampai puncak. Istirahat dan beban carrier belum termasuk, jadi di lapangan biasanya 1,4 sampai 1,8 kali lebih lama.": "It uses the Naismith rule hikers know: 1 hour for every 5 km plus 1 hour for every 600 m of climb, from the trailhead to the summit. Rests and a heavy pack are not included, so on the trail it usually takes 1.4 to 1.8 times as long."
 }

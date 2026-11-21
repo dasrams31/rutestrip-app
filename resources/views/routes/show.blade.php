@@ -7,7 +7,7 @@
     $seoParts = array_filter([
         $route->distance_km ? number_format($route->distance_km, 1, ',', '.') . ' km' : null,
         $route->elevation_gain_m ? __('total tanjakan :m m', ['m' => number_format($route->elevation_gain_m, 0, ',', '.')]) : null,
-        $route->naismith_duration_hour ? __('estimasi :h jam (Naismith)', ['h' => number_format($route->naismith_duration_hour, 1, ',', '.')]) : null,
+        $route->naismith_duration_hour ? __('waktu naik :h jam (Naismith)', ['h' => number_format($route->naismith_duration_hour, 1, ',', '.')]) : null,
         $route->average_grade_pct ? __('kemiringan rata-rata :pct%', ['pct' => number_format($route->average_grade_pct, 1, ',', '.')]) : null,
     ]);
     $seoStart = is_array($route->route_coordinates) && count($route->route_coordinates) ? $route->route_coordinates[0] : null;
@@ -39,6 +39,7 @@
 @php
     $isEn = app()->getLocale() === 'en';
     $num = fn ($value, int $decimals = 0) => number_format((float) $value, $decimals, $isEn ? '.' : ',', $isEn ? ',' : '.');
+    $halfHours = fn (float $h) => $num($h, $h == floor($h) ? 0 : 1); // 5 or 5,5
     $hoursLabel = function ($hours) {
         $hours = (float) $hours;
         $h = (int) floor($hours);
@@ -116,7 +117,7 @@
             <dl class="mt-6 grid grid-cols-2 md:grid-cols-4 border-t border-white/25">
                 @foreach([
                     [__('Jarak'), $num($route->distance_km, 1) . ' km'],
-                    [__('Waktu jalan'), $hoursLabel($route->naismith_duration_hour)],
+                    [__('Waktu naik'), $hoursLabel($route->naismith_duration_hour)],
                     [__('Total naik'), $num($route->elevation_gain_m) . ' m'],
                     [__('Kemiringan rata-rata'), $num($route->average_grade_pct, 1) . '%'],
                 ] as [$term, $value])
@@ -130,6 +131,12 @@
             {{-- The average hides short steep parts, so name the steepest stretch too. --}}
             <p class="mt-3 text-sm text-[#d1fae5]">
                 {{ __('Bagian paling curam: sekitar :grade% sepanjang 1 km.', ['grade' => $num($route->steepest_grade_pct, 0)]) }}
+            </p>
+            @endif
+            @if($route->field_hours_range)
+            {{-- Naismith has no rests and no pack: give the time people actually take, as a range. --}}
+            <p class="mt-1 text-sm text-[#d1fae5]">
+                {{ __('Waktu naik dihitung dengan rumus Naismith, tanpa istirahat. Dengan carrier dan istirahat, biasanya sekitar :low–:high jam sampai puncak.', ['low' => $halfHours($route->field_hours_range[0]), 'high' => $halfHours($route->field_hours_range[1])]) }}
             </p>
             @endif
 
