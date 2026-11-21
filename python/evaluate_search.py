@@ -145,15 +145,15 @@ def metrics(ranked, rel, k=5):
     return p_at_k, rr
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--db", required=True)
-    ap.add_argument("--labels", choices=("new", "old"), default="new")
-    args = ap.parse_args()
+def evaluate(routes, model, labels="new", log=print):
+    """Score every query with the three rankings.
 
-    routes = load_routes(args.db)
-    model = get_model()
-
+    routes need id, name, the GPX statistics, narrative_text and sbert_embedding
+    (the stored narrative embedding, used by the baseline). Returns
+    ({"baseline"|"hybrid"|"ranked": [(query, P@5, RR, top1, mean top5), ...]},
+    number of main queries, indexing time in ms); region queries follow the
+    main ones when routes have a province.
+    """
     t0 = time.time()
     docs = {r["id"]: ss.build_document(r) for r in routes}
     doc_vecs = {rid: model.encode(d["text"]).tolist() for rid, d in docs.items()}
@@ -167,7 +167,7 @@ def main():
     rows = {"baseline": [], "hybrid": [], "ranked": []}
     names = {r["id"]: r["name"] for r in routes}
     for query, label in queries:
-        rel = relevant_ids(routes, label, args.labels)
+        rel = relevant_ids(routes, label, labels)
         q_base = model.encode(preprocess_text(query)).tolist()
         base_ranked = sorted(((r["id"], cos(q_base, r["sbert_embedding"])) for r in routes), key=lambda x: -x[1])
 
@@ -179,17 +179,30 @@ def main():
         hyb_ranked = sorted(scored, key=lambda x: -x[1])
 
         new_ranked = [(row["id"], row["score"]) for row in ss.rank_routes(query, q_vec, routes, doc_vecs, aspect_vecs)]
-        print(f"  {query!r}: top3 = {[names[rid] for rid, _ in new_ranked[:3]]}")
+        if log:
+            log(f"  {query!r}: top3 = {[names[rid] for rid, _ in new_ranked[:3]]}")
 
         for name, ranked in (("baseline", base_ranked), ("hybrid", hyb_ranked), ("ranked", new_ranked)):
             p5, rr = metrics(ranked, rel)
             rows[name].append((query, p5, rr, ranked[0][1] if ranked else 0.0, np.mean([s for _, s in ranked[:5]]) if ranked else 0.0))
 
+    return rows, len(QUERIES), index_ms
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--db", required=True)
+    ap.add_argument("--labels", choices=("new", "old"), default="new")
+    args = ap.parse_args()
+
+    routes = load_routes(args.db)
+    rows, n_main, index_ms = evaluate(routes, get_model(), args.labels)
+    queries = [q for q, *_ in rows["ranked"]]
+
     print(f"routes={len(routes)} queries={len(queries)} index_ms={index_ms:.0f}")
     print(f"{'query':42s} {'P@5 base':>8s} {'P@5 hyb':>8s} {'P@5 rank':>8s} {'MRR rank':>8s}")
     for (q, p5b, *_), (_, p5h, *_), (_, p5r, rrr, *_) in zip(rows["baseline"], rows["hybrid"], rows["ranked"]):
         print(f"{q:42s} {p5b:8.2f} {p5h:8.2f} {p5r:8.2f} {rrr:8.2f}")
-    n_main = len(QUERIES)
     for label, sl in (("", slice(0, n_main)), (" region", slice(n_main, None))):
         for name in ("baseline", "hybrid", "ranked"):
             part = rows[name][sl]

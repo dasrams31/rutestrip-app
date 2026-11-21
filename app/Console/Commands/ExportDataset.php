@@ -25,7 +25,7 @@ class ExportDataset extends Command
     private const COLUMNS = [
         'route_id', 'slug', 'name', 'mountain', 'via',
         'village', 'district', 'regency', 'province',
-        'distance_km', 'elevation_gain_m', 'naismith_duration_hour', 'average_grade_pct',
+        'distance_km', 'elevation_gain_m', 'naismith_duration_hour', 'average_grade_pct', 'steepest_grade_pct',
         'min_elevation_m', 'max_elevation_m', 'difficulty', 'difficulty_score',
         'trailhead_lat', 'trailhead_lng', 'trailhead_elevation_m',
         'summit_lat', 'summit_lng', 'summit_elevation_m', 'elevation_source',
@@ -87,6 +87,7 @@ class ExportDataset extends Command
                 'elevation_gain_m' => (int) $route->elevation_gain_m,
                 'naismith_duration_hour' => (float) $route->naismith_duration_hour,
                 'average_grade_pct' => (float) $route->average_grade_pct,
+                'steepest_grade_pct' => $route->steepest_grade_pct !== null ? (float) $route->steepest_grade_pct : null,
                 'min_elevation_m' => isset($min[1]) ? (int) $min[1] : null,
                 'max_elevation_m' => $route->max_elevation_m,
                 'difficulty' => $route->difficulty_level,

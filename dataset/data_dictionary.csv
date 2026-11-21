@@ -12,6 +12,7 @@ distance_km,float,km,3D track distance from the GPX
 elevation_gain_m,integer,m,Total ascent along the track (smoothed GPX)
 naismith_duration_hour,float,hour,Naismith estimate: distance_km/5 + elevation_gain_m/600
 average_grade_pct,float,%,elevation_gain_m / (distance_km*1000) * 100
+steepest_grade_pct,float,%,"Steepest stretch of about 1 km along the elevation profile (rise / run * 100)"
 min_elevation_m,integer,m,Lowest GPX elevation (from the narrative)
 max_elevation_m,integer,m,Highest GPX elevation (from the narrative)
 difficulty,string,,"Mudah, Sedang, Sulit or Sangat Sulit (Shenandoah-based rating)"
