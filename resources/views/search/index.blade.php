@@ -200,7 +200,7 @@
             </svg>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12 sm:pt-16 sm:pb-14 lg:pt-24 lg:pb-16">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 sm:pt-10 sm:pb-14 lg:pt-14 lg:pb-16">
             <div class="max-w-3xl">
                 <p class="text-sm sm:text-base font-semibold text-[#a7f3d0]">{{ __('Jalur pendakian gunung di Pulau Jawa') }}</p>
                 <h1 id="hero-title" class="rs-display mt-3 uppercase text-[clamp(2.6rem,11vw,6.25rem)] leading-[0.9] [text-wrap:balance]">
@@ -552,10 +552,10 @@
                 </p>
                 <p class="mt-2 text-sm text-rs-muted">{{ __('Perlu masuk dengan akun RuteStrip. Setiap versi file kami simpan, jadi perubahan jalur selalu bisa dilacak.') }}</p>
                 <div class="mt-7 flex flex-col sm:flex-row gap-3">
-                    <a href="{{ route('routes.create') }}" class="rs-sign inline-flex items-center justify-center min-h-[52px] rounded-lg px-6 text-base font-bold transition-colors">
+                    <a href="{{ route('routes.create') }}" class="rs-sign inline-flex items-center justify-center text-center leading-snug min-h-[52px] rounded-lg px-6 py-3 text-base font-bold transition-colors">
                         {{ __('Upload file GPX') }}
                     </a>
-                    <a href="{{ route('routes.batch') }}" class="inline-flex items-center justify-center min-h-[52px] rounded-lg border-2 border-rs-z7 bg-rs-paper px-6 font-semibold text-rs-z7 hover:bg-white transition-colors">
+                    <a href="{{ route('routes.batch') }}" class="inline-flex items-center justify-center text-center leading-snug min-h-[52px] rounded-lg border-2 border-rs-z7 bg-rs-paper px-6 py-3 text-base font-bold text-rs-z7 hover:bg-white transition-colors">
                         {{ __('Upload banyak file sekaligus') }}
                     </a>
                 </div>
