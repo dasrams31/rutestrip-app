@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(\Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class, \App\Http\Middleware\SsoBridge::class);
         // Site language (?lang= > rs_lang > users.locale > id), after SsoBridge so the SSO user counts.
         $middleware->web(append: [\App\Http\Middleware\SetLocale::class]);
+        $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Community chat endpoints always answer in JSON (a guest gets 401, not a login redirect).

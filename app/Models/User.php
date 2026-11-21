@@ -28,6 +28,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'sso_version'       => 'integer',
+            'last_login_at'     => 'datetime',
+            'login_count'       => 'integer',
         ];
     }
 
@@ -61,5 +63,21 @@ class User extends Authenticatable
     public function ratings()
     {
         return $this->hasMany(Rating::class);
+    }
+
+    /** Routes this account uploaded (hiking_routes.uploaded_by). */
+    public function uploads()
+    {
+        return $this->hasMany(HikingRoute::class, 'uploaded_by');
+    }
+
+    public function communityMessages()
+    {
+        return $this->hasMany(CommunityMessage::class);
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
     }
 }

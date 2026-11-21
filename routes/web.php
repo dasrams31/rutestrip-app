@@ -116,9 +116,18 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
     // user.profile, user.profile.update, user.password.update: see "Account settings" below.
 });
 
-// Admin Dashboard
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+// Admin Dashboard (role "admin" only: EnsureAdmin answers 403 to everyone else)
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    // Users, activity, logs and moderation (App\Http\Controllers\Admin).
+    Route::get('/pengguna', [\App\Http\Controllers\Admin\AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/pengguna/{user}', [\App\Http\Controllers\Admin\AdminUserController::class, 'show'])->whereNumber('user')->name('users.show');
+    Route::post('/pengguna/{user}/peran', [\App\Http\Controllers\Admin\AdminUserController::class, 'updateRole'])->whereNumber('user')->name('users.role');
+    Route::get('/aktivitas', [\App\Http\Controllers\Admin\AdminActivityController::class, 'index'])->name('activity');
+    Route::get('/log', [\App\Http\Controllers\Admin\AdminLogController::class, 'index'])->name('logs');
+    Route::get('/moderasi', [\App\Http\Controllers\Admin\AdminModerationController::class, 'index'])->name('moderation');
+    Route::delete('/moderasi/{message}', [\App\Http\Controllers\Admin\AdminModerationController::class, 'destroy'])->whereNumber('message')->name('moderation.destroy');
+    Route::post('/moderasi/{message}/abaikan', [\App\Http\Controllers\Admin\AdminModerationController::class, 'dismiss'])->whereNumber('message')->name('moderation.dismiss');
     Route::post('/bulk-provenance-action', [AdminController::class, 'bulkProvenanceAction'])->name('bulk-provenance-action');
     Route::get('/paper-readiness', [AdminController::class, 'paperReadiness'])->name('paper-readiness');
     Route::get('/paper-readiness/export', [AdminController::class, 'exportPaperReadiness'])->name('paper-readiness.export');

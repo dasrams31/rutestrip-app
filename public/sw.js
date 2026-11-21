@@ -48,5 +48,5 @@ self.addEventListener('fetch', (event) => {
     if (STATIC_PATH.test(url.pathname)) {
         event.respondWith(caches.match(request).then((hit) => hit || fetch(request)));
     }
-    // Everything else (API, conditions JSON, auth, uploads, CSS/JS from CDNs): browser default.
+    // Everything else (API, conditions JSON, auth, uploads, CSS/JS/fonts): browser default.
 });

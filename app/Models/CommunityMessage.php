@@ -26,4 +26,10 @@ class CommunityMessage extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /** Who flagged the message (admin /admin/moderasi). */
+    public function reporter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reported_by');
+    }
 }

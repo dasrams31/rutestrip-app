@@ -98,75 +98,20 @@
         });
     </script>
 
-    <!-- Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- Everything below is served from this site, no CDN: Brave Shields, ad blockers and some
+         networks block cdn.tailwindcss.com, jsDelivr, unpkg and Google Fonts, which broke the layout.
+         Copied from node_modules with `npm run build:vendor`; Tailwind is built with `npm run build:css`. --}}
 
-    <!-- Alpine.js (menus, panels, likes, route conditions) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Alpine.js 3.17.5 (menus, panels, likes, route conditions) -->
+    <script defer src="/vendor/alpine/cdn.min.js?v=3.17.5"></script>
 
-    <!-- Leaflet.js for maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet 1.9.4 for maps -->
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css?v=1.9.4">
+    <script src="/vendor/leaflet/leaflet.js?v=1.9.4"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // DESIGN.md palette: zamrud (logo green) on map paper, kuning fajar as the one accent.
-                        rs: {
-                            ink: '#14231d',
-                            muted: '#4b5d55',
-                            z9: '#053b30',
-                            z8: '#0b4a3c',
-                            z7: '#047857',
-                            mist: '#eef4ef',
-                            paper: '#f6f4ec',
-                            line: '#dedbcd',
-                            sun: '#FCD34D',
-                        },
-                        primary: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            200: '#a7f3d0',
-                            300: '#6ee7b7',
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                        },
-                        mountain: {
-                            50: '#f0fdfa',
-                            100: '#ccfbf1',
-                            200: '#99f6e4',
-                            300: '#5eead4',
-                            400: '#2dd4bf',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            700: '#0f766e',
-                            800: '#115e59',
-                            900: '#134e4a',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        display: ['"Barlow Condensed"', '"Roboto Condensed"', '"Arial Narrow"', 'sans-serif'],
-                    },
-                    backgroundImage: {
-                        'mountain-gradient': 'linear-gradient(135deg, #065f46 0%, #0f766e 50%, #115e59 100%)',
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Fonts: Inter for text; Barlow Condensed (SIL OFL) for headings, drawn from road and trail signs (DESIGN.md). -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Fonts (public/fonts, @font-face in css/site.css): Inter for text; Barlow Condensed (SIL OFL) for headings, drawn from road and trail signs (DESIGN.md). -->
+    <link rel="preload" href="/fonts/inter/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/barlow-condensed/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 
     <style>
         :root {
@@ -240,6 +185,10 @@
         }
     </style>
     @stack('styles')
+
+    {{-- Tailwind v3 build of the classes in the views (tailwind.config.js -> public/css/site.css).
+         Linked last, where the Play CDN used to inject its styles, so utilities still win over the page styles above. --}}
+    <link rel="stylesheet" href="/css/site.css?v={{ filemtime(public_path('css/site.css')) }}">
 </head>
 <body class="has-tabbar safe-x min-h-screen bg-rs-paper text-rs-ink">
     <a href="#konten" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:font-semibold focus:text-rs-z9">{{ __('Langsung ke isi halaman') }}</a>

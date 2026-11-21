@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\AltchaService;
 use App\Services\SsoService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
@@ -75,6 +76,7 @@ class AuthController extends Controller
             'role'     => 'user',
             'locale'   => $this->sso->normalizeLocale(app()->getLocale()),
         ]);
+        event(new Registered($user));
 
         Auth::login($user);
         $request->session()->regenerate();

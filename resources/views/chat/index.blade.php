@@ -6,22 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>RuteStrip AI - Asisten Pendakian</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-                }
-            }
-        }
-    </script>
+    {{-- Self-hosted Alpine; Tailwind and Inter come from public/css/site.css (linked after the styles below). --}}
+    <script defer src="/vendor/alpine/cdn.min.js?v=3.17.5"></script>
 
     <style>
         * { font-family: 'Inter', system-ui, sans-serif; }
@@ -47,6 +33,7 @@
             .msg-appear { animation: none !important; opacity: 1 !important; transform: none !important; page-break-inside: avoid; }
         }
     </style>
+    <link rel="stylesheet" href="/css/site.css?v={{ filemtime(public_path('css/site.css')) }}">
 </head>
 <body class="h-screen flex flex-col bg-slate-50" x-data="chatApp()" x-init="init()">
 

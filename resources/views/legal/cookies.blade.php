@@ -119,7 +119,7 @@
 
         <section aria-labelledby="third-title">
             <h2 id="third-title" class="rs-display uppercase text-3xl text-rs-z9 leading-none">{{ __('Layanan luar') }}</h2>
-            <p class="mt-3 text-rs-ink leading-relaxed">{{ __('Untuk menampilkan halaman, browsermu mengambil huruf dari Google Fonts, kode tampilan dari cdn.tailwindcss.com, jsDelivr, dan unpkg, serta potongan peta dari OpenStreetMap. Server mereka menerima alamat IP-mu seperti permintaan web biasa. RuteStrip tidak memasang cookie atau pelacak untuk mereka.') }}</p>
+            <p class="mt-3 text-rs-ink leading-relaxed">{{ __('Huruf, tampilan, dan skrip situs ini disimpan di server RuteStrip sendiri. Satu-satunya layanan luar yang dihubungi browsermu adalah OpenStreetMap, untuk potongan peta. Server OpenStreetMap menerima alamat IP-mu seperti permintaan web biasa. RuteStrip tidak memasang cookie atau pelacak untuk mereka.') }}</p>
         </section>
 
         <section aria-labelledby="control-title">

@@ -40,10 +40,11 @@ Alasan satu baris per keputusan (antislop R-31), untuk halaman `/`
 - Aksen: kuning fajar #FCD34D (matahari di logo) hanya untuk tombol aksi utama
   (Cari jalur, Upload file GPX), berbingkai gelap seperti papan penunjuk jalur,
   supaya kuning selalu berarti "langkah berikutnya".
-- Huruf judul: Barlow Condensed 700/800 (SIL OFL, Google Fonts) karena
+- Huruf judul: Barlow Condensed 700/800 (SIL OFL) karena
   dirancang dari rambu jalan raya, cocok dengan "papan penunjuk jalur atau poster
-  ekspedisi"; dimuat dengan display=optional agar judul tidak bergeser. Teks isi
-  tetap Inter yang sudah dipakai situs.
+  ekspedisi". Teks isi tetap Inter. Keduanya di-host sendiri di public/fonts
+  (dari Fontsource, `npm run build:vendor`) dengan font-display: swap, tanpa
+  Google Fonts.
 - Motif: garis kontur dibuat deterministik di PHP (cincin bertingkat per puncak,
   setiap cincin ke-5 lebih tebal seperti garis indeks di peta cetak) dan dipakai
   di hero, pembatas bagian, latar kartu, AI Chat, dan Upload; jejak jalur di kartu
@@ -236,3 +237,57 @@ bersaing dengan kabar statusnya.
   bersudut 6 px, bukan pil, mengikuti arah "tanpa bentuk pil".
 - Warna amber dan merah hanya untuk tanda gangguan (ikon, chip, catatan), selalu
   bersama kata, agar palet tetap zamrud, kertas, dan satu kuning.
+
+## Keputusan desain halaman admin (statistik)
+
+Alasan satu baris per keputusan (antislop R-31) untuk `/admin/pengguna`, detail
+pengguna, `/admin/aktivitas`, `/admin/log`, dan `/admin/moderasi`
+(`resources/views/admin/users/*`, `activity`, `logs`, `moderation`). Dial ENERGY 2 /
+RHYTHM 2 / MOTION 1: admin datang untuk membaca angka dan memutuskan, jadi energi
+tetap di pita judul dan gerak hanya kontur bawaan `rs-head`.
+
+- Pita judul `rs-head` yang sama dengan dashboard, ditambah baris tab (Dataset,
+  Pengguna, Aktivitas, Log, Moderasi) di dasar pita, supaya lima halaman admin terasa
+  satu papan dan pindah bagian cukup satu ketukan.
+- Tab aktif ditandai garis putih 3 px di bawah, sama dengan penanda tautan aktif di
+  navbar; kuning tidak dipakai karena kuning berarti langkah berikutnya.
+- Di ponsel baris tab bergeser ke samping di dalam pitanya sendiri, bukan turun jadi
+  dua baris, supaya pita tidak memakan layar.
+- Jumlah laporan yang menunggu tampil sebagai angka di tab Moderasi, karena itu
+  satu-satunya hal di panel yang menunggu tindakan admin.
+- Ringkasan pengguna: satu angka besar (akun terdaftar) di kiri dan empat angka lebih
+  kecil di kanan, karena total adalah yang dibaca pertama; angka masuk diberi catatan
+  bahwa waktu masuk baru dicatat sejak fitur ini dipasang (tidak ada angka karangan).
+- Kuning hanya untuk satu aksi per halaman: Cari pengguna dan Saring log; Aktivitas
+  dan Moderasi tidak punya aksi utama, jadi tidak ada kuning di sana.
+- Grafik 30 hari berupa enam grafik batang kecil (satu seri per kartu, skala sendiri),
+  bukan satu grafik enam warna, supaya palet tetap satu zamrud dan tidak ada sumbu ganda.
+- Batang SVG buatan sendiri tanpa pustaka grafik: 30 batang dengan jarak 2 px, garis
+  dasar #7c8c84 (kontras 3,5:1), dan `<title>` per hari untuk angka saat disorot.
+- Angka per hari juga ada di tabel yang dilipat dalam `<details>`, karena sorot kursor
+  tidak ada di ponsel dan pembaca layar butuh tabel.
+- Seri yang kosong 30 hari menampilkan kalimat "Belum ada", bukan grafik datar, agar
+  nol terbaca sebagai keadaan, bukan grafik rusak.
+- Paling sering dicari berupa daftar bernomor dengan batang mendatar dan rincian
+  pengguna/tamu, karena admin membaca kalimatnya dulu, angkanya kemudian.
+- Kabar terbaru ditulis sebagai kalimat ("Rama mengunggah Gunung Prau via Wates") dan
+  setiap baris diberi garis pendek di kiri seperti tanda cat jalur; merah hanya untuk
+  gagal masuk, penolakan admin, dan laporan, selalu bersama chip berkata.
+- Gagal masuk ditaruh paling atas di halaman Log, karena itu satu-satunya bagian yang
+  mungkin butuh tindakan hari ini; baris dengan 5 kali atau lebih diberi chip
+  "Perlu dilihat".
+- Galat server memakai huruf monospace kecil hanya untuk isi pesan, karena itu teks
+  mesin yang dibaca persis; waktu dan tingkat tetap Inter.
+- Semua tabel bergulir di dalam kotaknya sendiri (`rs-table-wrap`) dan kolom nama punya
+  lebar minimum, supaya halaman tidak bergeser ke samping di 360 px.
+- Moderasi berupa kartu per pesan (isi pesan dalam kutipan bergaris kiri) dan bukan
+  tabel, karena admin perlu membaca isi pesan utuh sebelum memutuskan.
+- Tombol Hapus pesan bergaris merah, Abaikan laporan bergaris zamrud: hapus adalah
+  satu-satunya pilihan yang tidak bisa dibatalkan dari panel, jadi diberi warna
+  gangguan dan konfirmasi.
+- Konfirmasi memakai `confirm()` bawaan browser, sama dengan pemeriksaan massal di
+  dashboard, karena Enter, Escape, dan fokus sudah benar tanpa skrip dialog.
+- Saat formulir dikirim, tombol berganti tulisan (Mencari, Menyaring) dan formulir
+  diberi aria-busy, sebagai keadaan memuat tanpa ikon berputar.
+- Kartu, radius, dan garis mengikuti bagian admin di atas: putih di atas kertas
+  #f6f4ec, radius 8 sampai 12 px, garis 1 px #dcd8c9, tanpa bayangan.

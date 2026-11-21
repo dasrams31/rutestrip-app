@@ -202,13 +202,16 @@ class SearchController extends Controller
 
             $searchTime = round((microtime(true) - $startTime) * 1000, 2);
 
-            // Save search history for logged-in users
+            // Save search history for logged-in users; guests only add +1 to an
+            // anonymous daily count per phrase (admin "most searched").
             if (Auth::check()) {
                 SearchHistory::create([
                     'user_id'       => Auth::id(),
                     'query'         => $query,
                     'results_count' => $results->count(),
                 ]);
+            } else {
+                \App\Models\SearchStat::record($query);
             }
 
             // Be explicit when the user asks for gentle/beginner routes but the

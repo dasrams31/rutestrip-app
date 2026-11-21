@@ -83,7 +83,7 @@ MySQL: data aplikasi dan embedding hasil proses
 ## Tech Stack
 
 - Laravel 12, PHP 8.2+
-- Blade, Vite, Tailwind CSS
+- Blade, Tailwind CSS v3 (static build), Alpine.js, Leaflet
 - MySQL/MariaDB
 - Python, FastAPI, SBERT, scikit-learn, gpxpy
 - Google Gemini API
@@ -105,6 +105,13 @@ Jalankan Laravel:
 
 ```bash
 php artisan serve
+```
+
+CSS, JS, dan huruf situs di-host sendiri (tanpa CDN), jadi halaman tetap utuh di Brave Shields atau ad blocker. File hasil build ikut di-commit, server tidak perlu Node:
+
+```bash
+npm run build:css     # Tailwind v3 -> public/css/site.css (setelah menambah/mengubah class di Blade, PHP, atau JS)
+npm run build:vendor  # Alpine, Leaflet, huruf Inter + Barlow Condensed -> public/vendor, public/fonts (setelah ganti versi di package.json)
 ```
 
 Jalankan Python processor lokal:

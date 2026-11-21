@@ -5,12 +5,8 @@
     Include once per page: @include('partials.rs-kit'). Wrap the page in .rs-app.
 --}}
 @once
-@push('head')
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-{{-- Barlow Condensed (SIL OFL 1.1): drawn from road and trail signage, the "papan penunjuk jalur" voice. --}}
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&display=swap" rel="stylesheet">
-@endpush
-
+{{-- Barlow Condensed (SIL OFL 1.1): drawn from road and trail signage, the "papan penunjuk jalur" voice.
+     Self-hosted with Inter in public/fonts; the layout loads both through css/site.css. --}}
 @push('styles')
 <style>
     .rs-app { --rs-ink: #14231d; --rs-muted: #4b5d55; --rs-z9: #053b30; --rs-z7: #047857; --rs-paper: #f6f4ec; --rs-line: #dcd8c9; --rs-edge: #7c8c84; --rs-sun: #FCD34D; --rs-err: #b91c1c;

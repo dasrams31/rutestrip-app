@@ -1,0 +1,10 @@
+/*
+ * Stylesheet of the Laravel views, built to public/css/site.css (committed; the server runs no Node).
+ *   npm run build:css      Tailwind v3 with tailwind.config.js, minified
+ * Replaces the Tailwind Play CDN (cdn.tailwindcss.com), which Brave Shields and ad blockers block.
+ */
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

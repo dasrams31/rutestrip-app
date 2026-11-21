@@ -318,7 +318,7 @@ class RouteController extends Controller
         $userId = Auth::id();
 
         // Update or create rating
-        Rating::updateOrCreate(
+        $rating = Rating::updateOrCreate(
             ['user_id' => $userId, 'hiking_route_id' => $route->id],
             ['rating' => $validated['rating']]
         );
@@ -331,6 +331,15 @@ class RouteController extends Controller
                 'content'         => $validated['comment'],
             ]);
         }
+
+        // One entry per review sent (rating + optional comment), logged here because
+        // the two rows are written separately. Never breaks the review (see ActivityLogger).
+        app(\App\Services\ActivityLogger::class)->log('review.created', null, $route, [
+            'name'    => $route->name,
+            'rating'  => (int) $validated['rating'],
+            'comment' => ! empty($validated['comment']),
+            'repeat'  => ! $rating->wasRecentlyCreated,
+        ]);
 
         return back()->with('success', __('Review berhasil dikirim!'));
     }

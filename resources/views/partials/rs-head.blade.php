@@ -1,7 +1,8 @@
 {{--
     Page header band on dark zamrud with contour lines, the same voice as the landing hero.
     Params: title, lead?, eyebrow?, back? ['href' => , 'label' => ], actions? [['href', 'label',
-    'style' => 'sign'|'ghost', 'icon'?]], seed?, peaks?, width? (max-w class), titleClass?.
+    'style' => 'sign'|'ghost', 'icon'?]], seed?, peaks?, width? (max-w class), titleClass?,
+    tabs? [['href', 'label', 'active' => bool, 'count'?, 'count_label'?]] (App\Support\AdminNav::tabs()).
 --}}
 @php
     $hasFlash = session('success') || session('warning') || (isset($errors) && $errors->any());
@@ -31,6 +32,25 @@
             </a>
             @endforeach
         </div>
+        @endif
+        @if(!empty($tabs))
+        {{-- Section tabs (admin): scroll sideways inside their own row on narrow phones. --}}
+        <nav class="mt-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto" aria-label="{{ $tabsLabel ?? __('Bagian panel admin') }}">
+            <ul class="flex gap-1 min-w-max border-b border-white/20">
+                @foreach($tabs as $tab)
+                <li>
+                    <a href="{{ $tab['href'] }}" @if($tab['active']) aria-current="page" @endif
+                       class="inline-flex items-center gap-2 min-h-[44px] px-3 -mb-px border-b-[3px] text-sm sm:text-base font-semibold whitespace-nowrap {{ $tab['active'] ? 'border-white text-white' : 'border-transparent text-[#a7f3d0] hover:text-white hover:border-white/40' }}">
+                        <span>{{ $tab['label'] }}</span>
+                        @if(!empty($tab['count']))
+                        <span class="rs-num inline-flex items-center justify-center min-w-[1.5rem] px-1.5 rounded-md bg-white text-[#053b30] text-xs font-bold" aria-hidden="true">{{ $tab['count'] }}</span>
+                        <span class="sr-only">({{ $tab['count_label'] ?? $tab['count'] }})</span>
+                        @endif
+                    </a>
+                </li>
+                @endforeach
+            </ul>
+        </nav>
         @endif
     </div>
 </section>

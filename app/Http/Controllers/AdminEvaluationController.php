@@ -77,6 +77,8 @@ class AdminEvaluationController extends Controller
             ]);
         }
 
+        app(\App\Services\ActivityLogger::class)->log('admin.evaluation_snapshot', null, null, ['rows' => count($rows)]);
+
         return back()->with('success', 'Snapshot evaluation_results berhasil disimpan.');
     }
 

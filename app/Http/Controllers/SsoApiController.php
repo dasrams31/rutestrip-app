@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\AltchaService;
 use App\Services\SsoService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +23,7 @@ class SsoApiController extends Controller
 
     private const REGISTER_PER_MINUTE = 5;
 
-    public function __construct(private SsoService $sso)
+    public function __construct(private SsoService $sso, private ActivityLogger $activity)
     {
     }
 
@@ -44,8 +46,17 @@ class SsoApiController extends Controller
 
         $user = User::where('email', $request->input('email'))->first();
         if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) {
+            // Same entry as a failed web sign-in: the email tried, never the password.
+            $this->activity->log('auth.failed', $user ?? false, null, [
+                'email' => mb_strtolower(mb_substr(trim((string) $request->input('email')), 0, 255)),
+                'via'   => 'chat',
+            ]);
+
             return $this->error(__('account.api.invalid_credentials'), 401);
         }
+
+        // No session guard here, so the Login event does not fire: record the sign-in directly.
+        $this->activity->recordLogin($user, 'chat');
 
         return response()->json([
             'token' => $this->sso->issue($user),
@@ -82,6 +93,8 @@ class SsoApiController extends Controller
             'locale'   => $locale,
         ]);
         $user->refresh();
+        event(new Registered($user));
+        $this->activity->recordLogin($user, 'chat');
 
         return response()->json([
             'token' => $this->sso->issue($user),

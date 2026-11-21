@@ -63,6 +63,7 @@
         ],
         'width' => 'max-w-7xl',
         'seed' => 103,
+        'tabs' => \App\Support\AdminNav::tabs('dashboard'),
     ])
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
