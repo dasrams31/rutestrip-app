@@ -164,6 +164,60 @@ def mentioned_names(query: str, all_routes: list) -> set:
     return words & vocab
 
 
+W_REGION = 0.4       # share of region match when the query names a province/regency
+
+# Province names as stored from OpenStreetMap Nominatim -> words people type.
+PROVINCE_ALIASES = {
+    "jawa barat": ["jawa barat", "jabar", "west java"],
+    "jawa tengah": ["jawa tengah", "jateng", "central java"],
+    "jawa timur": ["jawa timur", "jatim", "east java"],
+    "daerah istimewa yogyakarta": ["yogyakarta", "jogjakarta", "yogya", "jogja", "diy"],
+    "banten": ["banten"],
+    "dki jakarta": ["jakarta"],
+    "lampung": ["lampung"],
+}
+
+
+def _norm_place(value) -> str:
+    value = re.sub(r"^(kabupaten|kota|kab\.?)\s+", "", (value or "").strip().lower())
+    return re.sub(r"\s+", " ", value)
+
+
+def _has_phrase(text: str, phrase: str) -> bool:
+    return re.search(r"(?<![a-z])" + re.escape(phrase) + r"(?![a-z])", text) is not None
+
+
+def detect_regions(query: str, all_routes: list) -> dict:
+    """Provinces and regencies named in the query, e.g. "di Jawa Barat",
+    "jabar", "dekat Malang". Regencies come from the routes' own locations."""
+    text = " " + re.sub(r"[^a-z]+", " ", (query or "").lower()) + " "
+    provinces = {p for p, aliases in PROVINCE_ALIASES.items() if any(_has_phrase(text, a) for a in aliases)}
+    regencies = set()
+    for r in all_routes:
+        reg = _norm_place(r.get("regency"))
+        if len(reg) >= 4 and _has_phrase(text, reg):
+            regencies.add(reg)
+    return {"provinces": provinces, "regencies": regencies}
+
+
+def region_words(regions: dict) -> set:
+    words = set()
+    for p in regions["provinces"]:
+        for alias in PROVINCE_ALIASES[p]:
+            words |= set(alias.split())
+    for reg in regions["regencies"]:
+        words |= set(reg.split())
+    return words
+
+
+def region_hit(regions: dict, route: dict) -> float:
+    if _norm_place(route.get("province")) in regions["provinces"]:
+        return 1.0
+    if _norm_place(route.get("regency")) in regions["regencies"]:
+        return 1.0
+    return 0.0
+
+
 def _cos(a, b) -> float:
     dot = na = nb = 0.0
     for x, y in zip(a, b):
@@ -185,7 +239,14 @@ def hybrid_score(query, q_vec, doc_vec, aspect_vecs, route, all_routes) -> dict:
     if intents:
         score = (1 - W_ATTR) * score + W_ATTR * attribute_score(intents, route, all_routes)
 
-    names = mentioned_names(query, all_routes)
+    # Place names ("di Jawa Barat", "jabar", "Malang"): routes there come first.
+    # Only applied when locations are known; region words are not route names.
+    regions = detect_regions(query, all_routes)
+    has_regions = (regions["provinces"] or regions["regencies"]) and any(r.get("province") for r in all_routes)
+    if has_regions:
+        score = (1 - W_REGION) * score + W_REGION * region_hit(regions, route)
+
+    names = mentioned_names(query, all_routes) - (region_words(regions) if has_regions else set())
     if names:
         # Share of the mentioned names this route matches ("sumbing via butuh":
         # Sumbing via Butuh = 1.0, other Sumbing routes = 0.5).

@@ -49,13 +49,24 @@ QUERIES = [
     ("sumbing", "name:sumbing"),
 ]
 
+# Queries that name a place; scored separately so the main numbers stay
+# comparable with earlier runs. Used only when routes have a stored province.
+REGION_QUERIES = [
+    ("jalur landai di jawa barat", "region:jawa barat"),
+    ("pendakian di jawa tengah untuk pemula", "region:jawa tengah"),
+    ("gunung di jatim", "region:jawa timur"),
+    ("jalur pendek jabar", "region:jawa barat"),
+]
+
 
 def load_routes(db_path):
     con = sqlite3.connect(db_path)
     con.row_factory = sqlite3.Row
+    cols = {c[1] for c in con.execute("PRAGMA table_info(hiking_routes)")}
+    place = ", province, regency" if {"province", "regency"} <= cols else ""
     rows = con.execute(
         "SELECT id, name, distance_km, elevation_gain_m, naismith_duration_hour, average_grade_pct, "
-        "narrative_text, description, sbert_embedding FROM hiking_routes WHERE sbert_embedding IS NOT NULL"
+        "narrative_text, description, sbert_embedding" + place + " FROM hiking_routes WHERE sbert_embedding IS NOT NULL"
     ).fetchall()
     con.close()
     routes = []
@@ -67,6 +78,9 @@ def load_routes(db_path):
 
 
 def relevant_ids(routes, label):
+    if label.startswith("region:"):
+        key = label.split(":", 1)[1]
+        return {r["id"] for r in routes if (r.get("province") or "").lower() == key}
     if label.startswith("name:"):
         key = label.split(":", 1)[1]
         return {r["id"] for r in routes if key in (r["name"] or "").lower()}
@@ -116,8 +130,12 @@ def main():
     aspect_vecs = {rid: model.encode(d["aspects"]).tolist() for rid, d in docs.items()}
     index_ms = (time.time() - t0) * 1000
 
+    queries = list(QUERIES)
+    if any(r.get("province") for r in routes):
+        queries += REGION_QUERIES
+
     rows = {"baseline": [], "hybrid": []}
-    for query, label in QUERIES:
+    for query, label in queries:
         rel = relevant_ids(routes, label)
         q_base = model.encode(preprocess_text(query)).tolist()
         base_ranked = sorted(((r["id"], cos(q_base, r["sbert_embedding"])) for r in routes), key=lambda x: -x[1])
@@ -137,14 +155,19 @@ def main():
             p5, rr = metrics(ranked, rel)
             rows[name].append((query, p5, rr, ranked[0][1], np.mean([s for _, s in ranked[:5]])))
 
-    print(f"routes={len(routes)} queries={len(QUERIES)} index_ms={index_ms:.0f}")
+    print(f"routes={len(routes)} queries={len(queries)} index_ms={index_ms:.0f}")
     print(f"{'query':42s} {'P@5 base':>8s} {'P@5 hyb':>8s} {'top1 base':>9s} {'top1 hyb':>9s}")
     for (q, p5b, _, t1b, _), (_, p5h, _, t1h, _) in zip(rows["baseline"], rows["hybrid"]):
         print(f"{q:42s} {p5b:8.2f} {p5h:8.2f} {t1b:9.3f} {t1h:9.3f}")
-    for name in ("baseline", "hybrid"):
-        arr = np.array([r[1:] for r in rows[name]], dtype=float)
-        print(f"{name:9s} P@5={arr[:,0].mean():.3f} MRR={arr[:,1].mean():.3f} "
-              f"mean_top1={arr[:,2].mean():.3f} mean_top5={arr[:,3].mean():.3f}")
+    n_main = len(QUERIES)
+    for label, sl in (("", slice(0, n_main)), (" region", slice(n_main, None))):
+        for name in ("baseline", "hybrid"):
+            part = rows[name][sl]
+            if not part:
+                continue
+            arr = np.array([r[1:] for r in part], dtype=float)
+            print(f"{name + label:16s} P@5={arr[:,0].mean():.3f} MRR={arr[:,1].mean():.3f} "
+                  f"mean_top1={arr[:,2].mean():.3f} mean_top5={arr[:,3].mean():.3f}")
 
 
 if __name__ == "__main__":

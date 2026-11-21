@@ -13,7 +13,9 @@ use Illuminate\Support\Collection;
  *    aspect sentence; the best aspect match is blended with the document match;
  *  - intent words (landai, pemula, curam, singkat, panjang, ...) are checked
  *    against the GPX statistics;
- *  - mountain/basecamp names in the query are matched against route names.
+ *  - mountain/basecamp names in the query are matched against route names;
+ *  - place names (province or regency, e.g. "di Jawa Barat", "jabar", "Malang")
+ *    favour routes whose trailhead is there.
  */
 class RouteSearchService
 {
@@ -24,6 +26,18 @@ class RouteSearchService
     public const VERY_STEEP_GRADE_PCT = 30.0;
     public const MAX_HIKE_KM = 60.0;
     public const W_NAME = 0.35;
+    public const W_REGION = 0.4;
+
+    /** Province names as stored from Nominatim => words people type. */
+    private const PROVINCE_ALIASES = [
+        'jawa barat' => ['jawa barat', 'jabar', 'west java'],
+        'jawa tengah' => ['jawa tengah', 'jateng', 'central java'],
+        'jawa timur' => ['jawa timur', 'jatim', 'east java'],
+        'daerah istimewa yogyakarta' => ['yogyakarta', 'jogjakarta', 'yogya', 'jogja', 'diy'],
+        'banten' => ['banten'],
+        'dki jakarta' => ['jakarta'],
+        'lampung' => ['lampung'],
+    ];
 
     private const INTENT_WORDS = [
         // "landai" = gentle slope; "pemula/mudah" = little climbing, short duration
@@ -52,9 +66,12 @@ class RouteSearchService
         $durations = $routes->map(fn($r) => (float) $r->naismith_duration_hour)->all();
         $gains     = $routes->map(fn($r) => (float) $r->elevation_gain_m)->all();
         $intents   = $this->detectIntents($query);
-        $names     = $this->mentionedNames($query, $routes);
+        $regions   = $this->detectRegions($query, $routes);
+        $useRegion = ($regions['provinces'] || $regions['regencies']) && $routes->contains(fn($r) => filled($r->province));
+        // Place words ("barat", "malang") are not mountain names.
+        $names     = array_values(array_diff($this->mentionedNames($query, $routes), $useRegion ? $this->regionWords($regions) : []));
 
-        return $routes->map(function (HikingRoute $route) use ($query, $queryEmbedding, $grades, $durations, $gains, $intents, $names) {
+        return $routes->map(function (HikingRoute $route) use ($query, $queryEmbedding, $grades, $durations, $gains, $intents, $names, $regions, $useRegion) {
             $cosDoc = $this->cosine($queryEmbedding, $route->sbert_embedding);
 
             $cosAspect = $cosDoc;
@@ -70,6 +87,11 @@ class RouteSearchService
             if ($intents) {
                 $score = (1 - self::W_ATTR) * $score
                     + self::W_ATTR * $this->attributeScore($intents, $route, $grades, $durations, $gains);
+            }
+
+            if ($useRegion) {
+                // "di Jawa Barat", "jabar", "dekat Malang": routes there come first.
+                $score = (1 - self::W_REGION) * $score + self::W_REGION * $this->regionHit($regions, $route);
             }
 
             if ($names) {
@@ -116,6 +138,66 @@ class RouteSearchService
         }
 
         return array_keys($intents);
+    }
+
+    /**
+     * Provinces and regencies named in the query. Regencies come from the
+     * routes' own stored locations, so only places we have routes in count.
+     *
+     * @return array{provinces: string[], regencies: string[]}
+     */
+    public function detectRegions(string $query, Collection $routes): array
+    {
+        $text = ' ' . preg_replace('/[^a-z]+/', ' ', mb_strtolower($query)) . ' ';
+
+        $provinces = [];
+        foreach (self::PROVINCE_ALIASES as $province => $aliases) {
+            foreach ($aliases as $alias) {
+                if ($this->hasPhrase($text, $alias)) {
+                    $provinces[] = $province;
+                    break;
+                }
+            }
+        }
+
+        $regencies = $routes->map(fn($r) => $this->normPlace($r->regency))
+            ->filter(fn($reg) => strlen($reg) >= 4 && $this->hasPhrase($text, $reg))
+            ->unique()->values()->all();
+
+        return ['provinces' => $provinces, 'regencies' => $regencies];
+    }
+
+    private function regionHit(array $regions, HikingRoute $route): float
+    {
+        return in_array($this->normPlace($route->province), $regions['provinces'], true)
+            || in_array($this->normPlace($route->regency), $regions['regencies'], true) ? 1.0 : 0.0;
+    }
+
+    private function regionWords(array $regions): array
+    {
+        $words = [];
+        foreach ($regions['provinces'] as $province) {
+            foreach (self::PROVINCE_ALIASES[$province] as $alias) {
+                array_push($words, ...explode(' ', $alias));
+            }
+        }
+        foreach ($regions['regencies'] as $regency) {
+            array_push($words, ...explode(' ', $regency));
+        }
+
+        return array_values(array_unique($words));
+    }
+
+    private function normPlace(?string $value): string
+    {
+        $value = preg_replace('/^(kabupaten|kota|kab\.?)\s+/', '', trim(mb_strtolower((string) $value)));
+
+        return preg_replace('/\s+/', ' ', (string) $value);
+    }
+
+    private function hasPhrase(string $text, string $phrase): bool
+    {
+        return (bool) preg_match('/(?<![a-z])' . preg_quote($phrase, '/') . '(?![a-z])/', $text);
     }
 
     public function nameTokens(?string $name): array

@@ -199,6 +199,8 @@ class RouteConditionsService
         $key = sprintf('route-location:%d:%.4f,%.4f', $route->id, $lat, $lng);
 
         if ($cached = Cache::get($key)) {
+            $this->storeOnRoute($route, $cached);
+
             return $cached;
         }
 
@@ -214,7 +216,23 @@ class RouteConditionsService
             return null;
         }
 
+        $this->storeOnRoute($route, $location);
+
         return Cache::rememberForever($key, fn() => $location);
+    }
+
+    /**
+     * Keep province/regency on the route so search can rank by place
+     * ("jalur landai di Jawa Barat") without reading the cache per route.
+     */
+    private function storeOnRoute(HikingRoute $route, array $location): void
+    {
+        $province = $location['province'] ?? null;
+        $regency  = $location['regency'] ?? null;
+
+        if ($route->exists && ($route->province !== $province || $route->regency !== $regency)) {
+            $route->forceFill(['province' => $province, 'regency' => $regency])->saveQuietly();
+        }
     }
 
     /**

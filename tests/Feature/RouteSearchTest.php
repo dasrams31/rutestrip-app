@@ -84,6 +84,52 @@ class RouteSearchTest extends TestCase
         $this->assertSame('Mt. Merbabu via Selo', $ranked->last()->name);
     }
 
+    private function placedRoutes(array $places): \Illuminate\Support\Collection
+    {
+        $emb = [1.0, 0.0, 0.0];
+
+        return collect($places)->map(fn($p) => (new HikingRoute([
+            'name' => $p[0], 'distance_km' => $p[3], 'elevation_gain_m' => $p[4],
+            'naismith_duration_hour' => $p[3] / 5 + $p[4] / 600, 'average_grade_pct' => $p[4] / ($p[3] * 10),
+            'sbert_embedding' => $emb, 'sbert_aspect_embeddings' => [$emb],
+        ]))->forceFill(['province' => $p[1], 'regency' => $p[2]]));
+    }
+
+    public function test_query_naming_a_province_ranks_routes_there_first(): void
+    {
+        $routes = $this->placedRoutes([
+            ['Kawah Ijen via Sunrise View Trek', 'Jawa Timur', 'Banyuwangi', 1.9, 98],
+            ['Puncak Koromong via Tugu Baleendah', 'Jawa Barat', 'Kabupaten Bandung', 3.3, 390],
+            ['Gunung Andong via Gogik', 'Jawa Tengah', 'Magelang', 0.9, 252],
+            ['Puncak Upas via Sukawana', 'Jawa Barat', 'Kabupaten Bandung Barat', 8.0, 536],
+        ]);
+        $search = app(RouteSearchService::class);
+
+        foreach (['jalur landai di Jawa Barat', 'jalur pemula jabar', 'west java easy trail'] as $query) {
+            $ranked = $search->rank($query, [1.0, 0.0, 0.0], $routes->map(fn($r) => clone $r), 4);
+            $this->assertSame(['Jawa Barat', 'Jawa Barat'], $ranked->take(2)->pluck('province')->all(), $query);
+        }
+
+        // Regency names count too, and "barat" is not treated as a mountain name.
+        $ranked = $search->rank('pendakian dekat Banyuwangi', [1.0, 0.0, 0.0], $routes->map(fn($r) => clone $r), 4);
+        $this->assertSame('Kawah Ijen via Sunrise View Trek', $ranked->first()->name);
+    }
+
+    public function test_place_words_do_nothing_when_no_route_has_a_location(): void
+    {
+        $routes = $this->placedRoutes([
+            ['Gunung Merbabu via Selo', null, null, 11.1, 1424],
+            ['Gunung Slamet via Dipajaya', null, null, 6.6, 1870],
+        ]);
+        $search = app(RouteSearchService::class);
+
+        $plain = $search->rank('jalur pendakian', [1.0, 0.0, 0.0], $routes->map(fn($r) => clone $r), 2)->pluck('similarity_score')->all();
+        $placed = $search->rank('jalur pendakian di jawa barat', [1.0, 0.0, 0.0], $routes->map(fn($r) => clone $r), 2)->pluck('similarity_score')->all();
+
+        $this->assertSame($plain, $placed);
+        $this->assertSame(['provinces' => ['jawa barat'], 'regencies' => []], $search->detectRegions('di Jawa Barat', $routes));
+    }
+
     public function test_difficulty_uses_climb_distance_steepness_and_altitude(): void
     {
         $route = fn(float $km, int $gain, float $grade, int $maxEle) => new HikingRoute([
