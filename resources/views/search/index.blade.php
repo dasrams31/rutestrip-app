@@ -327,7 +327,7 @@
                             <dl class="mt-auto pt-4 {{ $big ? 'grid grid-cols-3 gap-3 sm:max-w-md' : 'flex flex-wrap gap-x-6 gap-y-2 [&_dd]:whitespace-nowrap' }}">
                                 <div><dt class="text-xs text-rs-muted">{{ __('Jarak') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $num($item['distance'], 1) }} km</dd></div>
                                 <div><dt class="text-xs text-rs-muted">{{ __('Puncak') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $item['summit'] ? $num($item['summit']) . ' m' : '-' }}</dd></div>
-                                <div><dt class="text-xs text-rs-muted">{{ __('Waktu naik') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $hoursLabel($item['hours']) }}</dd></div>
+                                <div><dt class="text-xs text-rs-muted">{{ __('Waktu jalan') }}</dt><dd class="rs-display rs-num text-xl {{ $big ? 'sm:text-2xl' : 'sm:text-2xl lg:text-xl' }} text-rs-ink">{{ $hoursLabel($item['hours']) }}</dd></div>
                             </dl>
                         </div>
                     </a>
@@ -402,8 +402,8 @@
                                 'text' => __('Kalau kamu menulis landai, curam, singkat, atau panjang, kami cocokkan juga dengan kemiringan, total tanjakan, dan waktu jalan setiap jalur. Nama gunung atau basecamp yang kamu sebut ikut didahulukan.'),
                             ],
                             [
-                                'title' => __('Waktu naik dihitung dari GPX'),
-                                'text' => __('Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik, dari basecamp sampai puncak. Istirahat dan beban carrier belum termasuk, jadi di lapangan biasanya 1,4 sampai 1,8 kali lebih lama.'),
+                                'title' => __('Waktu jalan dihitung dari GPX'),
+                                'text' => __('Perkiraannya memakai aturan Naismith yang biasa dipakai pendaki: 1 jam untuk setiap 5 km, ditambah 1 jam untuk setiap 600 m naik. Waktu istirahat belum termasuk.'),
                             ],
                         ];
                     @endphp
