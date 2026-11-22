@@ -1300,5 +1300,21 @@
     "Diurutkan dari waktu jalan yang paling singkat (Naismith, belum termasuk istirahat).": "Sorted from the shortest walking time (Naismith, without breaks).",
     "Diurutkan dari waktu jalan yang paling lama (Naismith, belum termasuk istirahat).": "Sorted from the longest walking time (Naismith, without breaks).",
     "Waktu ke puncak": "Time to summit",
-    "Dihitung dengan rumus Naismith, belum termasuk istirahat dan beban carrier.": "Worked out with Naismith's rule, without breaks or a heavy pack."
+    "Dihitung dengan rumus Naismith, belum termasuk istirahat dan beban carrier.": "Worked out with Naismith's rule, without breaks or a heavy pack.",
+    "Kiriman jalur": "Trail submissions",
+    "Kiriman": "Submissions",
+    "Rekaman pendakian dari aplikasi.": "Hikes recorded in the app.",
+    "Rekaman sudah diproses seperti unggahan GPX biasa. Jalur baru tampil di pencarian dan rekomendasi setelah kamu setujui.": "Recordings are already processed like a normal GPX upload. A trail shows in search and recommendations only after you approve it.",
+    ":count kiriman menunggu": ":count submissions waiting",
+    "Tidak ada kiriman.": "No submissions.",
+    "Rekaman muncul di sini saat pendaki mengirimnya dari aplikasi Android.": "Recordings show up here when hikers send them from the Android app.",
+    "Dikirim oleh": "Sent by",
+    "Titik GPS": "GPS points",
+    "Setujui": "Approve",
+    "Tolak": "Reject",
+    "Tolak \":name\"? Jalur ini tidak akan tampil.": "Reject \":name\"? This trail will not be shown.",
+    "Alasan (dilihat pengirim, boleh kosong)": "Reason (the sender sees it, optional)",
+    "\":name\" disetujui dan sekarang tampil di pencarian.": "\":name\" approved and now shows in search.",
+    "\":name\" ditolak. Pengirim melihat statusnya di aplikasi.": "\":name\" rejected. The sender sees the status in the app.",
+    "Rekaman terkirim dan sudah diproses. Jalur ini tampil di pencarian setelah disetujui admin.": "Recording sent and processed. This trail shows in search after an admin approves it."
 }

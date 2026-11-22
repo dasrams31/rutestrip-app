@@ -63,7 +63,7 @@ chat and the assistant run through the website's own controllers and limits.
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/routes` | Multipart: `name`, `description?`, `gpx_file` (.gpx/.xml, max 10 MB), `clean_track?` (default on). Same checks, track cleaning and processing as the website upload; the user is recorded as uploader. Returns 201 with `data` (route summary) and `message`. 10/min. |
+| POST | `/routes` | Multipart: `name`, `description?`, `gpx_file` (.gpx/.xml, max 10 MB), `clean_track?` (default on), `source?` (`upload` default, or `recording` for a hike recorded in the app). Same checks, track cleaning and processing as the website upload; the user is recorded as uploader. Returns 201 with `data` (route summary) and `message`. A `recording` is processed the same way but stays hidden (`review_status` pending) until an admin approves it at /admin/kiriman; its `data` is a submission (see `/me/submissions`). 10/min, 30/day per account. |
 | GET | `/community/messages` | Obrolan Pendaki, room `umum`: latest 30 (`?before=<id>` older, `?after=<id>` newer plus `deleted` ids). Each message: `id`, `name`, `mine`, `deleted`, `body`, `html`, `created_at`, `can_delete`, `can_report`, `reported`. |
 | GET | `/community/latest` | `{last_id}` of the newest message by someone else (unread badge). |
 | POST | `/community/messages` | `{body}` (max 500 characters). 201 with `message`. 6 per 30 s, 200 per day (429 with `message`). |
@@ -72,6 +72,7 @@ chat and the assistant run through the website's own controllers and limits.
 | POST | `/routes/{id}/reviews` | `{rating: 1-5, comment?: max 1000}`. One rating per user (updated on repeat), a comment adds a review. Returns the reviews payload. 10/min. |
 | GET | `/me` | `user`, dashboard `stats` (favorites, searches, comments, ratings) and `recent_searches`. |
 | GET | `/me/history?page=` | Search history, 20 per page. |
+| GET | `/me/submissions?page=` | Uploads and recordings sent from this account: `id`, `name`, `distance_km`, `elevation_gain_m`, `source`, `status` (`pending`, `published`, `rejected`), `note` (admin's reason when rejected), `reviewed_at`, `created_at`. 20 per page. |
 | PUT | `/me/profile` | `{name, email}` (email unique). |
 | PUT | `/me/password` | `{current_password, password, password_confirmation}` (min 8). Ends every older token and website session (`sso_version`) and returns a new `token`. 5/min. |
 | PUT | `/me/locale` | `{locale: id|en}`. |

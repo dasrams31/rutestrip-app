@@ -127,6 +127,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/log', [\App\Http\Controllers\Admin\AdminLogController::class, 'index'])->name('logs');
     Route::get('/moderasi', [\App\Http\Controllers\Admin\AdminModerationController::class, 'index'])->name('moderation');
     Route::delete('/moderasi/{message}', [\App\Http\Controllers\Admin\AdminModerationController::class, 'destroy'])->whereNumber('message')->name('moderation.destroy');
+    Route::get('/kiriman', [\App\Http\Controllers\Admin\AdminSubmissionController::class, 'index'])->name('submissions');
+    Route::post('/kiriman/{route}/setujui', [\App\Http\Controllers\Admin\AdminSubmissionController::class, 'approve'])->whereNumber('route')->name('submissions.approve');
+    Route::post('/kiriman/{route}/tolak', [\App\Http\Controllers\Admin\AdminSubmissionController::class, 'reject'])->whereNumber('route')->name('submissions.reject');
     Route::post('/moderasi/{message}/abaikan', [\App\Http\Controllers\Admin\AdminModerationController::class, 'dismiss'])->whereNumber('message')->name('moderation.dismiss');
     Route::post('/bulk-provenance-action', [AdminController::class, 'bulkProvenanceAction'])->name('bulk-provenance-action');
     Route::get('/paper-readiness', [AdminController::class, 'paperReadiness'])->name('paper-readiness');

@@ -57,6 +57,7 @@ Route::prefix('v1')->name('api.v1.')->middleware(\App\Http\Middleware\ApiLocale:
         Route::prefix('me')->name('me.')->controller(AccountApiController::class)->group(function () {
             Route::get('/', 'show')->middleware('throttle:60,1,api-v1')->name('show');
             Route::get('/history', 'historyIndex')->middleware('throttle:60,1,api-v1')->name('history');
+            Route::get('/submissions', [UploadApiController::class, 'submissions'])->middleware('throttle:60,1,api-v1')->name('submissions');
             Route::put('/profile', 'updateProfile')->middleware('throttle:10,1,api-v1-account')->name('profile');
             Route::put('/password', 'updatePassword')->middleware('throttle:5,1,api-v1-password')->name('password');
             Route::put('/locale', 'updateLocale')->middleware('throttle:10,1,api-v1-account')->name('locale');

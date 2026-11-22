@@ -14,10 +14,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * POST /api/v1/routes (multipart: name, description?, gpx_file, clean_track?):
+ * POST /api/v1/routes (multipart: name, description?, gpx_file, clean_track?, source?):
  * the website's single GPX upload (RouteController::store) as JSON for the app.
  * Same checks, track cleaning, Python ingest and first GPX version; the
- * signed-in user (SsoBearer) is recorded as the uploader.
+ * signed-in user (SsoBearer) is recorded as the uploader. source=recording (a hike
+ * recorded in the app) is processed the same way but waits for an admin.
  */
 class UploadApiController extends Controller
 {
@@ -45,7 +46,10 @@ class UploadApiController extends Controller
             'description' => 'nullable|string|max:2000',
             'gpx_file'    => 'required|file|max:10240',
             'clean_track' => 'nullable|boolean',
+            'source'      => 'nullable|in:upload,recording',
         ]);
+        // A hike recorded in the app is processed now but shown only after an admin approves it.
+        $recording = $request->input('source') === 'recording';
 
         $file = $request->file('gpx_file');
         if (! in_array(strtolower($file->getClientOriginalExtension()), ['gpx', 'xml'], true)) {
@@ -83,10 +87,12 @@ class UploadApiController extends Controller
                 'summit_route'           => ! preg_match(GpxTrackCleaner::KEEP_WHOLE_PATTERN, $request->input('name')),
                 'narrative_text'         => $narrative,
                 'sbert_embedding'        => $result['embedding'] ?? null,
+                'source'                 => $recording ? 'recording' : 'upload',
+                'review_status'          => $recording ? HikingRoute::PENDING : HikingRoute::PUBLISHED,
             ]);
 
             $this->versions->createInitialVersion($route, $path, $userId,
-                trim('Diunggah dari aplikasi Android. ' . GpxTrackCleaner::summary($cleaning, 'id')) ?: null);
+                trim(($recording ? 'Rekaman dari aplikasi Android. ' : 'Diunggah dari aplikasi Android. ') . GpxTrackCleaner::summary($cleaning, 'id')) ?: null);
         } catch (\Throwable $e) {
             report($e);
             Storage::disk('public')->delete($path);
@@ -94,10 +100,49 @@ class UploadApiController extends Controller
             return response()->json(['error' => __('Gagal memproses file GPX. Periksa filenya, lalu coba lagi.')], 422);
         }
 
+        if ($recording) {
+            return response()->json([
+                'data'    => self::submission($route),
+                'message' => __('Rekaman terkirim dan sudah diproses. Jalur ini tampil di pencarian setelah disetujui admin.'),
+            ], 201);
+        }
+
         return response()->json([
             'data'    => $this->present->summary($route->loadCount('likes')),
             'message' => trim(__('Jalur pendakian berhasil ditambahkan!') . ' ' . GpxTrackCleaner::summary($cleaning)),
         ], 201);
+    }
+
+    /**
+     * GET /api/v1/me/submissions: everything this account sent (GPX uploads and
+     * app recordings) with its review status, newest first.
+     */
+    public function submissions(Request $request): JsonResponse
+    {
+        $page = HikingRoute::withoutGlobalScope('published')
+            ->where('uploaded_by', $request->user()->id)
+            ->latest('id')
+            ->paginate(20, ['id', 'name', 'distance_km', 'elevation_gain_m', 'source', 'review_status', 'review_note', 'reviewed_at', 'created_at']);
+
+        return response()->json([
+            'data' => collect($page->items())->map(fn (HikingRoute $r) => self::submission($r))->values(),
+            'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'total' => $page->total()],
+        ]);
+    }
+
+    private static function submission(HikingRoute $r): array
+    {
+        return [
+            'id'               => $r->id,
+            'name'             => $r->name,
+            'distance_km'      => $r->distance_km,
+            'elevation_gain_m' => $r->elevation_gain_m,
+            'source'           => $r->source,
+            'status'           => $r->review_status,
+            'note'             => $r->review_status === HikingRoute::REJECTED ? $r->review_note : null,
+            'reviewed_at'      => $r->reviewed_at?->toIso8601String(),
+            'created_at'       => $r->created_at?->toIso8601String(),
+        ];
     }
 
     private function invalid(string $message): JsonResponse

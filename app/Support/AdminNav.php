@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\CommunityMessage;
+use App\Models\HikingRoute;
 
 /** Tabs under the admin page header (partials/rs-head "tabs"). */
 class AdminNav
@@ -10,6 +11,7 @@ class AdminNav
     public static function tabs(string $active): array
     {
         $reports = CommunityMessage::whereNotNull('reported_at')->count();
+        $pending = HikingRoute::withoutGlobalScope('published')->where('review_status', HikingRoute::PENDING)->count();
 
         $tabs = [
             ['key' => 'dashboard', 'href' => route('admin.dashboard'), 'label' => __('Dataset')],
@@ -18,6 +20,8 @@ class AdminNav
             ['key' => 'logs', 'href' => route('admin.logs'), 'label' => __('Log')],
             ['key' => 'moderation', 'href' => route('admin.moderation'), 'label' => __('Moderasi'), 'count' => $reports,
                 'count_label' => __(':count laporan menunggu', ['count' => $reports])],
+            ['key' => 'submissions', 'href' => route('admin.submissions'), 'label' => __('Kiriman'), 'count' => $pending,
+                'count_label' => __(':count kiriman menunggu', ['count' => $pending])],
         ];
 
         return array_map(fn ($t) => $t + ['active' => $t['key'] === $active], $tabs);

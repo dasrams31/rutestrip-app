@@ -29,6 +29,15 @@ class HikingRoute extends Model
         return preg_match('/^(\d+)/', (string) $value, $m) ? $this->whereKey((int) $m[1])->first() : null;
     }
 
+    /** Shown everywhere (the default for every upload except app recordings). */
+    public const PUBLISHED = 'published';
+
+    /** A recording from the app, processed and waiting for an admin. Hidden until approved. */
+    public const PENDING = 'pending';
+
+    /** Turned down by an admin; stays hidden, the sender sees the note. */
+    public const REJECTED = 'rejected';
+
     protected $fillable = [
         'name',
         'description',
@@ -55,9 +64,17 @@ class HikingRoute extends Model
         'embedding_text',
         'sbert_embedding',
         'sbert_aspect_embeddings',
+        'review_status',
+        'source',
+    ];
+
+    protected $attributes = [
+        'review_status' => self::PUBLISHED,
+        'source'        => 'upload',
     ];
 
     protected $casts = [
+        'reviewed_at'            => 'datetime',
         'distance_km'            => 'float',
         'elevation_gain_m'       => 'integer',
         'naismith_duration_hour' => 'float',
@@ -70,6 +87,13 @@ class HikingRoute extends Model
 
     protected static function booted(): void
     {
+        // Every query (search, lists, detail pages, sitemap, exports) sees published
+        // routes only. The admin review page and "my submissions" opt out explicitly
+        // with withoutGlobalScope('published').
+        static::addGlobalScope('published', function (\Illuminate\Database\Eloquent\Builder $q) {
+            $q->where($q->getModel()->getTable() . '.review_status', self::PUBLISHED);
+        });
+
         // Keep search embeddings (name + narrative + aspects) in sync whenever the
         // text that feeds them changes. Disabled in tests via ROUTE_SEARCH_AUTO_INDEX=false.
         // (wasRecentlyCreated stays true on the same instance, so "created" and
