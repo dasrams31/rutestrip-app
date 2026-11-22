@@ -169,12 +169,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/profile', fn () => redirect()->route('settings', status: 301))->name('user.profile');
     Route::put('/user/profile', [\App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('user.profile.update');
     Route::put('/user/password', [\App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('user.password.update');
+    // Own uploads and app recordings with their review status (pending / published / rejected).
+    Route::get('/akun/kiriman', [\App\Http\Controllers\SubmissionController::class, 'index'])->name('account.submissions');
 });
 
 // ---------------------------------------------------------------------------
 // Site UI: language switch (ID | EN, rs_lang cookie, see SetLocale) and likes
 // without login (guests are identified by the rs_vid visitor cookie).
 // ---------------------------------------------------------------------------
+// Live position link opened by family or the basecamp (no login, secret token, noindex).
+Route::get('/lacak/{token}', [\App\Http\Controllers\LiveShareController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{1,64}')->middleware('throttle:60,1')->name('live.show');
+Route::get('/lacak/{token}/data', [\App\Http\Controllers\LiveShareController::class, 'data'])
+    ->where('token', '[A-Za-z0-9]{1,64}')->middleware('throttle:60,1')->name('live.data');
+
 Route::get('/lang/{locale}', [\App\Http\Controllers\LocaleController::class, 'switch'])
     ->whereIn('locale', \App\Http\Middleware\SetLocale::SUPPORTED)
     ->name('lang.switch');

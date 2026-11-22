@@ -120,7 +120,7 @@
         </div>
 
         {{-- Next steps --}}
-        <section class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="{{ __('Lanjut ke') }}">
+        <section class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="{{ __('Lanjut ke') }}">
             <a href="{{ route('routes.index') }}" class="rs-card p-5 flex items-center gap-4 hover:border-[#047857] min-w-0">
                 <x-icon name="map" class="w-7 h-7 text-[#047857] shrink-0" />
                 <span class="min-w-0">
@@ -135,6 +135,36 @@
                     <span class="block text-sm rs-muted">{{ __('Bagikan jejak pendakianmu') }}</span>
                 </span>
             </a>
+            <a href="{{ route('account.submissions') }}" class="rs-card p-5 flex items-center gap-4 hover:border-[#047857] min-w-0 sm:col-span-2 lg:col-span-1">
+                <x-icon name="clipboard-list" class="w-7 h-7 text-[#047857] shrink-0" />
+                <span class="min-w-0">
+                    <span class="block font-semibold">{{ __('Kiriman jalurku') }}</span>
+                    <span class="block text-sm rs-muted">{{ __('Status upload dan rekaman dari aplikasi') }}</span>
+                </span>
+            </a>
+        </section>
+
+        {{-- What only the Android app does (GPS and phone-to-phone radios); the web covers the rest. --}}
+        <section class="mt-10 rs-card p-5 sm:p-7 md:grid md:grid-cols-12 md:gap-8" aria-labelledby="app-only-title" data-app-only>
+            <div class="md:col-span-5">
+                <h2 id="app-only-title" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ __('Di aplikasi Android') }}</h2>
+                <p class="mt-2 rs-muted">{{ __('Fitur ini butuh GPS dan radio HP, jadi hanya ada di aplikasi.') }}</p>
+                <a href="https://app.rutestrip.ai.id" rel="noopener" class="mt-3 inline-flex items-center gap-1.5 min-h-[44px] font-semibold text-[#047857] underline decoration-[#047857]/40 underline-offset-4 hover:text-[#053b30]">
+                    {{ __('Lihat semua fitur aplikasi') }}
+                </a>
+            </div>
+            <ul class="mt-4 md:mt-0 md:col-span-7 space-y-3">
+                @foreach([
+                    ['location-marker', __('Rekam jejak GPS selama mendaki, tetap berjalan saat layar mati.')],
+                    ['users', __('Rombongan tanpa internet: obrolan, posisi teman, dan SOS antar-HP lewat Bluetooth atau Wi-Fi.')],
+                    ['mountain', __('Putar ulang rekaman pendakianmu sendiri dalam 3D.')],
+                ] as [$icon, $text])
+                <li class="flex items-start gap-3">
+                    <x-icon :name="$icon" class="w-5 h-5 mt-0.5 text-[#047857] shrink-0" />
+                    <span>{{ $text }}</span>
+                </li>
+                @endforeach
+            </ul>
         </section>
     </div>
 </div>

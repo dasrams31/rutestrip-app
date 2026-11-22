@@ -572,6 +572,8 @@
                     <a href="{{ route('app.download.legacy') }}" class="self-center min-[420px]:self-auto inline-flex items-center min-h-[44px] px-1 text-sm font-semibold text-rs-z7 underline decoration-rs-z7/40 underline-offset-4 hover:decoration-rs-z7">{{ __('HP lama (32-bit)') }}</a>
                 </div>
                 <p class="mt-2 max-w-md text-sm text-rs-muted leading-relaxed">{{ __('Berkas APK yang dipasang di luar Play Store, jadi Android akan meminta izin memasang aplikasi dari browsermu.') }}</p>
+                {{-- The Android app's own site (app.rutestrip.ai.id); the button above stays the direct APK. --}}
+                <a href="https://app.rutestrip.ai.id" rel="noopener" data-app-site class="mt-3 inline-flex items-center min-h-[44px] font-semibold text-rs-z9 underline decoration-rs-z7/50 underline-offset-4 hover:decoration-rs-z9">{{ __('Lihat semua fitur aplikasi') }}</a>
             </div>
 
             <figure class="lg:col-span-5 lg:row-span-2 lg:col-start-8 lg:row-start-1 min-w-0 flex flex-col items-center">

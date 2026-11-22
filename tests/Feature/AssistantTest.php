@@ -157,13 +157,34 @@ class AssistantTest extends TestCase
             '*' . self::GEMINI . 'model-b:*' => Http::failedConnection('timeout'),
         ]);
 
-        $this->ask(['message' => 'Jalur termudah?'])
+        // A question with no known topic: a pointer to search instead of an error.
+        $this->ask(['message' => 'Halo apa kabar?'])
             ->assertOk()
             ->assertJsonPath('fallback', true)
-            ->assertJsonPath('reply', fn ($reply) => str_contains($reply, 'Maaf, Asisten RuteStrip sedang tidak bisa menjawab')
-                && str_contains($reply, route('search.index')));
+            ->assertJsonPath('reply', fn ($reply) => str_contains($reply, route('search.index')) && ! str_contains($reply, 'tidak bisa menjawab'));
 
         Http::assertSentCount(2);
+    }
+
+    public function test_fallback_answers_known_topics_and_names_matching_trails(): void
+    {
+        config(['services.gemini.key' => null]);
+        Http::fake();
+        $route = $this->seedRoute();
+
+        $this->ask(['message' => 'Bagaimana RuteStrip mengurutkan hasil pencarian?'])
+            ->assertOk()->assertJsonPath('fallback', true)
+            ->assertJsonPath('reply', fn ($r) => str_contains($r, 'SBERT') && str_contains($r, route('search.index')));
+
+        $this->ask(['message' => 'cuaca di puncak gimana?'])
+            ->assertJsonPath('reply', fn ($r) => str_contains($r, 'prakiraan tiap 3 jam'));
+
+        $name = explode(' ', trim(preg_replace('/^(gunung|mt\.?)\s+/i', '', $route->name)))[0];
+        $this->ask(['message' => 'Info jalur ' . $name . ' dong'])
+            ->assertJsonPath('reply', fn ($r) => str_contains($r, route('routes.show', $route)));
+
+        $this->withHeader('Accept-Language', 'en');
+        Http::assertNothingSent();
     }
 
     public function test_without_api_key_no_request_is_sent(): void
@@ -261,7 +282,7 @@ class AssistantTest extends TestCase
         config(['services.gemini.key' => null]);
         $this->withCredentials()->withUnencryptedCookie('rs_lang', 'en')
             ->postJson(route('assistant.ask'), ['message' => 'Hello'])
-            ->assertJsonPath('reply', fn ($reply) => str_starts_with($reply, 'Sorry, the RuteStrip Assistant cannot answer right now.'));
+            ->assertJsonPath('reply', fn ($reply) => str_contains($reply, 'describe the trail you want') && str_contains($reply, route('search.index')));
     }
 
     public function test_guest_sees_the_hiker_chat_sign_in_panel_and_the_assistant(): void

@@ -4,7 +4,7 @@
 //
 //   npm run build:vendor   (after changing a version in package.json)
 //
-// Writes: public/vendor/alpine, public/vendor/leaflet, public/fonts and
+// Writes: public/vendor/alpine, public/vendor/leaflet, public/vendor/maplibre, public/fonts and
 // resources/css/fonts.css (the @font-face rules that site.css imports).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -51,6 +51,10 @@ for (const f of ['leaflet.js', 'leaflet.css']) copy(nm('leaflet', 'dist', f), pu
 for (const f of fs.readdirSync(nm('leaflet', 'dist', 'images'))) copy(nm('leaflet', 'dist', 'images', f), pub('vendor', 'leaflet', 'images', f));
 copy(nm('leaflet', 'LICENSE'), pub('vendor', 'leaflet', 'LICENSE'));
 
+// MapLibre GL JS (BSD-3-Clause) for the 3D terrain view on the trail page. Loaded only
+// when the hiker opens that view, never on page load. No source map (5 MB, not needed).
+for (const f of ['maplibre-gl.js', 'maplibre-gl.css', 'LICENSE.txt']) copy(nm('maplibre-gl', 'dist', f), pub('vendor', 'maplibre', f));
+
 // Fonts (SIL OFL 1.1) from Fontsource, latin + latin-ext only, woff2 only.
 const fonts = [
     ['inter', 'Inter', [400, 500, 600, 700, 800]],
@@ -75,4 +79,4 @@ for (const [id, family, weights] of fonts) {
     }
 }
 fs.writeFileSync(path.join(root, 'resources', 'css', 'fonts.css'), css);
-console.log(`alpine ${alpine.version}, leaflet ${pkg('leaflet').version}, fonts written`);
+console.log(`alpine ${alpine.version}, leaflet ${pkg('leaflet').version}, maplibre-gl ${pkg('maplibre-gl').version}, fonts written`);

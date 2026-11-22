@@ -112,8 +112,10 @@ class AppDownloadTest extends TestCase
             ->assertSee('Unduh aplikasi')
             ->getContent();
 
+        // The navbar item goes to the app site (features and the APK); the bottom card keeps the direct APK.
         $nav = substr($html, strpos($html, '<nav'), strpos($html, '</nav>') - strpos($html, '<nav'));
-        $this->assertStringContainsString('href="' . route('app.download') . '"', $nav);
+        $this->assertStringContainsString('href="https://app.rutestrip.ai.id" rel="noopener" data-nav-app', $nav);
+        $this->assertStringNotContainsString('href="' . route('app.download') . '"', $nav);
 
         // The bottom card now offers the Android app; the PWA install moved to the settings page.
         $banner = substr($html, strpos($html, 'id="rs-install"'), 1500);

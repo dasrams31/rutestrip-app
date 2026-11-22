@@ -8,6 +8,7 @@
         ['id' => 'profile', 'label' => __('account.settings.profile'), 'icon' => 'user'],
         ['id' => 'password', 'label' => __('account.settings.password'), 'icon' => 'lock-closed'],
         ['id' => 'language', 'label' => __('account.settings.language'), 'icon' => 'translate'],
+        ['id' => 'kiriman', 'label' => __('Kiriman jalurku'), 'icon' => 'clipboard-list'],
         ['id' => 'pwa', 'label' => __('Versi web (PWA)'), 'icon' => 'device-mobile'],
     ];
 @endphp
@@ -136,6 +137,15 @@
                 </form>
             </section>
 
+            {{-- Own uploads and app recordings with their review status (account.submissions). --}}
+            <section id="kiriman" class="rs-card p-5 sm:p-7 scroll-mt-24" aria-labelledby="kiriman-heading">
+                <h2 id="kiriman-heading" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ __('Kiriman jalurku') }}</h2>
+                <p class="mt-2 rs-muted">{{ __('Lihat status jalur yang kamu unggah dari situs atau kirim dari aplikasi Android: menunggu admin, tampil, atau ditolak beserta catatannya.') }}</p>
+                <a href="{{ route('account.submissions') }}" class="rs-btn-ghost w-full sm:w-auto mt-5">
+                    <x-icon name="clipboard-list" class="w-5 h-5 shrink-0" /><span>{{ __('Buka kiriman jalurku') }}</span>
+                </a>
+            </section>
+
             {{-- Web app (PWA) install. The browser's beforeinstallprompt event is kept by the
                  layout (window.__rsInstallEvent, "rs:installable"); this section offers it. --}}
             <section id="pwa" class="rs-card p-5 sm:p-7 scroll-mt-24" aria-labelledby="pwa-heading" data-pwa>
@@ -157,6 +167,8 @@
                     <a href="{{ route('app.download') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] underline underline-offset-4">{{ __('Unduh aplikasi Android') }}</a>
                 </p>
             </section>
+
+            <p class="pt-2 text-sm rs-muted" data-copyright>© 2026 Aeternum Kreasikan Bersama</p>
         </div>
     </div>
 </div>

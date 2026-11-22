@@ -88,6 +88,16 @@
     /* Difficulty bars on the dark header: white instead of zamrud. */
     .rs-on-dark .rs-diff i { background: rgba(255,255,255,.3); }
     .rs-on-dark .rs-diff i.on { background: #fff; }
+    /* 3D terrain dialog: full screen on phones, a large sheet on wider screens. */
+    .rs-terrain { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; }
+    .rs-terrain[open] { display: flex; }
+    .rs-terrain::backdrop { background: rgba(5, 59, 48, .72); }
+    @media (min-width: 640px) {
+        .rs-terrain { width: min(72rem, calc(100vw - 2rem)); height: min(48rem, calc(100vh - 2rem)); height: min(48rem, calc(100dvh - 2rem)); margin: auto; border-radius: 12px; }
+    }
+    html:has(.rs-terrain[open]) { overflow: hidden; }
+    /* The loading/error note is display: flex; [hidden] must still remove it from the map. */
+    .rs-terrain [data-terrain-status][hidden] { display: none; }
 </style>
 @endpush
 
@@ -189,7 +199,47 @@
                     </p>
                 </div>
                 <div id="route-map" class="w-full h-[300px] sm:h-[420px] bg-rs-mist"></div>
+                @if(count($route->route_coordinates) > 1)
+                {{-- 3D terrain view: MapLibre (public/vendor/maplibre) is fetched only after this button is pressed. --}}
+                <div class="px-4 sm:px-5 py-3 border-t border-rs-line flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <button type="button" data-terrain-open aria-haspopup="dialog" aria-controls="terrain-3d" class="rs-btn-ghost rs-btn-sm shrink-0">
+                        <x-icon name="mountain" class="w-5 h-5 shrink-0" /><span>{{ __('Lihat medan 3D') }}</span>
+                    </button>
+                    <p class="text-sm text-rs-muted">{{ __('Jalur yang sama di atas bentuk medan 3D. Peta 3D baru dimuat setelah tombol ini ditekan.') }}</p>
+                </div>
+                @endif
             </section>
+
+            @if(count($route->route_coordinates) > 1)
+            <dialog id="terrain-3d" class="rs-terrain p-0 bg-white text-rs-ink" aria-labelledby="terrain-title">
+                <div class="flex flex-col w-full h-full">
+                    <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-2 border-b border-rs-line">
+                        <h2 id="terrain-title" class="rs-display uppercase text-2xl text-rs-z9 leading-none min-w-0 truncate">{{ __('Medan 3D') }}<span class="sr-only">: {{ $route->name }}</span></h2>
+                        <button type="button" data-terrain-close class="rs-btn-ghost rs-btn-sm shrink-0">
+                            <x-icon name="x" class="w-5 h-5 shrink-0" /><span>{{ __('Tutup') }}</span>
+                        </button>
+                    </div>
+                    <div class="relative flex-1 min-h-0 bg-rs-mist">
+                        {{-- maplibre-gl.css makes the map element position: relative, so the absolute box is a wrapper. --}}
+                        <div class="absolute inset-0"><div data-terrain-map class="w-full h-full"></div></div>
+                        <p data-terrain-status role="status" class="absolute inset-0 flex items-center justify-center p-6 text-center font-semibold text-rs-z9 bg-rs-mist">{{ __('Memuat medan 3D...') }}</p>
+                    </div>
+                    <div class="px-4 sm:px-5 py-3 border-t border-rs-line flex flex-col sm:flex-row sm:items-center gap-3">
+                        <button type="button" data-terrain-play aria-pressed="false" disabled class="rs-btn rs-btn-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span data-terrain-play-label>{{ __('Putar') }}</span>
+                        </button>
+                        <div class="min-w-0 text-sm text-rs-muted">
+                            <p class="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rs-z9 ring-2 ring-white outline outline-1 outline-rs-z9"></span>{{ __('Basecamp') }}</span>
+                                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 ring-2 ring-white outline outline-1 outline-amber-700"></span>{{ __('Puncak') }}</span>
+                                <span class="inline-flex items-center gap-1.5"><span class="w-4 h-1 rounded-sm bg-rs-z7"></span>{{ __('Jalur GPX') }}</span>
+                            </p>
+                            <p class="mt-1">{{ __('Putar menerbangkan kamera dari basecamp mengikuti jalur. Seret peta untuk memutar sudut pandang; tinggi medan dibesarkan 1,3 kali agar lereng lebih terbaca.') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </dialog>
+            @endif
             @endif
 
             @if($trailPoints)
@@ -770,6 +820,213 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+@if(count($route->route_coordinates) > 1)
+<script>
+// 3D terrain view. Nothing here runs until "Lihat medan 3D" is pressed: then MapLibre GL JS
+// (public/vendor/maplibre, npm maplibre-gl) is loaded once and draws the GPX line over
+// Terrain Tiles (terrarium elevation, Mapzen/AWS) with OpenStreetMap tiles draped on top.
+(function () {
+    var openBtn = document.querySelector('[data-terrain-open]');
+    var dlg = document.getElementById('terrain-3d');
+    if (!openBtn || !dlg) return;
+
+    var MAPLIBRE = '5.24.1';
+    var txt = {
+        noWebgl: @js(__('Browser ini tidak mendukung WebGL, jadi medan 3D tidak bisa ditampilkan. Peta jalur di halaman ini tetap bisa dipakai.')),
+        failed: @js(__('Medan 3D gagal dimuat. Periksa koneksi internetmu, lalu tutup dan buka lagi.')),
+        slow: @js(__('Medan 3D belum termuat. Koneksi mungkin lambat; tunggu sebentar atau tutup dan buka lagi.')),
+        play: @js(__('Putar')),
+        stop: @js(__('Berhenti')),
+    };
+    var statusEl = dlg.querySelector('[data-terrain-status]');
+    var playBtn = dlg.querySelector('[data-terrain-play]');
+    var playLabel = dlg.querySelector('[data-terrain-play-label]');
+    var mapEl = dlg.querySelector('[data-terrain-map]');
+    var loadingText = statusEl.textContent;
+
+    // Track as [lng, lat]; basecamp is the first point, the summit the highest point
+    // with a stored elevation (otherwise the last point), as on the conditions card.
+    var raw = @json($route->route_coordinates);
+    var pts = [], summitIdx = -1, best = -Infinity;
+    raw.forEach(function (p) {
+        if (!Array.isArray(p) || !isFinite(p[0]) || !isFinite(p[1])) return;
+        pts.push([Number(p[1]), Number(p[0])]);
+        if (p.length > 2 && isFinite(p[2]) && Number(p[2]) > best) { best = Number(p[2]); summitIdx = pts.length - 1; }
+    });
+    if (pts.length < 2) return;
+    if (summitIdx < 0) summitIdx = pts.length - 1;
+
+    var rad = Math.PI / 180;
+    var km = function (a, b) {
+        var dLat = (b[1] - a[1]) * rad, dLng = (b[0] - a[0]) * rad;
+        var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return 12742 * Math.asin(Math.sqrt(h));
+    };
+    var cum = [0];
+    for (var i = 1; i < pts.length; i++) cum.push(cum[i - 1] + km(pts[i - 1], pts[i]));
+    var total = cum[cum.length - 1] || 0.001;
+    var at = function (d) { // point at distance d (km) along the track
+        d = Math.max(0, Math.min(total, d));
+        var lo = 0, hi = cum.length - 1;
+        while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (cum[mid] <= d) lo = mid; else hi = mid; }
+        var span = cum[hi] - cum[lo] || 1, t = (d - cum[lo]) / span;
+        return [pts[lo][0] + (pts[hi][0] - pts[lo][0]) * t, pts[lo][1] + (pts[hi][1] - pts[lo][1]) * t];
+    };
+    var bearing = function (a, b) {
+        var y = Math.sin((b[0] - a[0]) * rad) * Math.cos(b[1] * rad);
+        var x = Math.cos(a[1] * rad) * Math.sin(b[1] * rad) - Math.sin(a[1] * rad) * Math.cos(b[1] * rad) * Math.cos((b[0] - a[0]) * rad);
+        return Math.atan2(y, x) / rad;
+    };
+    var bounds = pts.reduce(function (b, p) {
+        return [[Math.min(b[0][0], p[0]), Math.min(b[0][1], p[1])], [Math.max(b[1][0], p[0]), Math.max(b[1][1], p[1])]];
+    }, [[pts[0][0], pts[0][1]], [pts[0][0], pts[0][1]]]);
+
+    var showStatus = function (message) { statusEl.textContent = message; statusEl.hidden = !message; };
+    var hasWebgl = function () {
+        try {
+            var c = document.createElement('canvas');
+            return !!(c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl'));
+        } catch (e) { return false; }
+    };
+
+    var libPromise = null;
+    var loadLib = function () {
+        if (window.maplibregl) return Promise.resolve(window.maplibregl);
+        if (libPromise) return libPromise;
+        libPromise = new Promise(function (resolve, reject) {
+            var css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.href = '/vendor/maplibre/maplibre-gl.css?v=' + MAPLIBRE;
+            document.head.appendChild(css);
+            var s = document.createElement('script');
+            s.src = '/vendor/maplibre/maplibre-gl.js?v=' + MAPLIBRE;
+            s.onload = function () { window.maplibregl ? resolve(window.maplibregl) : reject(new Error('maplibregl missing')); };
+            s.onerror = function () { s.remove(); reject(new Error('maplibre-gl.js failed')); };
+            document.head.appendChild(s);
+        });
+        libPromise.catch(function () { libPromise = null; });
+        return libPromise;
+    };
+
+    var map = null, loaded = false, flying = 0;
+    var fitAll = function (duration) {
+        map.fitBounds(bounds, { padding: 60, pitch: 60, bearing: map.getBearing(), duration: duration, maxZoom: 15 });
+    };
+
+    var stopFlight = function () {
+        if (flying) cancelAnimationFrame(flying);
+        flying = 0;
+        playBtn.setAttribute('aria-pressed', 'false');
+        playLabel.textContent = txt.play;
+        if (map && map.getSource('cursor')) map.getSource('cursor').setData({ type: 'FeatureCollection', features: [] });
+    };
+    var startFlight = function () {
+        var duration = Math.min(60000, Math.max(20000, total * 3000));
+        var ahead = Math.min(0.6, total / 10);
+        var start = null, heading = bearing(at(0), at(ahead)), ground = null;
+        playBtn.setAttribute('aria-pressed', 'true');
+        playLabel.textContent = txt.stop;
+        var frame = function (now) {
+            if (start === null) start = now;
+            var t = Math.min(1, (now - start) / duration);
+            var here = at(t * total), next = at(t * total + ahead);
+            var target = bearing(here, next);
+            heading += ((((target - heading) % 360) + 540) % 360 - 180) * 0.05; // ease towards the trail direction
+            map.getSource('cursor').setData({ type: 'Point', coordinates: here });
+            // The map does not re-read the ground height while the camera moves every frame, which
+            // left the camera under the mountain. Give it the terrain height at the point (eased).
+            var h = map.queryTerrainElevation(here);
+            if (h) ground = ground === null ? h : ground + (h - ground) * 0.1;
+            map.jumpTo({ center: here, bearing: heading, pitch: 62, zoom: 14.5, elevation: ground || 0 });
+            if (t < 1) { flying = requestAnimationFrame(frame); return; }
+            stopFlight();
+            fitAll(1500);
+        };
+        flying = requestAnimationFrame(frame);
+    };
+
+    var build = function (maplibregl) {
+        map = new maplibregl.Map({
+            container: mapEl,
+            bounds: bounds,
+            fitBoundsOptions: { padding: 60, maxZoom: 15 },
+            pitch: 60,
+            maxPitch: 80,
+            attributionControl: { compact: true },
+            locale: {
+                'Map.Title': @js(__('Peta medan 3D')),
+                'NavigationControl.ZoomIn': @js(__('Perbesar')),
+                'NavigationControl.ZoomOut': @js(__('Perkecil')),
+                'NavigationControl.ResetBearing': @js(__('Kembalikan arah utara')),
+                'AttributionControl.ToggleAttribution': @js(__('Sumber peta')),
+            },
+            style: {
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster', tileSize: 256, maxzoom: 19,
+                        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>',
+                    },
+                    dem: {
+                        type: 'raster-dem', encoding: 'terrarium', tileSize: 256, maxzoom: 15,
+                        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+                        attribution: 'Terrain Tiles: Mapzen, AWS',
+                    },
+                    trail: { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: pts } } },
+                    ends: { type: 'geojson', data: { type: 'FeatureCollection', features: [
+                        { type: 'Feature', properties: { kind: 'basecamp' }, geometry: { type: 'Point', coordinates: pts[0] } },
+                        { type: 'Feature', properties: { kind: 'summit' }, geometry: { type: 'Point', coordinates: pts[summitIdx] } },
+                    ] } },
+                    cursor: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
+                },
+                layers: [
+                    { id: 'osm', type: 'raster', source: 'osm' },
+                    { id: 'trail-casing', type: 'line', source: 'trail', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 } },
+                    { id: 'trail', type: 'line', source: 'trail', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#047857', 'line-width': 4.5 } },
+                    { id: 'ends', type: 'circle', source: 'ends', paint: {
+                        'circle-radius': 8, 'circle-stroke-width': 3, 'circle-stroke-color': '#ffffff',
+                        'circle-color': ['match', ['get', 'kind'], 'summit', '#f59e0b', '#053b30'],
+                    } },
+                    { id: 'cursor', type: 'circle', source: 'cursor', paint: { 'circle-radius': 7, 'circle-color': '#ffffff', 'circle-stroke-width': 3, 'circle-stroke-color': '#053b30' } },
+                ],
+                terrain: { source: 'dem', exaggeration: 1.3 },
+            },
+        });
+        map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');        var slow = setTimeout(function () { if (!loaded) showStatus(txt.slow); }, 15000);
+        map.on('load', function () {
+            loaded = true;
+            clearTimeout(slow);
+            showStatus('');
+            playBtn.disabled = false;
+            fitAll(0);
+        });
+        map.on('error', function (e) { if (!loaded) console.warn('Medan 3D', e && e.error); });
+        // Any drag, wheel or touch hands the camera back to the hiker.
+        ['mousedown', 'touchstart', 'wheel'].forEach(function (type) { map.on(type, function () { if (flying) stopFlight(); }); });
+    };
+
+    var open = function () {
+        if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+        if (map) { map.resize(); return; }
+        if (!hasWebgl()) { showStatus(txt.noWebgl); return; }
+        showStatus(loadingText);
+        loadLib().then(function (lib) {
+            try { build(lib); } catch (e) { map = null; console.warn('Medan 3D', e); showStatus(txt.noWebgl); }
+        }).catch(function (e) { console.warn('Medan 3D', e); showStatus(txt.failed); });
+    };
+    openBtn.addEventListener('click', open);
+    dlg.querySelector('[data-terrain-close]').addEventListener('click', function () {
+        if (typeof dlg.close === 'function') dlg.close(); else { dlg.removeAttribute('open'); dlg.dispatchEvent(new Event('close')); }
+    });
+    dlg.addEventListener('close', function () { stopFlight(); openBtn.focus(); });
+    playBtn.addEventListener('click', function () {
+        if (!map || !loaded) return;
+        if (flying) { stopFlight(); fitAll(1200); } else startFlight();
+    });
+})();
+</script>
+@endif
 @endif
 @endpush
 @endsection

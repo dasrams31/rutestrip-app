@@ -28,7 +28,7 @@
         // Account/admin/upload pages and POSTed search results stay out of search engines.
         $seoPrivate = request()->isMethod('post') || request()->is(
             'admin*', 'dashboard*', 'profile*', 'favorites*', 'history*', 'login', 'register',
-            'routes/create', 'routes-batch', 'evaluation*', 'routes/*/versions/*', 'user/*', 'settings*'
+            'routes/create', 'routes-batch', 'evaluation*', 'routes/*/versions/*', 'user/*', 'settings*', 'akun*'
         );
         $seoRobots = trim($__env->yieldContent('robots')) ?: ($seoPrivate ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
     @endphp
@@ -196,6 +196,8 @@
     <!-- Navigation -->
     @php
         $webchatUrl = config('services.webchat.url');
+        // Android app site: features, how to use it and the APK. /install stays the direct APK link.
+        $appSiteUrl = 'https://app.rutestrip.ai.id';
         $navLinks = [
             ['href' => route('search.index'), 'label' => __('Cari Rute'), 'icon' => 'search', 'active' => request()->routeIs('search.*', 'home')],
             ['href' => route('routes.index'), 'label' => __('Semua Rute'), 'icon' => 'map', 'active' => request()->routeIs('routes.index', 'routes.show', 'routes.similar', 'routes.provenance')],
@@ -210,6 +212,7 @@
         $accountLinks = $navUser ? array_values(array_filter([
             ['href' => route('user.dashboard'), 'label' => __('Dashboard'), 'icon' => 'home'],
             ['href' => route('user.favorites'), 'label' => __('Rute Favorit'), 'icon' => 'heart-outline'],
+            ['href' => route('account.submissions'), 'label' => __('Kiriman jalurku'), 'icon' => 'clipboard-list'],
             ['href' => route('user.history'), 'label' => __('Riwayat Pencarian'), 'icon' => 'clock'],
             $hasSettings
                 ? ['href' => route('settings'), 'label' => __('Pengaturan'), 'icon' => 'cog']
@@ -239,9 +242,9 @@
                     </a>
                     @endforeach
 
-                    {{-- Android app (APK download, AppDownloadController): a plain link, not the yellow main action. --}}
+                    {{-- Android app site (features and the APK): a plain link, not the yellow main action. --}}
                     {{-- Between lg and xl the row has no room for the label: icon with a tooltip and an accessible name. --}}
-                    <a href="{{ route('app.download') }}" data-nav-app aria-label="{{ __('Unduh aplikasi Android') }}" title="{{ __('Unduh aplikasi Android') }}"
+                    <a href="{{ $appSiteUrl }}" rel="noopener" data-nav-app aria-label="{{ __('Unduh aplikasi Android') }}" title="{{ __('Unduh aplikasi Android') }}"
                        class="px-3 xl:px-3.5 min-w-[44px] h-11 rounded-lg text-[15px] font-semibold transition-colors inline-flex items-center justify-center gap-2 text-rs-muted hover:text-rs-z9 hover:bg-rs-paper">
                         <x-icon name="download" class="w-5 h-5 xl:w-4 xl:h-4" />
                         <span class="hidden xl:inline">{{ __('Unduh aplikasi') }}</span>
@@ -345,7 +348,7 @@
                     {{ $link['label'] }}
                 </a>
                 @endforeach
-                <a href="{{ route('app.download') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold text-rs-ink hover:bg-rs-paper">
+                <a href="{{ $appSiteUrl }}" rel="noopener" data-nav-app class="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold text-rs-ink hover:bg-rs-paper">
                     <x-icon name="download" class="w-5 h-5 text-rs-muted" />
                     {{ __('Unduh aplikasi') }}
                     <span class="ml-auto text-sm font-medium text-rs-muted">Android</span>
@@ -508,7 +511,7 @@
             </div>
 
             <div class="mt-8 pt-6 border-t border-white/15 flex flex-col md:flex-row md:items-start md:justify-between gap-2 text-xs text-[#b7cfc4]">
-                <p>&copy; {{ date('Y') }} RuteStrip. {{ __('Dibuat untuk pendaki Indonesia') }}.</p>
+                <p>© 2026 Aeternum Kreasikan Bersama. RuteStrip, {{ __('dibuat untuk pendaki Indonesia') }}.</p>
                 <p>
                     {{ __('Sebagian data jalur') }} &copy; <a href="https://www.openstreetmap.org/copyright" class="underline hover:text-white" target="_blank" rel="noopener">OpenStreetMap contributors</a> (ODbL); {{ __('elevasi: NASA SRTM.') }}
                 </p>

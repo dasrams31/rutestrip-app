@@ -72,8 +72,9 @@ class AssistantController extends Controller
         $reply      = $this->generate($this->systemPrompt($en), $contents);
 
         if ($reply === null) {
+            // No model answered: reply from fixed topics and the routes table instead of an error.
             return response()->json([
-                'reply'    => __('Maaf, Asisten RuteStrip sedang tidak bisa menjawab. Coba lagi beberapa saat lagi, atau cari jalur langsung di :url', ['url' => route('search.index')]),
+                'reply'    => app(\App\Services\AssistantFallback::class)->answer($message, $en),
                 'fallback' => true,
             ]);
         }
@@ -317,6 +318,8 @@ About RuteStrip:
 - Route detail page: map, elevation profile, live weather at basecamp and summit, basecamp info, administrative location, directions, likes (no login needed), reviews and ratings (login), favorites, similar routes.
 - GPX upload (single or batch) for logged-in users; the uploader is recorded. Provenance: every route keeps GPX versions with SHA-256 hashes, verification and restore history.
 - Accounts: one account for the website and the AI Chat (single sign-on), with a settings page (profile, password, language). Dashboard, favorites and search history. Indonesian and English interface (ID/EN switch). Installable as an app (PWA).
+- Android app (features at https://app.rutestrip.ai.id, APK download at {$facts['urls']['install']}, outside the Play Store): GPS recording that keeps going with the screen off, compass and turn-the-map, waypoints, cut a recording, 3D replay of a recording, offline saved trails, submit a recording as a trail (shown after an admin approves it), and Rombongan: chat, teammates' positions and SOS with a siren between the group's phones over Bluetooth/Wi-Fi with no internet.
+- Trail pages also show a forecast every 3 hours for the next 48 hours (temperature, chance of rain, wind) and a 3-day outlook at basecamp and summit.
 - RuteStrip AI Chat ({$chat}, "AI Chat" in the menu): a hiking chat assistant with weather, itinerary, porter info and a satellite map; needs a free account. Also available as the Telegram bot @rutestrip_hikingbot.
 - Obrolan Pendaki (hiker chat): the chat button in the bottom left corner opens a public chat room where logged-in hikers talk to each other (real people, not AI). Needs a free account.
 - Research paper: R. D. P. Wijaya & A. N. Rahman, "Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity", SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026), pp. 1241-1256, DOI 10.32520/stmsi.v15i4.6087, SINTA 3 accredited. The live site now has more routes than the paper.
@@ -353,6 +356,8 @@ Tentang RuteStrip:
 - Halaman detail rute: peta, profil elevasi, cuaca terkini di basecamp dan puncak, info basecamp, lokasi administratif, petunjuk arah, suka (tanpa login), ulasan dan rating (perlu login), favorit, rute serupa.
 - Upload GPX (satu file atau batch) untuk pengguna yang login; pengunggah dicatat. Provenance: setiap rute menyimpan versi GPX dengan hash SHA-256, riwayat verifikasi dan pemulihan versi.
 - Akun: satu akun untuk situs dan AI Chat (single sign-on), dengan halaman pengaturan (profil, kata sandi, bahasa). Dashboard, favorit, dan riwayat pencarian. Tampilan Bahasa Indonesia dan Inggris (tombol ID/EN). Bisa dipasang sebagai aplikasi (PWA).
+- Aplikasi Android (fitur di https://app.rutestrip.ai.id, unduh APK di {$facts['urls']['install']}, di luar Play Store): rekam jalur GPS yang tetap jalan saat layar mati, kompas dan peta ikut arah, tandai titik, potong rekaman, putar ulang 3D rekaman, simpan jalur offline, ajukan rekaman jadi jalur (tampil setelah disetujui admin), dan Rombongan: chat, posisi teman, dan SOS dengan sirene antar-HP satu rombongan lewat Bluetooth/Wi-Fi tanpa internet.
+- Halaman jalur juga punya prakiraan tiap 3 jam untuk 48 jam ke depan (suhu, peluang hujan, angin) dan ringkasan 3 hari di basecamp dan puncak.
 - RuteStrip AI Chat ({$chat}, menu "AI Chat"): asisten chat pendakian dengan cuaca, itinerary, info porter, dan peta satelit; perlu akun gratis. Juga ada bot Telegram @rutestrip_hikingbot.
 - Obrolan Pendaki: tombol obrolan di pojok kiri bawah membuka ruang obrolan umum tempat pendaki yang sudah masuk saling ngobrol (orang sungguhan, bukan AI). Perlu akun gratis.
 - Artikel penelitian: R. D. P. Wijaya & A. N. Rahman, "Mountain Hiking Route Recommendation System using Content-based Filtering with SBERT and Cosine Similarity", SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026), hlm. 1241-1256, DOI 10.32520/stmsi.v15i4.6087, terakreditasi SINTA 3. Situs saat ini punya lebih banyak jalur daripada di paper.
@@ -370,7 +375,7 @@ TXT;
     /** Route count, compact route list and page URLs; cached for 10 minutes per language. */
     private function liveFacts(bool $en): array
     {
-        return Cache::remember('assistant:facts:' . ($en ? 'en' : 'id'), 600, function () use ($en) {
+        return Cache::remember('assistant:facts:v2:' . ($en ? 'en' : 'id'), 600, function () use ($en) {
             $routes = HikingRoute::query()
                 ->select(['id', 'name', 'distance_km', 'elevation_gain_m', 'naismith_duration_hour', 'average_grade_pct', 'narrative_text'])
                 ->orderBy('name')
@@ -406,6 +411,7 @@ TXT;
                     'favorites'     => route('user.favorites'),
                     'history'       => route('user.history'),
                     'architecture'  => route('architecture'),
+                    'install'       => url('/install'),
                 ],
             ];
         });

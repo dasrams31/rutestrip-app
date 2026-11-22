@@ -51,6 +51,13 @@ Route::prefix('v1')->name('api.v1.')->middleware(\App\Http\Middleware\ApiLocale:
         });
         Route::post('/assistant', [\App\Http\Controllers\AssistantController::class, 'ask'])->name('assistant');
 
+        // Live position link ("Bagikan lokasi online"), see LiveShareController.
+        Route::post('/live', [\App\Http\Controllers\LiveShareController::class, 'start'])->middleware('throttle:10,1,api-v1-live-start')->name('live.start');
+        Route::post('/live/{token}/position', [\App\Http\Controllers\LiveShareController::class, 'position'])
+            ->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:30,1,api-v1-live-pos')->name('live.position');
+        Route::post('/live/{token}/stop', [\App\Http\Controllers\LiveShareController::class, 'stop'])
+            ->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:20,1,api-v1-live-stop')->name('live.stop');
+
         Route::post('/routes/{route}/reviews', [RouteExtrasApiController::class, 'storeReview'])
             ->middleware('throttle:10,1,api-v1-review')->name('routes.reviews.store');
 
