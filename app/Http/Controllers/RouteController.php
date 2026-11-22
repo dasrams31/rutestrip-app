@@ -480,7 +480,7 @@ class RouteController extends Controller
      * Store an uploaded GPX under a sanitised name, always with a .gpx
      * extension (never .xml, which browsers could render as XHTML).
      */
-    private function storeGpx(UploadedFile $file): string
+    public static function storeGpx(UploadedFile $file): string
     {
         $base = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'route';
 
@@ -491,7 +491,7 @@ class RouteController extends Controller
      * The file must be well-formed XML whose root element is <gpx>.
      * Network access is disabled while parsing.
      */
-    private function isValidGpx(?string $path): bool
+    public static function isValidGpx(?string $path): bool
     {
         if (! $path || ! is_file($path)) {
             return false;

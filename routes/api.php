@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\RouteApiController;
 use App\Http\Controllers\Api\V1\SearchApiController;
+use App\Http\Controllers\Api\V1\UploadApiController;
 use App\Http\Controllers\SsoApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +28,20 @@ Route::prefix('v1')->name('api.v1.')->middleware(\App\Http\Middleware\ApiLocale:
         ->middleware('throttle:20,1,api-v1-search')->name('search');
     Route::post('/routes/{route}/like', [RouteApiController::class, 'like'])
         ->middleware('throttle:30,1,api-v1-like')->name('routes.like');
+
+    // Signed-in only (SsoBearer turns the bearer token into $request->user()).
+    Route::middleware(\App\Http\Middleware\SsoBearer::class)->group(function () {
+        Route::post('/routes', [UploadApiController::class, 'store'])
+            ->middleware('throttle:10,1,api-v1-upload')->name('routes.store');
+
+        // Obrolan Pendaki and Asisten RuteStrip: the website's own controllers and limits.
+        Route::prefix('community')->name('community.')->controller(\App\Http\Controllers\CommunityChatController::class)->group(function () {
+            Route::get('/messages', 'index')->middleware('throttle:90,1,api-v1-cc-read')->name('index');
+            Route::get('/latest', 'latest')->middleware('throttle:30,1,api-v1-cc-latest')->name('latest');
+            Route::post('/messages', 'store')->name('store');
+            Route::delete('/messages/{message}', 'destroy')->whereNumber('message')->middleware('throttle:30,1,api-v1-cc-delete')->name('destroy');
+            Route::post('/messages/{message}/report', 'report')->whereNumber('message')->middleware('throttle:20,1,api-v1-cc-report')->name('report');
+        });
+        Route::post('/assistant', [\App\Http\Controllers\AssistantController::class, 'ask'])->name('assistant');
+    });
 });

@@ -42,3 +42,19 @@ tests in `tests/Feature/MobileApiTest.php`.
 | POST | `/search` | `{query: 3..500 chars, all_routes?: bool}`. Same ranking as the website: SBERT query embedding plus `RouteSearchService::rank` and `plan`. Returns up to 10 `results` (summary plus `similarity_score`, `match_label`, `why`), `plan` (`intents`, `sort`, `also`, `mountains`, `mountain_filter`, `region_labels`, `region_filter`, `all_routes`), `explanation` (`filter_line`, `sort_line`, `also_line`, `notice`, `can_search_all`, `search_all_label`) and `search_time_ms`. 503 when the model service is down. A signed-in search is saved to the user's history. |
 | POST | `/routes/{id}/like` | Token required. `{liked?: bool}` sets the state; without it the like is toggled. Returns `{liked, count}`. |
 | GET | `/likes` | Token required. The user's liked routes, newest like first. |
+
+## Signed-in endpoints
+
+These need `Authorization: Bearer <token>`; without a valid token they answer 401.
+`App\Http\Middleware\SsoBearer` signs the user in for the request, so the community
+chat and the assistant run through the website's own controllers and limits.
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/routes` | Multipart: `name`, `description?`, `gpx_file` (.gpx/.xml, max 10 MB), `clean_track?` (default on). Same checks, track cleaning and processing as the website upload; the user is recorded as uploader. Returns 201 with `data` (route summary) and `message`. 10/min. |
+| GET | `/community/messages` | Obrolan Pendaki, room `umum`: latest 30 (`?before=<id>` older, `?after=<id>` newer plus `deleted` ids). Each message: `id`, `name`, `mine`, `deleted`, `body`, `html`, `created_at`, `can_delete`, `can_report`, `reported`. |
+| GET | `/community/latest` | `{last_id}` of the newest message by someone else (unread badge). |
+| POST | `/community/messages` | `{body}` (max 500 characters). 201 with `message`. 6 per 30 s, 200 per day (429 with `message`). |
+| DELETE | `/community/messages/{id}` | Own message (admins: any). |
+| POST | `/community/messages/{id}/report` | Flag someone else's message for the admins. |
+| POST | `/assistant` | Asisten RuteStrip: `{message, history?: [{role: user|assistant, text}]}` returns `{reply}`; `fallback: true` when no model answered. 8/min, 60/day per IP. |
