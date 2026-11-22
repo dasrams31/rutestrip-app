@@ -257,7 +257,7 @@ class RouteConditionsService
      */
     public function weather(HikingRoute $route, array $points): ?array
     {
-        $key = 'route-weather:' . $route->id;
+        $key = 'route-weather:v2:' . $route->id; // v2: hourly forecast and daily cycle
 
         if ($cached = Cache::get($key)) {
             return $cached;
@@ -305,6 +305,14 @@ class RouteConditionsService
             $messages[] = 'Ada potensi badai petir. Tunda pendakian ke puncak dan jauhi area terbuka serta pohon tunggal.';
         } elseif ($this->isRain($codes) || ($summit['precipitation_mm'] ?? 0) > 0 || ($basecamp['precipitation_mm'] ?? 0) > 0) {
             $messages[] = 'Sedang hujan di jalur. Jalur bisa licin; bawa jas hujan dan lindungi perlengkapan dari air.';
+        }
+
+        foreach (array_slice($weather['forecast']['summit'] ?? [], 1, 4) as $slot) {
+            if (($slot['rain_probability'] ?? 0) >= 60) {
+                $messages[] = 'Peluang hujan di puncak ' . round((float) $slot['rain_probability']) . '% sekitar pukul ' . $slot['hour']
+                    . ($slot['day_offset'] ? ' besok' : '') . '. Rencanakan turun sebelum itu dan siapkan jas hujan.';
+                break;
+            }
         }
 
         if (array_intersect($codes, [45, 48])) {
@@ -522,9 +530,10 @@ class RouteConditionsService
             'latitude'        => $b['lat'] . ',' . $s['lat'],
             'longitude'       => $b['lng'] . ',' . $s['lng'],
             'current'         => 'temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day',
-            'daily'           => 'sunrise,sunset',
+            'hourly'          => 'temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,is_day',
+            'daily'           => 'sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,weather_code',
             'timezone'        => self::TIMEZONE,
-            'forecast_days'   => 1,
+            'forecast_days'   => self::FORECAST_DAYS,
             'wind_speed_unit' => 'kmh',
         ];
 
@@ -562,7 +571,86 @@ class RouteConditionsService
             'summit'        => $this->mapCurrent($data[1], $s['elevation_m']),
             'sunrise'       => $this->clock($data[0]['daily']['sunrise'][0] ?? null),
             'sunset'        => $this->clock($data[0]['daily']['sunset'][0] ?? null),
+            // Every FORECAST_STEP hours from the current hour, and one line per day.
+            'forecast'      => [
+                'step_hours' => self::FORECAST_STEP,
+                'basecamp'   => $this->mapHourly($data[0], $now),
+                'summit'     => $this->mapHourly($data[1], $now),
+            ],
+            'days'          => [
+                'basecamp' => $this->mapDaily($data[0]),
+                'summit'   => $this->mapDaily($data[1]),
+            ],
         ];
+    }
+
+    /** Hours ahead in the forecast strip and the gap between its slots. */
+    public const FORECAST_HOURS = 48;
+    public const FORECAST_STEP  = 3;
+    public const FORECAST_DAYS  = 3;
+
+    /**
+     * Hourly forecast from the current hour, one slot every FORECAST_STEP hours.
+     * Open-Meteo returns local times ("2026-11-22T14:00") in TIMEZONE.
+     */
+    private function mapHourly(array $data, Carbon $now): array
+    {
+        $h     = $data['hourly'] ?? [];
+        $times = is_array($h['time'] ?? null) ? $h['time'] : [];
+        $from  = $now->copy()->startOfHour()->format('Y-m-d\TH:00');
+        $start = array_search($from, $times, true);
+        if ($start === false) {
+            return [];
+        }
+
+        $num   = fn($k, $i) => isset($h[$k][$i]) && is_numeric($h[$k][$i]) ? round((float) $h[$k][$i], 1) : null;
+        $today = $now->format('Y-m-d');
+        $out   = [];
+        for ($i = $start, $end = min(count($times), $start + self::FORECAST_HOURS + 1); $i < $end; $i += self::FORECAST_STEP) {
+            $code  = isset($h['weather_code'][$i]) ? (int) $h['weather_code'][$i] : null;
+            $out[] = [
+                'time'               => $times[$i],
+                'hour'               => substr($times[$i], 11, 5),
+                'day_offset'         => (int) Carbon::parse($today, self::TIMEZONE)->diffInDays(Carbon::parse(substr($times[$i], 0, 10), self::TIMEZONE)),
+                'temperature_c'      => $num('temperature_2m', $i),
+                'rain_probability'   => $num('precipitation_probability', $i),
+                'precipitation_mm'   => $num('precipitation', $i),
+                'wind_speed_kmh'     => $num('wind_speed_10m', $i),
+                'wind_gusts_kmh'     => $num('wind_gusts_10m', $i),
+                'weather_code'       => $code,
+                'weather_text'       => $this->weatherText($code),
+                'is_day'             => isset($h['is_day'][$i]) ? (bool) $h['is_day'][$i] : null,
+            ];
+        }
+
+        return $out;
+    }
+
+    /** One line per forecast day: temperature range, chance of rain, wind, sunrise and sunset. */
+    private function mapDaily(array $data): array
+    {
+        $d     = $data['daily'] ?? [];
+        $dates = is_array($d['time'] ?? null) ? $d['time'] : [];
+        $num   = fn($k, $i) => isset($d[$k][$i]) && is_numeric($d[$k][$i]) ? round((float) $d[$k][$i], 1) : null;
+        $out   = [];
+        foreach ($dates as $i => $date) {
+            $code  = isset($d['weather_code'][$i]) ? (int) $d['weather_code'][$i] : null;
+            $out[] = [
+                'date'             => $date,
+                'day_offset'       => $i,
+                'temperature_max_c' => $num('temperature_2m_max', $i),
+                'temperature_min_c' => $num('temperature_2m_min', $i),
+                'rain_probability' => $num('precipitation_probability_max', $i),
+                'precipitation_mm' => $num('precipitation_sum', $i),
+                'wind_speed_kmh'   => $num('wind_speed_10m_max', $i),
+                'weather_code'     => $code,
+                'weather_text'     => $this->weatherText($code),
+                'sunrise'          => $this->clock($d['sunrise'][$i] ?? null),
+                'sunset'           => $this->clock($d['sunset'][$i] ?? null),
+            ];
+        }
+
+        return $out;
     }
 
     private function mapCurrent(array $data, ?int $elevation): array

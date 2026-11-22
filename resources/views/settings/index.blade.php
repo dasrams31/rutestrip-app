@@ -8,6 +8,7 @@
         ['id' => 'profile', 'label' => __('account.settings.profile'), 'icon' => 'user'],
         ['id' => 'password', 'label' => __('account.settings.password'), 'icon' => 'lock-closed'],
         ['id' => 'language', 'label' => __('account.settings.language'), 'icon' => 'translate'],
+        ['id' => 'pwa', 'label' => __('Versi web (PWA)'), 'icon' => 'device-mobile'],
     ];
 @endphp
 
@@ -134,7 +135,63 @@
                     <button type="submit" class="rs-btn w-full sm:w-auto mt-5">{{ __('account.settings.save_language') }}</button>
                 </form>
             </section>
+
+            {{-- Web app (PWA) install. The browser's beforeinstallprompt event is kept by the
+                 layout (window.__rsInstallEvent, "rs:installable"); this section offers it. --}}
+            <section id="pwa" class="rs-card p-5 sm:p-7 scroll-mt-24" aria-labelledby="pwa-heading" data-pwa>
+                <h2 id="pwa-heading" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ __('Pasang versi web (PWA)') }}</h2>
+                <p class="mt-2 rs-muted">{{ __('Versi web bisa dipasang ke layar utama HP atau komputer tanpa berkas APK. Isinya sama dengan situs ini dan tetap butuh internet.') }}</p>
+
+                <div class="mt-5" aria-live="polite">
+                    <button type="button" data-pwa-install hidden class="rs-btn-ghost w-full sm:w-auto">
+                        <x-icon name="device-mobile" class="w-5 h-5 shrink-0" /><span>{{ __('Pasang versi web') }}</span>
+                    </button>
+                    <p data-pwa-state="none" class="text-[0.9375rem]">{{ __('Browser ini belum menawarkan pemasangan. Buka halaman ini di Chrome atau Edge, atau pakai menu browser lalu pilih Tambahkan ke layar utama.') }}</p>
+                    <p data-pwa-state="ios" hidden class="text-[0.9375rem]">{{ __('Di iPhone atau iPad: ketuk Bagikan lalu Tambah ke Layar Utama.') }}</p>
+                    <p data-pwa-state="installed" hidden class="text-[0.9375rem]">{{ __('Versi web sudah terpasang di perangkat ini.') }}</p>
+                    <p data-pwa-state="done" hidden class="text-[0.9375rem]">{{ __('Terpasang. Buka RuteStrip dari layar utama.') }}</p>
+                </div>
+
+                <p class="mt-5 pt-4 border-t rs-rule text-sm rs-muted">
+                    {{ __('Pakai HP Android? Aplikasi Android bisa merekam jejak GPS dan menyimpan jalur untuk dibuka tanpa sinyal.') }}
+                    <a href="{{ route('app.download') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] underline underline-offset-4">{{ __('Unduh aplikasi Android') }}</a>
+                </p>
+            </section>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    (function () {
+        var box = document.querySelector('[data-pwa]');
+        if (!box) return;
+        var btn = box.querySelector('[data-pwa-install]');
+        var state = function (name) {
+            box.querySelectorAll('[data-pwa-state]').forEach(function (p) { p.hidden = p.dataset.pwaState !== name; });
+            btn.hidden = name !== 'prompt';
+        };
+        var ua = navigator.userAgent;
+        var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+        var refresh = function () {
+            if (standalone) return state('installed');
+            if (window.__rsInstallEvent) return state('prompt');
+            state(ios ? 'ios' : 'none');
+        };
+        refresh();
+        window.addEventListener('rs:installable', refresh);
+        window.addEventListener('appinstalled', function () { window.__rsInstallEvent = null; state('done'); });
+
+        btn.addEventListener('click', function () {
+            var e = window.__rsInstallEvent;
+            if (!e) return refresh();
+            window.__rsInstallEvent = null; // a prompt event can be used once
+            Promise.resolve(e.prompt()).then(function () { return e.userChoice; }).then(function (choice) {
+                if (choice && choice.outcome === 'accepted') state('done'); else refresh();
+            }).catch(refresh);
+        });
+    })();
+</script>
+@endpush
 @endsection

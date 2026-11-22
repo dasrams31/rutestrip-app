@@ -16,6 +16,13 @@ use Illuminate\Support\Facades\Route;
 // Home - search page (served directly so the homepage itself is indexable)
 Route::get('/', [SearchController::class, 'index'])->name('home');
 
+// Android app (APK from storage/app/downloads, see AppDownloadController).
+// The throttle prefix keeps this counter apart from other "throttle:20,1" routes.
+Route::middleware('throttle:20,1,app-download')->group(function () {
+    Route::get('/install', [\App\Http\Controllers\AppDownloadController::class, 'arm64'])->name('app.download');
+    Route::get('/install/lama', [\App\Http\Controllers\AppDownloadController::class, 'legacy'])->name('app.download.legacy');
+});
+
 // Search engines
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');

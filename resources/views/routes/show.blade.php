@@ -242,6 +242,40 @@
                         <span x-text="weather ? @js(__('Matahari terbit')) + ' ' + weather.sunrise + ', ' + @js(__('terbenam')) + ' ' + weather.sunset + ' WIB' : ''"></span>
                     </p>
 
+                    {{-- Forecast every 3 hours for 48 hours, and the daily cycle (Open-Meteo hourly/daily). --}}
+                    <div x-show="weather && weather.forecast && (weather.forecast.summit || []).length" x-cloak x-data="{ fside: 'summit' }" class="space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="rs-display uppercase text-xl text-rs-z9 leading-none">{{ __('Prakiraan') }}</h3>
+                            <div class="inline-flex rounded-lg border border-rs-line bg-white p-0.5 text-sm" role="group" aria-label="{{ __('Lokasi prakiraan') }}">
+                                <button type="button" class="px-3 min-h-[36px] rounded-md font-semibold" :class="fside === 'basecamp' ? 'bg-rs-z9 text-white' : 'text-rs-z9'" :aria-pressed="fside === 'basecamp'" @click="fside = 'basecamp'">{{ __('Basecamp') }}</button>
+                                <button type="button" class="px-3 min-h-[36px] rounded-md font-semibold" :class="fside === 'summit' ? 'bg-rs-z9 text-white' : 'text-rs-z9'" :aria-pressed="fside === 'summit'" @click="fside = 'summit'">{{ __('Puncak') }}</button>
+                            </div>
+                        </div>
+                        <ol class="flex gap-2 overflow-x-auto pb-2 snap-x" aria-label="{{ __('Prakiraan tiap 3 jam') }}">
+                            <template x-for="(slot, i) in (weather && weather.forecast ? weather.forecast[fside] || [] : [])" :key="fside + slot.time">
+                                <li class="snap-start shrink-0 w-[4.6rem] rounded-lg border p-2 text-center"
+                                    :class="(slot.rain_probability || 0) >= 50 ? 'bg-blue-50 border-blue-200' : 'bg-rs-paper border-rs-line'">
+                                    <p class="text-xs font-bold" :class="i > 0 && slot.day_offset !== weather.forecast[fside][i - 1].day_offset ? 'text-rs-z7' : 'text-rs-muted'"
+                                       x-text="i === 0 ? @js(__('Kini')) : (i > 0 && slot.day_offset !== weather.forecast[fside][i - 1].day_offset ? [@js(__('Hari ini')), @js(__('Besok')), @js(__('Lusa'))][slot.day_offset] + ' ' + slot.hour : slot.hour)"></p>
+                                    <p class="rs-display rs-num text-2xl text-rs-z9 leading-none mt-1" x-text="num(slot.temperature_c, 0) + '°'"></p>
+                                    <p class="text-[0.7rem] text-rs-ink leading-tight mt-1 min-h-[2em]" x-text="slot.weather_text"></p>
+                                    <p class="text-xs font-bold mt-1" :class="(slot.rain_probability || 0) >= 50 ? 'text-blue-700' : 'text-rs-muted'" x-text="@js(__('Hujan')) + ' ' + num(slot.rain_probability, 0) + '%'"></p>
+                                    <p class="text-[0.7rem] text-rs-muted" x-text="num(slot.wind_speed_kmh, 0) + ' ' + @js(__('km/jam'))"></p>
+                                </li>
+                            </template>
+                        </ol>
+                        <ul class="divide-y divide-rs-line text-sm">
+                            <template x-for="day in (weather && weather.days ? weather.days[fside] || [] : [])" :key="fside + day.date">
+                                <li class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2">
+                                    <span class="font-bold text-rs-ink w-20" x-text="[@js(__('Hari ini')), @js(__('Besok')), @js(__('Lusa'))][day.day_offset] || day.date"></span>
+                                    <span class="flex-1 min-w-[10rem] text-rs-ink" x-text="day.weather_text + ' · ' + @js(__('hujan')) + ' ' + num(day.rain_probability, 0) + '% · ' + @js(__('angin')) + ' ' + num(day.wind_speed_kmh, 0) + ' ' + @js(__('km/jam'))"></span>
+                                    <span class="font-bold text-rs-z9 rs-num" x-text="num(day.temperature_min_c, 0) + '° / ' + num(day.temperature_max_c, 0) + '°'"></span>
+                                </li>
+                            </template>
+                        </ul>
+                        <p class="text-xs text-rs-muted">{{ __('Tiap 3 jam: suhu, peluang hujan, dan angin. Kotak biru: peluang hujan 50% atau lebih.') }}</p>
+                    </div>
+
                     <div x-show="safety" x-cloak class="rounded-lg border border-l-4 p-4 text-sm"
                          :class="safety && safety.level === 'caution' ? 'bg-amber-50 border-amber-300 border-l-amber-600 text-amber-950' : 'bg-[#ecfdf5] border-[#a7f3d0] border-l-rs-z7 text-rs-z9'">
                         <p class="font-bold flex items-center gap-2 mb-1">

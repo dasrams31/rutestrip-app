@@ -257,4 +257,62 @@ class RouteConditionsTest extends TestCase
             ->assertSee('action="' . route('routes.review.store', $route) . '"', false)
             ->assertDontSee('Masuk atau daftar dulu untuk memberi ulasan');
     }
+
+    public function test_forecast_gives_three_hour_slots_and_a_daily_cycle(): void
+    {
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-21 08:20', 'Asia/Jakarta'));
+        $times = [];
+        for ($d = 0; $d < 3; $d++) {
+            for ($h = 0; $h < 24; $h++) {
+                $times[] = sprintf('2026-11-%02dT%02d:00', 21 + $d, $h);
+            }
+        }
+        $n = count($times);
+        $hourly = fn(float $temp) => [
+            'time'                      => $times,
+            'temperature_2m'            => array_fill(0, $n, $temp),
+            // Rain likely from 14:00 today at the summit.
+            'precipitation_probability' => array_map(fn($t) => $t >= '2026-11-21T14:00' && $t <= '2026-11-21T17:00' ? 80 : 10, $times),
+            'precipitation'             => array_fill(0, $n, 0.0),
+            'weather_code'              => array_fill(0, $n, 3),
+            'wind_speed_10m'            => array_fill(0, $n, 12.0),
+            'wind_gusts_10m'            => array_fill(0, $n, 20.0),
+            'is_day'                    => array_map(fn($t) => (int) (substr($t, 11, 2) >= '06' && substr($t, 11, 2) < '18'), $times),
+        ];
+        $daily = [
+            'time' => ['2026-11-21', '2026-11-22', '2026-11-23'],
+            'sunrise' => ['2026-11-21T05:12', '2026-11-22T05:12', '2026-11-23T05:12'],
+            'sunset' => ['2026-11-21T17:41', '2026-11-22T17:41', '2026-11-23T17:42'],
+            'temperature_2m_max' => [18, 19, 17], 'temperature_2m_min' => [9, 10, 8],
+            'precipitation_probability_max' => [80, 40, 65], 'precipitation_sum' => [6.2, 0.4, 3.1],
+            'wind_speed_10m_max' => [20, 15, 25], 'weather_code' => [61, 3, 80],
+        ];
+        $calm = ['temperature_2m' => 15, 'apparent_temperature' => 15, 'relative_humidity_2m' => 70, 'precipitation' => 0, 'weather_code' => 2, 'wind_speed_10m' => 5, 'wind_direction_10m' => 90, 'wind_gusts_10m' => 8];
+        Http::fake([
+            'api.open-meteo.com/v1/elevation*' => Http::response(['elevation' => [1820.0, 2500.0, 3123.0, 3050.0]]),
+            'api.open-meteo.com/v1/forecast*'  => Http::response([
+                ['current' => $calm + ['time' => '2026-11-21T08:15'], 'hourly' => $hourly(16.0), 'daily' => $daily],
+                ['current' => $calm + ['time' => '2026-11-21T08:15'], 'hourly' => $hourly(7.0), 'daily' => $daily],
+            ]),
+            'nominatim.openstreetmap.org/*' => Http::response([]),
+        ]);
+
+        $r = $this->getJson(route('routes.conditions', $this->route()))->assertOk();
+
+        $r->assertJsonPath('weather.forecast.step_hours', 3)
+            ->assertJsonPath('weather.forecast.summit.0.hour', '08:00')
+            ->assertJsonPath('weather.forecast.summit.1.hour', '11:00')
+            ->assertJsonPath('weather.forecast.summit.2.rain_probability', 80) // 14:00
+            ->assertJsonPath('weather.forecast.summit.0.temperature_c', 7)
+            ->assertJsonPath('weather.forecast.basecamp.0.temperature_c', 16)
+            ->assertJsonPath('weather.forecast.summit.6.day_offset', 1)        // 02:00 tomorrow
+            ->assertJsonPath('weather.forecast.summit.6.is_day', false)
+            ->assertJsonCount(17, 'weather.forecast.summit')                   // 48 h every 3 h, both ends
+            ->assertJsonCount(3, 'weather.days.summit')
+            ->assertJsonPath('weather.days.summit.2.rain_probability', 65)
+            ->assertJsonPath('weather.days.summit.0.weather_text', 'Hujan ringan')
+            ->assertJsonPath('weather.days.basecamp.1.sunset', '17:41');
+        $this->assertStringContainsString('Peluang hujan di puncak 80% sekitar pukul 14:00', implode(' ', $r->json('safety.messages')));
+        Http::assertSent(fn(Request $q) => str_contains($q->url(), '/v1/forecast') && $q['forecast_days'] === 3 && str_contains($q['hourly'], 'precipitation_probability'));
+    }
 }

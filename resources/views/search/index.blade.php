@@ -107,6 +107,7 @@
     );
     $chatRings = $rings(80, 760, 12, 30, 40, 43);
     $uploadRings = $rings(1180, 330, 11, 18, 32, 57);
+    $appRings = $rings(1150, 420, 12, 20, 30, 97);
     $cardRings = $rings(250, 40, 9, 14, 22, 71, 0.8, 1);
     $dividerTop = $band(1440, 22, 5, 15, 83);
 
@@ -165,6 +166,15 @@
     .rs-more > summary { list-style: none; cursor: pointer; }
     .rs-more > summary::-webkit-details-marker { display: none; }
     .rs-more[open] .rs-more-icon { transform: rotate(180deg); }
+
+    /* Android app: a plain phone frame around the real Rekam screenshot. The strip above the
+       screenshot takes the colour of the app header, so the cropped status bar is not missed. */
+    .rs-phone { width: min(14.5rem, 68vw); border-radius: 2.25rem; background: #14231d; padding: .5rem; box-shadow: 0 28px 50px -28px rgba(5, 59, 48, .6); }
+    @media (min-width: 640px) { .rs-phone { width: 16rem; } }
+    @media (min-width: 1024px) { .rs-phone { width: 18rem; } }
+    .rs-phone-screen { position: relative; overflow: hidden; border-radius: 1.8rem; background: #053b30; padding-top: 1.4rem; }
+    .rs-phone-screen::before { content: ""; position: absolute; top: .45rem; left: 50%; width: .55rem; height: .55rem; margin-left: -.275rem; border-radius: 50%; background: #0b1512; }
+    .rs-phone img { display: block; width: 100%; height: auto; }
 
     /* The landing runs straight into the footer (no strip of body background between them). */
     main:has(> .rs-landing:last-child) + footer { margin-top: 0; }
@@ -533,6 +543,59 @@
                 </div>
                 <figcaption class="mt-3 text-sm text-[#c7d9d0]">{{ __('Contoh percakapan. Jawaban sebenarnya memakai cuaca saat kamu bertanya.') }}</figcaption>
             </figure>
+        </div>
+    </section>
+
+    {{-- ================= ANDROID APP (APK from /install, see AppDownloadController) ================= --}}
+    <section id="aplikasi" class="relative overflow-hidden bg-white scroll-mt-20" aria-labelledby="app-title">
+        <svg class="absolute inset-0 w-full h-full pointer-events-none text-rs-z7" viewBox="0 0 1440 800" preserveAspectRatio="xMaxYMid slice" data-reveal="view" aria-hidden="true" focusable="false">
+            <g fill="none" stroke="currentColor" stroke-linejoin="round">
+                @foreach($appRings as $ring)
+                <path class="rs-draw" pathLength="100" style="--i: {{ $loop->index }}" d="{{ $ring['d'] }}" stroke-width="{{ $ring['index'] ? 2 : 1.2 }}" stroke-opacity="{{ $ring['index'] ? .22 : .12 }}"/>
+                @endforeach
+            </g>
+        </svg>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 grid lg:grid-cols-12 gap-x-14 gap-y-10 items-start">
+            <div class="lg:col-span-7 min-w-0">
+                <p class="text-sm sm:text-base font-semibold text-rs-z7">{{ __('Aplikasi Android') }}</p>
+                <h2 id="app-title" class="rs-display mt-2 uppercase text-[clamp(2.25rem,8vw,4rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Bawa RuteStrip ke jalur, juga saat sinyal hilang.') }}</h2>
+                <p class="mt-4 max-w-xl text-lg text-rs-ink leading-relaxed">
+                    {{ __('Rekam jejak GPS pendakianmu di HP. Kunci layar dan simpan HP di saku, rekamannya tetap berjalan.') }}
+                </p>
+
+                <div class="mt-7 flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-x-5 gap-y-2">
+                    <a href="{{ route('app.download') }}" class="rs-sign inline-flex items-center justify-center gap-2 min-h-[52px] rounded-lg px-6 text-base font-bold transition-colors">
+                        <x-icon name="download" class="w-5 h-5 shrink-0" />
+                        <span>{{ __('Unduh aplikasi Android') }}</span>
+                    </a>
+                    <a href="{{ route('app.download.legacy') }}" class="self-center min-[420px]:self-auto inline-flex items-center min-h-[44px] px-1 text-sm font-semibold text-rs-z7 underline decoration-rs-z7/40 underline-offset-4 hover:decoration-rs-z7">{{ __('HP lama (32-bit)') }}</a>
+                </div>
+                <p class="mt-2 max-w-md text-sm text-rs-muted leading-relaxed">{{ __('Berkas APK yang dipasang di luar Play Store, jadi Android akan meminta izin memasang aplikasi dari browsermu.') }}</p>
+            </div>
+
+            <figure class="lg:col-span-5 lg:row-span-2 lg:col-start-8 lg:row-start-1 min-w-0 flex flex-col items-center">
+                <div class="rs-phone lg:rotate-1">
+                    <div class="rs-phone-screen">
+                        <img src="/images/app/rekam-jalur.webp" width="540" height="1129" loading="lazy" decoding="async"
+                             alt="{{ __('Layar Rekam Jalur di aplikasi RuteStrip: peta dengan posisi pendaki, lalu waktu, jarak, total naik, dan tombol Jeda dan Selesai.') }}">
+                    </div>
+                </div>
+                <figcaption class="mt-4 text-sm text-rs-muted text-center max-w-[18rem]">{{ __('Layar Rekam saat pendakian berjalan.') }}</figcaption>
+            </figure>
+
+            <ul class="lg:col-span-7 lg:col-start-1 min-w-0 grid sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-x-8 gap-y-5 max-w-3xl">
+                @foreach([
+                    ['users', __('Rombongan tanpa sinyal'), __('Obrolan, posisi anggota, dan SOS dikirim langsung antar-HP dalam rombongan, tanpa sinyal seluler.')],
+                    ['search', __('Cari jalur'), __('Tulis jalur yang kamu cari dengan kalimat sehari-hari, sama seperti di situs ini.')],
+                    ['map', __('Jalur tersimpan offline'), __('Simpan jalur sebelum berangkat, lalu buka lagi tanpa internet.')],
+                ] as [$icon, $term, $desc])
+                <li class="border-t-2 border-rs-z9/15 pt-3">
+                    <p class="flex items-center gap-2 font-semibold text-rs-ink"><x-icon :name="$icon" class="w-5 h-5 shrink-0 text-rs-z7" />{{ $term }}</p>
+                    <p class="mt-1 text-sm text-rs-muted leading-relaxed">{{ $desc }}</p>
+                </li>
+                @endforeach
+            </ul>
         </div>
     </section>
 

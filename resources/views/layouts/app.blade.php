@@ -89,8 +89,8 @@
     <meta name="apple-mobile-web-app-title" content="RuteStrip">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script>
-        // Install prompt (Chrome/Edge on Android and desktop): keep the event for our own
-        // small banner at the bottom (see #rs-install), which is shown later and only once in a while.
+        // Web app install prompt (Chrome/Edge): keep the event so "Pasang versi web (PWA)" on the
+        // settings page can offer it. The bottom banner (#rs-install) points to the Android app instead.
         window.addEventListener('beforeinstallprompt', function (e) {
             e.preventDefault();
             window.__rsInstallEvent = e;
@@ -239,6 +239,14 @@
                     </a>
                     @endforeach
 
+                    {{-- Android app (APK download, AppDownloadController): a plain link, not the yellow main action. --}}
+                    {{-- Between lg and xl the row has no room for the label: icon with a tooltip and an accessible name. --}}
+                    <a href="{{ route('app.download') }}" data-nav-app aria-label="{{ __('Unduh aplikasi Android') }}" title="{{ __('Unduh aplikasi Android') }}"
+                       class="px-3 xl:px-3.5 min-w-[44px] h-11 rounded-lg text-[15px] font-semibold transition-colors inline-flex items-center justify-center gap-2 text-rs-muted hover:text-rs-z9 hover:bg-rs-paper">
+                        <x-icon name="download" class="w-5 h-5 xl:w-4 xl:h-4" />
+                        <span class="hidden xl:inline">{{ __('Unduh aplikasi') }}</span>
+                    </a>
+
                     <!-- Upload Dropdown -->
                     <div class="relative ml-2" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
@@ -337,6 +345,11 @@
                     {{ $link['label'] }}
                 </a>
                 @endforeach
+                <a href="{{ route('app.download') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold text-rs-ink hover:bg-rs-paper">
+                    <x-icon name="download" class="w-5 h-5 text-rs-muted" />
+                    {{ __('Unduh aplikasi') }}
+                    <span class="ml-auto text-sm font-medium text-rs-muted">Android</span>
+                </a>
 
                 <p class="px-3 pt-3 pb-1 text-sm font-semibold text-rs-muted">{{ __('Upload GPX') }}</p>
                 <div class="grid grid-cols-2 gap-2">
@@ -541,7 +554,8 @@
     {{-- Bottom banners: at most one at a time (cookie notice first, install prompt on a later page).
          While one is open, --rs-banner-h holds the space it takes so floating buttons can move above it. --}}
     @php
-        $installBlocked = request()->routeIs('login', 'register', 'admin.login', 'routes.create', 'routes.batch', 'routes.versions.create');
+        // The landing has its own Android app section, so the card stays away there.
+        $installBlocked = request()->routeIs('home', 'search.index', 'login', 'register', 'admin.login', 'routes.create', 'routes.batch', 'routes.versions.create', 'app.download*');
     @endphp
     <div id="rs-banner-dock" class="rs-dock" data-no-install="{{ $installBlocked ? '1' : '0' }}">
         <section id="rs-cookie" hidden aria-label="{{ __('Pemberitahuan cookie') }}"
@@ -553,18 +567,18 @@
             <button type="button" data-cookie-ok class="rs-sign shrink-0 min-h-[44px] rounded-lg px-4 text-sm font-bold">{{ __('Mengerti') }}</button>
         </section>
 
-        <section id="rs-install" hidden aria-label="{{ __('Pasang aplikasi RuteStrip') }}"
+        {{-- Android app card (APK via /install). The web app (PWA) install now lives in Pengaturan. --}}
+        <section id="rs-install" hidden aria-label="{{ __('Aplikasi Android RuteStrip') }}"
                  class="rounded-xl border-2 border-rs-z9 bg-white p-3 sm:px-5 sm:py-3 shadow-lg flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
             <div class="flex items-center gap-3 flex-1 min-w-0">
                 <img src="/images/icons/icon-192.png" alt="" width="44" height="44" class="w-10 h-10 rounded-lg shrink-0">
                 <div class="min-w-0">
-                    <p class="font-semibold text-rs-ink">{{ __('Pasang RuteStrip di HP') }}</p>
-                    <p class="text-sm text-rs-muted leading-snug" data-install-text>{{ __('Buka jalur dari layar utama, tanpa mengetik alamat.') }}</p>
-                    <p class="text-sm text-rs-muted leading-snug" data-ios-text hidden>{{ __('Ketuk Bagikan lalu Tambah ke Layar Utama.') }}</p>
+                    <p class="font-semibold text-rs-ink">{{ __('Aplikasi Android RuteStrip') }}</p>
+                    <p class="text-sm text-rs-muted leading-snug">{{ __('Rekam jejak GPS dan buka jalur tersimpan, juga saat tanpa sinyal.') }}</p>
                 </div>
             </div>
             <div class="flex gap-2 shrink-0">
-                <button type="button" data-install-yes class="rs-sign flex-1 sm:flex-none min-h-[44px] rounded-lg px-5 text-sm font-bold">{{ __('Pasang') }}</button>
+                <a href="{{ route('app.download') }}" data-install-yes class="rs-sign flex-[2] sm:flex-none inline-flex items-center justify-center min-h-[44px] rounded-lg px-4 sm:px-5 text-sm font-bold whitespace-nowrap">{{ __('Download aplikasi') }}</a>
                 <button type="button" data-install-no class="flex-1 sm:flex-none min-h-[44px] rounded-lg px-4 text-sm font-semibold text-rs-z9 border border-rs-line hover:bg-rs-paper">{{ __('Nanti') }}</button>
             </div>
         </section>
@@ -604,16 +618,17 @@
             });
         })();
 
-        // Bottom banners. Cookie notice until "Mengerti" (rs_cookie_ok, 1 year). Install prompt:
-        // never in the installed app, never on login/upload pages, not in the first 5 seconds,
-        // not on the same page view as the cookie notice, and 14 days of quiet after "Nanti".
+        // Bottom banners. Cookie notice until "Mengerti" (rs_cookie_ok, 1 year). Android app card:
+        // Android browsers only (the download is an APK), never in the installed web app, never on
+        // login/upload pages, not in the first 5 seconds, not on the same page view as the cookie
+        // notice, and 14 days of quiet after "Nanti" or after the download link is pressed.
         (function () {
             var root = document.documentElement;
             var dock = document.getElementById('rs-banner-dock');
             if (!dock) return;
             var cookieBox = document.getElementById('rs-cookie');
             var installBox = document.getElementById('rs-install');
-            var DAY = 864e5, QUIET = 'rs_install_dismissed', IOS_SEEN = 'rs_install_ios_hint';
+            var DAY = 864e5, QUIET = 'rs_install_dismissed';
             var store = {
                 get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
                 set: function (k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
@@ -642,44 +657,16 @@
 
             var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
             var quietUntil = (+store.get(QUIET) || 0) + 14 * DAY;
-            if (cookieOpen || standalone || dock.dataset.noInstall === '1' || Date.now() < quietUntil) return;
+            var android = /Android/i.test(navigator.userAgent);
+            if (cookieOpen || standalone || !android || dock.dataset.noInstall === '1' || Date.now() < quietUntil) return;
 
-            var ua = navigator.userAgent;
-            var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            var iosSafari = ios && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
-            var mode = null, waited = false;
-            var maybeShow = function () {
-                if (!waited || !installBox.hidden || !cookieBox.hidden) return;
-                if (window.__rsInstallEvent) {
-                    mode = 'prompt';
-                } else if (iosSafari && !store.get(IOS_SEEN)) {
-                    mode = 'ios';
-                    store.set(IOS_SEEN, Date.now());
-                    installBox.querySelector('[data-install-text]').hidden = true;
-                    installBox.querySelector('[data-ios-text]').hidden = false;
-                    installBox.querySelector('[data-install-yes]').hidden = true;
-                } else {
-                    return;
-                }
-                show(installBox);
-            };
-            setTimeout(function () { waited = true; maybeShow(); }, 5000);
-            window.addEventListener('rs:installable', maybeShow);
-
+            setTimeout(function () { if (cookieBox.hidden) show(installBox); }, 5000);
+            // The link itself starts the download; the card just steps aside for 14 days.
             installBox.querySelector('[data-install-yes]').addEventListener('click', function () {
-                var e = window.__rsInstallEvent;
-                hide(installBox);
-                if (!e) return;
-                window.__rsInstallEvent = null;
-                Promise.resolve(e.prompt()).then(function () { return e.userChoice; }).then(function (choice) {
-                    if (!choice || choice.outcome !== 'accepted') store.set(QUIET, Date.now());
-                }).catch(function () {});
-            });
-            installBox.querySelector('[data-install-no]').addEventListener('click', function () {
                 store.set(QUIET, Date.now());
                 hide(installBox);
             });
-            window.addEventListener('appinstalled', function () {
+            installBox.querySelector('[data-install-no]').addEventListener('click', function () {
                 store.set(QUIET, Date.now());
                 hide(installBox);
             });
