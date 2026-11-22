@@ -23,6 +23,11 @@ class SsoApiController extends Controller
 
     private const REGISTER_PER_MINUTE = 5;
 
+    /** Failed sign-ins per account (any IP) before that account is paused for a while. */
+    private const FAILS_PER_ACCOUNT = 10;
+
+    private const FAIL_WINDOW_SECONDS = 900;
+
     public function __construct(private SsoService $sso, private ActivityLogger $activity)
     {
     }
@@ -44,8 +49,17 @@ class SsoApiController extends Controller
             return $this->validationError($validator->errors()->toArray());
         }
 
+        // Per-account cap on wrong passwords, so guessing from many IPs does not get far.
+        $failKey = 'sso-api:login-fail:' . sha1(mb_strtolower(trim((string) $request->input('email'))));
+        if (RateLimiter::tooManyAttempts($failKey, self::FAILS_PER_ACCOUNT)) {
+            $seconds = RateLimiter::availableIn($failKey);
+
+            return $this->error(__('account.api.throttled', ['seconds' => $seconds]), 429)->header('Retry-After', (string) $seconds);
+        }
+
         $user = User::where('email', $request->input('email'))->first();
         if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) {
+            RateLimiter::hit($failKey, self::FAIL_WINDOW_SECONDS);
             // Same entry as a failed web sign-in: the email tried, never the password.
             $this->activity->log('auth.failed', $user ?? false, null, [
                 'email' => mb_strtolower(mb_substr(trim((string) $request->input('email')), 0, 255)),
@@ -54,6 +68,8 @@ class SsoApiController extends Controller
 
             return $this->error(__('account.api.invalid_credentials'), 401);
         }
+
+        RateLimiter::clear($failKey);
 
         // No session guard here, so the Login event does not fire: record the sign-in directly.
         $this->activity->recordLogin($user, 'chat');

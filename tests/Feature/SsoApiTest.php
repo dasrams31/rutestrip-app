@@ -116,21 +116,22 @@ class SsoApiTest extends TestCase
     {
         $trusted = fn (string $ip) => ['X-RuteStrip-Internal' => 'test-internal-secret', 'X-RuteStrip-Client-IP' => $ip];
 
+        // A different email per try, so only the per-IP limit is in play (accounts have their own limit).
         for ($i = 0; $i < 10; $i++) {
-            $this->postJson('/api/sso/login', ['email' => 'x@example.com', 'password' => 'salah'], $trusted('203.0.113.7'))->assertStatus(401);
+            $this->postJson('/api/sso/login', ['email' => "x$i@example.com", 'password' => 'salah'], $trusted('203.0.113.7'))->assertStatus(401);
         }
-        $this->postJson('/api/sso/login', ['email' => 'x@example.com', 'password' => 'salah'], $trusted('203.0.113.7'))->assertStatus(429);
+        $this->postJson('/api/sso/login', ['email' => 'x10@example.com', 'password' => 'salah'], $trusted('203.0.113.7'))->assertStatus(429);
 
         // Another visitor behind the same chat server is not affected.
-        $this->postJson('/api/sso/login', ['email' => 'x@example.com', 'password' => 'salah'], $trusted('203.0.113.8'))->assertStatus(401);
+        $this->postJson('/api/sso/login', ['email' => 'y@example.com', 'password' => 'salah'], $trusted('203.0.113.8'))->assertStatus(401);
 
         // Without (or with a wrong) secret the header is ignored: the bucket is the real IP.
         for ($i = 0; $i < 10; $i++) {
-            $this->postJson('/api/sso/login', ['email' => 'x@example.com', 'password' => 'salah'], [
+            $this->postJson('/api/sso/login', ['email' => "z$i@example.com", 'password' => 'salah'], [
                 'X-RuteStrip-Internal' => 'wrong', 'X-RuteStrip-Client-IP' => '198.51.100.' . $i,
             ])->assertStatus(401);
         }
-        $this->postJson('/api/sso/login', ['email' => 'x@example.com', 'password' => 'salah'], [
+        $this->postJson('/api/sso/login', ['email' => 'z99@example.com', 'password' => 'salah'], [
             'X-RuteStrip-Client-IP' => '198.51.100.99',
         ])->assertStatus(429);
     }

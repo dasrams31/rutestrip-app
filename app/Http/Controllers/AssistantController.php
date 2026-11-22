@@ -37,6 +37,11 @@ class AssistantController extends Controller
         $en  = app()->getLocale() === 'en';
         $ip  = (string) $request->ip();
         $keys = ['assistant:min:' . $ip => [self::PER_MINUTE, 60], 'assistant:day:' . $ip => [self::PER_DAY, 86400]];
+        // Signed-in callers (the app) also get the same limits per account, so a changing
+        // IP (mobile networks) does not reset them and a shared IP is not the only cap.
+        if ($user = $request->user()) {
+            $keys += ['assistant:user-min:' . $user->id => [self::PER_MINUTE, 60], 'assistant:user-day:' . $user->id => [self::PER_DAY, 86400]];
+        }
 
         foreach ($keys as $key => [$max]) {
             if (RateLimiter::tooManyAttempts($key, $max)) {

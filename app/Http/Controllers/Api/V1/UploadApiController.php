@@ -29,8 +29,17 @@ class UploadApiController extends Controller
     ) {
     }
 
+    /** Uploads per account per day: each one is processed by the Python service and published at once. */
+    public const PER_DAY = 30;
+
     public function store(Request $request): JsonResponse
     {
+        $dayKey = 'api-upload-day:' . $request->user()->id;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($dayKey, self::PER_DAY)) {
+            return response()->json(['error' => __('Batas unggah hari ini sudah tercapai. Coba lagi besok.')], 429)
+                ->header('Retry-After', (string) \Illuminate\Support\Facades\RateLimiter::availableIn($dayKey));
+        }
+
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
@@ -46,6 +55,7 @@ class UploadApiController extends Controller
             return $this->invalid(__('Isi file bukan GPX yang valid.'));
         }
 
+        \Illuminate\Support\Facades\RateLimiter::hit($dayKey, 86400);
         $path     = RouteController::storeGpx($file);
         $fullPath = Storage::disk('public')->path($path);
         $userId   = $request->user()->id;
