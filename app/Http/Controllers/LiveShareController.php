@@ -30,10 +30,14 @@ class LiveShareController extends Controller
         ]);
         $user = $request->user();
 
+        // Positions of ended links (anyone's) are forgotten; old rows go after a day.
+        LiveShare::forgetEnded();
+        (new LiveShare)->pruneAll();
+
         // Older links of this account beyond the limit are ended, newest kept.
         $active = LiveShare::active()->where('user_id', $user->id)->orderByDesc('id')->get();
         foreach ($active->slice(self::MAX_ACTIVE - 1) as $old) {
-            $old->forceFill(['stopped_at' => now()])->save();
+            $old->end();
         }
 
         $share = LiveShare::create([
@@ -54,6 +58,7 @@ class LiveShareController extends Controller
     {
         $share = $this->own($request, $token);
         if (! $share->isActive()) {
+            $share->end(); // expired: make sure no position stays behind
             return response()->json(['error' => __('Tautan lokasi ini sudah berakhir.'), 'ended' => true], 410);
         }
 
@@ -79,10 +84,7 @@ class LiveShareController extends Controller
 
     public function stop(Request $request, string $token): JsonResponse
     {
-        $share = $this->own($request, $token);
-        if ($share->stopped_at === null) {
-            $share->forceFill(['stopped_at' => now()])->save();
-        }
+        $this->own($request, $token)->end();
 
         return response()->json(['ok' => true]);
     }
@@ -112,6 +114,9 @@ class LiveShareController extends Controller
     private function payload(LiveShare $share): array
     {
         $active = $share->isActive();
+        if (! $active && $share->position_at !== null) {
+            $share->end(); // expired since the last visit: forget the position now
+        }
 
         return [
             'name'        => $share->label ?: ($share->user?->name ?? __('Pendaki')),

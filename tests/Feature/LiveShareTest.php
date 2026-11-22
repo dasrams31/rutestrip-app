@@ -76,6 +76,33 @@ class LiveShareTest extends TestCase
         $this->getJson('/lacak/' . str_repeat('b', 40) . '/data')->assertNotFound();
     }
 
+    public function test_ended_links_keep_no_position_and_old_rows_are_deleted(): void
+    {
+        $user = User::factory()->create();
+        $a = $this->as($user)->postJson('/api/v1/live', ['hours' => 1])->json('token');
+        $b = $this->as($user)->postJson('/api/v1/live', ['hours' => 6])->json('token');
+        foreach ([$a, $b] as $t) {
+            $this->as($user)->postJson("/api/v1/live/$t/position", ['lat' => -7.45, 'lng' => 110.43, 'bat' => 50])->assertOk();
+        }
+
+        // Stopping clears the stored position at once.
+        $this->as($user)->postJson("/api/v1/live/$b/stop")->assertOk();
+        $row = LiveShare::where('token', $b)->first();
+        $this->assertNull($row->lat);
+        $this->assertNull($row->battery);
+        $this->assertNull($row->position_at);
+
+        // Expiry: the next visit or new link clears it too, even without the scheduler.
+        $this->travel(61)->minutes();
+        $this->getJson("/lacak/$a/data")->assertJsonPath('active', false);
+        $this->assertNull(LiveShare::where('token', $a)->first()->lat);
+
+        // A day after ending, the rows are deleted.
+        $this->travel(25)->hours();
+        $this->artisan('model:prune', ['--model' => [LiveShare::class]])->assertSuccessful();
+        $this->assertSame(0, LiveShare::count());
+    }
+
     public function test_at_most_three_active_links_per_account(): void
     {
         $user = User::factory()->create();
