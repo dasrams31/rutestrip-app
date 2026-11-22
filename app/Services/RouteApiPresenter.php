@@ -55,7 +55,25 @@ class RouteApiPresenter
         // Cache only: the route page refines missing elevations lazily, the API never waits on it.
         $points = $this->conditions->points($route, false);
 
+        $route->loadMissing(['activeGpxVersion', 'uploader:id,name']);
+        $reviews = $route->ratings()->count();
+
         return $this->summary($route, 0) + [
+            'uploader'        => $route->uploader_name,
+            'average_rating'  => $reviews ? round((float) $route->ratings()->avg('rating'), 1) : null,
+            'review_count'    => $reviews,
+            'gpx_status'      => $route->activeGpxVersion?->verification_status,
+            'practical'       => array_filter([
+                'basecamp_name'    => $route->basecamp_name,
+                'basecamp_address' => $route->basecamp_address,
+                'basecamp_lat'     => $route->basecamp_lat !== null ? (float) $route->basecamp_lat : null,
+                'basecamp_lng'     => $route->basecamp_lng !== null ? (float) $route->basecamp_lng : null,
+                'entry_fee'        => $route->entry_fee !== null ? (int) $route->entry_fee : null,
+                'contact_phone'    => $route->contact_phone,
+                'facilities'       => $route->facilities,
+                'best_season'      => $route->best_season,
+                'tips'             => $route->tips,
+            ], fn($v) => $v !== null && $v !== ''),
             'description'     => $route->description,
             'narrative_text'  => $route->narrative_text,
             'difficulty_hint' => __($route->difficulty_hint),
@@ -118,6 +136,18 @@ class RouteApiPresenter
         }
 
         return $out;
+    }
+
+    /** One review: the user's rating and, when written, their comment (website "Ulasan Pendaki"). */
+    public function review(\App\Models\Comment|\App\Models\Rating $item, ?int $rating): array
+    {
+        return [
+            'id'         => (int) $item->id,
+            'name'       => $item->user?->name ?? __('Anonim'),
+            'rating'     => $rating,
+            'comment'    => $item instanceof \App\Models\Comment ? $item->content : null,
+            'created_at' => $item->created_at?->toIso8601String(),
+        ];
     }
 
     private function point(array $point): array

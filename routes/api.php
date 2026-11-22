@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountApiController;
 use App\Http\Controllers\Api\V1\RouteApiController;
+use App\Http\Controllers\Api\V1\RouteExtrasApiController;
 use App\Http\Controllers\Api\V1\SearchApiController;
 use App\Http\Controllers\Api\V1\UploadApiController;
 use App\Http\Controllers\SsoApiController;
@@ -23,7 +25,12 @@ Route::prefix('v1')->name('api.v1.')->middleware(\App\Http\Middleware\ApiLocale:
         Route::get('/routes/{route}', [RouteApiController::class, 'show'])->name('routes.show');
         Route::get('/filters', [RouteApiController::class, 'filters'])->name('filters');
         Route::get('/likes', [RouteApiController::class, 'likes'])->name('likes');
+        Route::get('/routes/{route}/reviews', [RouteExtrasApiController::class, 'reviews'])->name('routes.reviews');
+        Route::get('/routes/{route}/versions', [RouteExtrasApiController::class, 'versions'])->name('routes.versions');
     });
+    // Live conditions call Open-Meteo and Nominatim (cached): same limit as the website endpoint.
+    Route::get('/routes/{route}/conditions', [RouteExtrasApiController::class, 'conditions'])
+        ->middleware('throttle:30,1,api-v1-conditions')->name('routes.conditions');
     Route::post('/search', [SearchApiController::class, 'search'])
         ->middleware('throttle:20,1,api-v1-search')->name('search');
     Route::post('/routes/{route}/like', [RouteApiController::class, 'like'])
@@ -43,5 +50,17 @@ Route::prefix('v1')->name('api.v1.')->middleware(\App\Http\Middleware\ApiLocale:
             Route::post('/messages/{message}/report', 'report')->whereNumber('message')->middleware('throttle:20,1,api-v1-cc-report')->name('report');
         });
         Route::post('/assistant', [\App\Http\Controllers\AssistantController::class, 'ask'])->name('assistant');
+
+        Route::post('/routes/{route}/reviews', [RouteExtrasApiController::class, 'storeReview'])
+            ->middleware('throttle:10,1,api-v1-review')->name('routes.reviews.store');
+
+        Route::prefix('me')->name('me.')->controller(AccountApiController::class)->group(function () {
+            Route::get('/', 'show')->middleware('throttle:60,1,api-v1')->name('show');
+            Route::get('/history', 'historyIndex')->middleware('throttle:60,1,api-v1')->name('history');
+            Route::put('/profile', 'updateProfile')->middleware('throttle:10,1,api-v1-account')->name('profile');
+            Route::put('/password', 'updatePassword')->middleware('throttle:5,1,api-v1-password')->name('password');
+            Route::put('/locale', 'updateLocale')->middleware('throttle:10,1,api-v1-account')->name('locale');
+            Route::post('/logout-all', 'logout')->middleware('throttle:5,1,api-v1-account')->name('logout-all');
+        });
     });
 });

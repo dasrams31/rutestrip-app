@@ -43,6 +43,18 @@ tests in `tests/Feature/MobileApiTest.php`.
 | POST | `/routes/{id}/like` | Token required. `{liked?: bool}` sets the state; without it the like is toggled. Returns `{liked, count}`. |
 | GET | `/likes` | Token required. The user's liked routes, newest like first. |
 
+## Route page extras
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/routes/{id}/reviews` | `average_rating`, `review_count`, `my_rating` (with a token), latest 30 `reviews` (`name`, `rating`, `comment`, `created_at`). |
+| GET | `/routes/{id}/conditions` | Same payload as the website's `/routes/{id}/conditions`: points, location, weather, safety, sources. External calls are cached server side. 30/min. |
+| GET | `/routes/{id}/versions` | GPX file history: `version`, `active`, `status`, `status_label`, `hash`, `change_log`, `uploader`, `created_at`, `download_url`. |
+
+The route detail also carries `uploader`, `average_rating`, `review_count`, `gpx_status`
+and `practical` (basecamp name/address/coordinates, entry fee, contact, facilities,
+best season, tips; only the fields that are filled).
+
 ## Signed-in endpoints
 
 These need `Authorization: Bearer <token>`; without a valid token they answer 401.
@@ -57,4 +69,11 @@ chat and the assistant run through the website's own controllers and limits.
 | POST | `/community/messages` | `{body}` (max 500 characters). 201 with `message`. 6 per 30 s, 200 per day (429 with `message`). |
 | DELETE | `/community/messages/{id}` | Own message (admins: any). |
 | POST | `/community/messages/{id}/report` | Flag someone else's message for the admins. |
+| POST | `/routes/{id}/reviews` | `{rating: 1-5, comment?: max 1000}`. One rating per user (updated on repeat), a comment adds a review. Returns the reviews payload. 10/min. |
+| GET | `/me` | `user`, dashboard `stats` (favorites, searches, comments, ratings) and `recent_searches`. |
+| GET | `/me/history?page=` | Search history, 20 per page. |
+| PUT | `/me/profile` | `{name, email}` (email unique). |
+| PUT | `/me/password` | `{current_password, password, password_confirmation}` (min 8). Ends every older token and website session (`sso_version`) and returns a new `token`. 5/min. |
+| PUT | `/me/locale` | `{locale: id|en}`. |
+| POST | `/me/logout-all` | Logs the account out everywhere (`sso_version`). |
 | POST | `/assistant` | Asisten RuteStrip: `{message, history?: [{role: user|assistant, text}]}` returns `{reply}`; `fallback: true` when no model answered. 8/min, 60/day per IP. |
