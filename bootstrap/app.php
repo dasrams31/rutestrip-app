@@ -23,6 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Community chat endpoints always answer in JSON (a guest gets 401, not a login redirect).
-        $exceptions->shouldRenderJsonWhen(fn (\Illuminate\Http\Request $request) => $request->expectsJson() || $request->is('komunitas/chat', 'komunitas/chat/*'));
+        // Community chat endpoints and the mobile API always answer in JSON (a guest gets 401, not a login redirect).
+        $exceptions->shouldRenderJsonWhen(fn (\Illuminate\Http\Request $request) => $request->expectsJson() || $request->is('komunitas/chat', 'komunitas/chat/*', 'api/v1/*'));
     })->create();
