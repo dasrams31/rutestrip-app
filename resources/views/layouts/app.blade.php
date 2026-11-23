@@ -467,7 +467,7 @@
                         <span class="rs-display uppercase text-3xl leading-none text-white">RuteStrip</span>
                     </a>
                     <p class="mt-3 text-sm leading-relaxed max-w-sm">
-                        {{ __('Cari jalur pendakian gunung di Pulau Jawa dengan bahasa sehari-hari, lalu bandingkan jarak, tanjakan, dan waktunya dari file GPX asli.') }}
+                        {{ __('Cari jalur pendakian gunung di Pulau Jawa dengan kalimat sehari-hari, lalu bandingkan jarak, tanjakan, dan waktunya dari file GPX. Data jalur untuk perencanaan, bukan alat navigasi.') }}
                     </p>
                     <div class="mt-4 flex items-center gap-2">
                         <a href="https://github.com/RamsNotes31" target="_blank" rel="noopener" aria-label="GitHub RuteStrip"
@@ -581,7 +581,7 @@
                 </div>
             </div>
             <div class="flex gap-2 shrink-0">
-                <a href="{{ route('app.download') }}" data-install-yes class="rs-sign flex-[2] sm:flex-none inline-flex items-center justify-center min-h-[44px] rounded-lg px-4 sm:px-5 text-sm font-bold whitespace-nowrap">{{ __('Download aplikasi') }}</a>
+                <a href="{{ route('app.download') }}" data-install-yes class="rs-sign flex-[2] sm:flex-none inline-flex items-center justify-center min-h-[44px] rounded-lg px-4 sm:px-5 text-sm font-bold whitespace-nowrap">{{ __('Unduh aplikasi') }}</a>
                 <button type="button" data-install-no class="flex-1 sm:flex-none min-h-[44px] rounded-lg px-4 text-sm font-semibold text-rs-z9 border border-rs-line hover:bg-rs-paper">{{ __('Nanti') }}</button>
             </div>
         </section>

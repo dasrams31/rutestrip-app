@@ -46,7 +46,7 @@
     @include('partials.rs-head', [
         'eyebrow' => __('Cara kerja RuteStrip'),
         'title' => __('Dari file GPX sampai saran jalur.'),
-        'lead' => __('Untuk yang penasaran dengan dapurnya. Intinya sederhana: kalimatmu dicocokkan dengan ringkasan setiap jalur.'),
+        'lead' => __('Setiap file GPX diringkas menjadi kalimat, lalu kalimat pencarianmu dicocokkan dengan ringkasan itu memakai model bahasa SBERT.'),
         'seed' => 97,
     ])
 
@@ -93,7 +93,7 @@
             </section>
 
             <section class="border-l-4 border-[#047857] pl-5" aria-labelledby="paper-title">
-                <h2 id="paper-title" class="font-semibold">{{ __('Mau baca lebih dalam?') }}</h2>
+                <h2 id="paper-title" class="font-semibold">{{ __('Artikel jurnal') }}</h2>
                 <p class="mt-1 rs-muted">{{ __('Metode ini ditulis lengkap di artikel jurnal Sistemasi.') }}</p>
                 <a href="{{ $paperUrl }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 min-h-[44px] font-semibold text-[#047857] underline decoration-2 underline-offset-4 hover:text-[#053b30]">
                     {{ __('Baca artikelnya') }} <x-icon name="external-link" class="w-4 h-4" />

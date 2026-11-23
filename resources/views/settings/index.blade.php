@@ -163,7 +163,7 @@
                 </div>
 
                 <p class="mt-5 pt-4 border-t rs-rule text-sm rs-muted">
-                    {{ __('Pakai HP Android? Aplikasi Android bisa merekam jejak GPS dan menyimpan jalur untuk dibuka tanpa sinyal.') }}
+                    {{ __('Di HP Android, aplikasi RuteStrip merekam jejak GPS dan menyimpan jalur untuk dibuka tanpa sinyal.') }}
                     <a href="{{ route('app.download') }}" class="inline-flex items-center min-h-[44px] font-semibold text-[#047857] underline underline-offset-4">{{ __('Unduh aplikasi Android') }}</a>
                 </p>
             </section>

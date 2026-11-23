@@ -18,9 +18,9 @@
     @include('partials.rs-head', [
         'back' => ['href' => route('routes.index'), 'label' => __('Kembali ke daftar jalur')],
         'eyebrow' => __('Upload GPX'),
-        'title' => __('Bagikan jejak pendakianmu.'),
-        'lead' => __('Unggah satu file GPX dari jam GPS atau aplikasi pelacak. Angka jalurnya kami hitung sendiri dari file itu.'),
-        'actions' => [['href' => route('routes.batch'), 'label' => __('Banyak file? Unggah sekaligus'), 'icon' => 'upload']],
+        'title' => __('Tambahkan jalur dari pendakianmu.'),
+        'lead' => __('Unggah satu file GPX dari jam GPS atau aplikasi pelacak. Jarak, tanjakan, waktu tempuh, dan tingkat kesulitan dihitung dari file itu.'),
+        'actions' => [['href' => route('routes.batch'), 'label' => __('Unggah banyak file'), 'icon' => 'upload']],
         'width' => 'max-w-5xl',
         'seed' => 53,
     ])

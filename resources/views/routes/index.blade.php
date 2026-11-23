@@ -71,7 +71,7 @@
             <a href="{{ route('routes.index') }}" class="rs-btn-ghost mt-5">{{ __('Tampilkan semua jalur') }}</a>
             @else
             <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ada jalur.') }}</p>
-            <p class="mt-2 text-rs-muted">{{ __('Jalur muncul di sini setelah ada yang mengunggah file GPX. File pertama bisa dari pendakianmu.') }}</p>
+            <p class="mt-2 text-rs-muted">{{ __('Jalur tampil di sini setelah ada yang mengunggah file GPX. Unggah file dari pendakianmu untuk menambahkan jalur pertama.') }}</p>
             <a href="{{ route('routes.create') }}" class="rs-sign mt-5">{{ __('Upload file GPX') }}</a>
             @endif
         </div>

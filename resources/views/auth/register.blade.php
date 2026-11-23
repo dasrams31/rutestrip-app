@@ -5,7 +5,7 @@
 @section('content')
 @component('partials.rs-auth-shell', [
     'eyebrow' => __('account.register.title'),
-    'title' => __('account.register.heading'),
+    'title' => __('Simpan jalur favoritmu.'),
     'lead' => __('account.register.subtitle'),
     'seed' => 23,
 ])

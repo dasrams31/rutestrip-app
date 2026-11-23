@@ -214,13 +214,13 @@
             <div class="max-w-3xl">
                 <p class="text-sm sm:text-base font-semibold text-[#a7f3d0]">{{ __('Jalur pendakian gunung di Pulau Jawa') }}</p>
                 <h1 id="hero-title" class="rs-display mt-3 uppercase text-[clamp(2.6rem,11vw,6.25rem)] leading-[0.9] [text-wrap:balance]">
-                    {{ __('Hari ini mau mendaki ke gunung mana?') }}
+                    {{ __('Cari jalur dengan kalimat sehari-hari.') }}
                 </h1>
                 <p class="mt-4 sm:mt-5 text-base sm:text-lg text-[#d1fae5] max-w-xl leading-relaxed">
                     @if($routeCount > 0)
-                        {{ __('Tulis seperti bicara ke teman satu rombongan. Kami carikan yang paling pas dari :count jalur dengan file GPX asli.', ['count' => $num($routeCount)]) }}
+                        {{ __('Sebut nama gunung, lama pendakian, atau seberapa curam jalurnya. RuteStrip mengurutkan :count jalur dengan data GPX, dari yang paling cocok.', ['count' => $num($routeCount)]) }}
                     @else
-                        {{ __('Tulis seperti bicara ke teman satu rombongan. Kami carikan jalur yang paling pas dari file GPX asli.') }}
+                        {{ __('Sebut nama gunung, lama pendakian, atau seberapa curam jalurnya. RuteStrip mengurutkan jalur dengan data GPX, dari yang paling cocok.') }}
                     @endif
                 </p>
 
@@ -250,11 +250,12 @@
                     <p class="sr-only" role="status" aria-live="polite" data-search-status data-text="{{ __('Mencari jalur yang cocok, tunggu sebentar.') }}"></p>
 
                     {{-- Example searches: submit buttons of the same form (they work without JS). --}}
-                    <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2">
-                        <span class="text-sm text-[#d1fae5] mr-1">{{ __('Atau coba:') }}</span>
+                    {{-- Label on its own line, chips in one aligned row: a scroll row on phones, wrapping from sm up. --}}
+                    <p class="mt-5 text-sm font-semibold text-[#d1fae5]">{{ __('Contoh pencarian:') }}</p>
+                    <div class="mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         @foreach($examples as $example)
                         <button type="submit" name="query" value="{{ $example }}" formnovalidate
-                                class="{{ $loop->index > 1 ? 'hidden sm:inline-flex' : 'inline-flex' }} items-center min-h-[44px] rounded-lg border border-white/30 px-3.5 text-sm font-medium text-white text-left hover:bg-white/10 hover:border-white/60 transition-colors">
+                                class="shrink-0 inline-flex items-center min-h-[44px] rounded-lg border border-white/30 px-3.5 text-sm font-medium text-white whitespace-nowrap hover:bg-white/10 hover:border-white/60 transition-colors">
                             {{ $example }}
                         </button>
                         @endforeach
@@ -280,9 +281,9 @@
     <section class="pt-14 pb-16 sm:pt-24 sm:pb-20" aria-labelledby="featured-title">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-12 gap-3 lg:gap-10 items-end">
-                <h2 id="featured-title" class="lg:col-span-7 rs-display uppercase text-[clamp(2.25rem,8vw,4rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Masih bingung? Mulai dari jalur ini.') }}</h2>
+                <h2 id="featured-title" class="lg:col-span-7 rs-display uppercase text-[clamp(2.25rem,8vw,4rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Satu jalur dari tiap gunung.') }}</h2>
                 <div class="lg:col-span-5 lg:pb-1">
-                    <p class="text-rs-muted leading-relaxed">{{ __('Satu jalur per gunung. Yang paling banyak disukai pendaki tampil lebih dulu.') }}</p>
+                    <p class="text-rs-muted leading-relaxed">{{ __('Diurutkan dari yang paling banyak disukai. Setiap halaman jalur berisi peta, profil elevasi, prakiraan cuaca, dan tampilan medan 3D.') }}</p>
                     @if($routeCount > 0)
                     <a href="{{ route('routes.index') }}" class="mt-2 inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline decoration-rs-z7/40 underline-offset-4 hover:decoration-rs-z7">
                         {{ __('Lihat semua :count jalur', ['count' => $num($routeCount)]) }}
@@ -348,7 +349,7 @@
             {{-- Empty state: no route with a track worth drawing yet. --}}
             <div class="mt-10 rounded-lg border-2 border-dashed border-[#cfd8d2] bg-white px-5 py-10 sm:px-10 text-center">
                 <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ada jalur yang bisa ditampilkan.') }}</p>
-                <p class="mt-2 text-rs-muted max-w-lg mx-auto">{{ __('Jalur muncul di sini setelah ada file GPX dengan jejak lengkap di database. File pertama bisa dari pendakianmu.') }}</p>
+                <p class="mt-2 text-rs-muted max-w-lg mx-auto">{{ __('Jalur tampil di sini setelah ada file GPX dengan jejak lengkap di database. Unggah file dari pendakianmu untuk menambahkan jalur pertama.') }}</p>
                 <a href="{{ route('routes.create') }}" class="rs-sign mt-5 inline-flex items-center justify-center min-h-[48px] rounded-lg px-6 font-bold">{{ __('Upload file GPX') }}</a>
             </div>
             @endif
@@ -368,8 +369,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 grid lg:grid-cols-12 items-start gap-10 lg:gap-16">
             {{-- Not sticky: the heading and the first step start on the same line --}}
             <div class="lg:col-span-5">
-                <h2 id="how-title" class="rs-display uppercase text-[clamp(2rem,6vw,3.25rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Begini kami mencarikan jalurnya.') }}</h2>
-                <p class="mt-4 max-w-md text-rs-muted leading-relaxed">{{ __('Kamu tidak perlu menebak kata kunci. Tulis saja seperti bercerita, misalnya:') }}</p>
+                <h2 id="how-title" class="rs-display uppercase text-[clamp(2rem,6vw,3.25rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Cara RuteStrip mengurutkan jalur.') }}</h2>
+                <p class="mt-4 max-w-md text-rs-muted leading-relaxed">{{ __('Tidak perlu kata kunci khusus. Tulis permintaanmu dalam satu kalimat, misalnya:') }}</p>
                 <form action="{{ route('search.submit') }}" method="POST" class="mt-5 max-w-md" data-search-form>
                     @csrf
                     {{-- The example is shown as the search box it stands for, so it reads as "type this" --}}
@@ -379,7 +380,7 @@
                     </div>
                     <button type="submit" name="query" value="{{ __('jalur landai untuk pemula') }}" data-search-submit
                             class="rs-swap mt-3 w-full sm:w-auto min-h-[48px] rounded-lg bg-rs-z7 px-5 font-semibold text-white hover:bg-rs-z9 transition-colors">
-                        <span data-idle>{{ __('Coba cari kalimat ini') }}</span>
+                        <span data-idle>{{ __('Cari dengan kalimat ini') }}</span>
                         <span data-busy hidden>{{ __('Mencari jalur...') }}</span>
                     </button>
                     <p class="sr-only" role="status" aria-live="polite" data-search-status data-text="{{ __('Mencari jalur yang cocok, tunggu sebentar.') }}"></p>
@@ -400,16 +401,16 @@
                     @php
                         $steps = [
                             [
-                                'title' => __('Kami baca maksud kalimatmu'),
-                                'text' => __('Kata-katanya boleh bebas. "Jalur santai buat pemula" dan "trek ringan untuk yang baru pertama naik" kami anggap permintaan yang sama.'),
+                                'title' => __('Makna kalimat, bukan kata kunci'),
+                                'text' => __('Pilihan katanya bebas. "Jalur santai buat pemula" dan "trek ringan untuk yang baru pertama naik" dibaca sebagai permintaan yang sama.'),
                             ],
                             [
-                                'title' => __('Kami bandingkan dengan gambaran setiap jalur'),
-                                'text' => __('Setiap jalur punya gambaran singkat yang ditulis dari file GPX-nya: seberapa jauh, seberapa curam, dan berapa lama. Jalur yang gambarannya paling mirip dengan permintaanmu tampil paling atas.'),
+                                'title' => __('Dibandingkan dengan ringkasan setiap jalur'),
+                                'text' => __('Setiap jalur punya ringkasan yang ditulis dari file GPX-nya: jarak, kecuraman, dan lama perjalanan. Jalur dengan ringkasan paling mirip permintaanmu tampil paling atas.'),
                             ],
                             [
-                                'title' => __('Kami cek ke angka aslinya'),
-                                'text' => __('Kalau kamu menulis landai, curam, singkat, atau panjang, kami cocokkan juga dengan kemiringan, total tanjakan, dan waktu jalan setiap jalur. Nama gunung atau basecamp yang kamu sebut ikut didahulukan.'),
+                                'title' => __('Dicek dengan statistik GPX'),
+                                'text' => __('Kata seperti landai, curam, singkat, atau panjang juga dicocokkan dengan kemiringan, total tanjakan, dan waktu jalan setiap jalur. Nama gunung atau basecamp yang kamu sebut ikut didahulukan.'),
                             ],
                             [
                                 'title' => __('Waktu jalan dihitung dari GPX'),
@@ -443,14 +444,14 @@
 
                 <details class="rs-more mt-10 max-w-2xl rounded-lg border border-rs-line bg-rs-paper">
                     <summary class="flex items-center justify-between gap-3 min-h-[48px] px-4 py-3 font-semibold text-rs-z9">
-                        <span>{{ __('Cara kami mencocokkan (untuk yang penasaran)') }}</span>
+                        <span>{{ __('Detail teknis pencocokan') }}</span>
                         <x-icon name="chevron-down" class="rs-more-icon w-5 h-5 shrink-0 transition-transform" />
                     </summary>
                     <div class="px-4 pb-4 text-sm text-rs-muted leading-relaxed space-y-2">
                         <p>{{ __('Kalimatmu diubah menjadi 384 angka oleh model bahasa SBERT multibahasa (paraphrase-multilingual-MiniLM-L12-v2), lalu dibandingkan dengan gambaran setiap jalur memakai cosine similarity: 40% dari gambaran utuh dan 60% dari kalimat yang paling mirip.') }}</p>
                         <p>{{ __('Kalau kamu menyebut nama gunung atau daerah, hanya jalur di sana yang ditampilkan. Kata seperti landai, mudah, curam, singkat, atau panjang menentukan urutan dari statistik GPX, dan kemiripan kalimat hanya dipakai kalau angkanya sama.') }}</p>
                         <p>{{ __('Tingkat kesulitan memakai skor Shenandoah (akar dari tanjakan dalam kaki x 2 x jarak dalam mil), dinaikkan 15% untuk jalur sangat curam atau puncak di atas 3.000 m.') }}</p>
-                        <p><a href="{{ route('architecture') }}" class="inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline underline-offset-4">{{ __('Lihat cara kerja sistemnya') }}</a></p>
+                        <p><a href="{{ route('architecture') }}" class="inline-flex items-center min-h-[44px] font-semibold text-rs-z7 underline underline-offset-4">{{ __('Baca cara kerja RuteStrip') }}</a></p>
                     </div>
                 </details>
             </div>
@@ -496,9 +497,9 @@
                 {{-- The two floating buttons at the bottom corners, explained once. --}}
                 <dl class="mt-10 border-t border-white/20 pt-6 max-w-xl grid sm:grid-cols-2 gap-x-8 gap-y-6">
                     <div>
-                        <dt class="font-semibold">{{ __('Ada pertanyaan soal situs ini?') }}</dt>
+                        <dt class="font-semibold">{{ __('Asisten RuteStrip') }}</dt>
                         <dd class="mt-1 text-sm text-[#c7d9d0] leading-relaxed">
-                            {{ __('Tombol robot di pojok kanan bawah membuka Asisten RuteStrip. Tanyakan cara mengunggah GPX atau cara kami memilih jalur, tanpa perlu masuk.') }}
+                            {{ __('Tombol di pojok kanan bawah membuka asisten AI untuk pertanyaan seputar situs ini, misalnya cara mengunggah GPX atau cara jalur diurutkan. Tidak perlu masuk.') }}
                         </dd>
                         <dd>
                             <button type="button" data-open-fab=".rs-fab-right" hidden
@@ -508,9 +509,9 @@
                         </dd>
                     </div>
                     <div>
-                        <dt class="font-semibold">{{ __('Mau ngobrol dengan sesama pendaki?') }}</dt>
+                        <dt class="font-semibold">{{ __('Obrolan Pendaki') }}</dt>
                         <dd class="mt-1 text-sm text-[#c7d9d0] leading-relaxed">
-                            {{ __('Tombol obrolan di pojok kiri bawah membuka Obrolan Pendaki, tempat bertanya langsung ke pendaki lain. Perlu akun RuteStrip.') }}
+                            {{ __('Tombol di pojok kiri bawah membuka ruang obrolan bersama untuk bertanya langsung ke pendaki lain. Perlu akun RuteStrip.') }}
                         </dd>
                         <dd>
                             <button type="button" data-open-fab=".rs-fab-left" hidden
@@ -559,9 +560,9 @@
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 grid lg:grid-cols-12 gap-x-14 gap-y-10 items-start">
             <div class="lg:col-span-7 min-w-0">
                 <p class="text-sm sm:text-base font-semibold text-rs-z7">{{ __('Aplikasi Android') }}</p>
-                <h2 id="app-title" class="rs-display mt-2 uppercase text-[clamp(2.25rem,8vw,4rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Bawa RuteStrip ke jalur, juga saat sinyal hilang.') }}</h2>
+                <h2 id="app-title" class="rs-display mt-2 uppercase text-[clamp(2.25rem,8vw,4rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Rekam pendakian dengan GPS, juga tanpa sinyal.') }}</h2>
                 <p class="mt-4 max-w-xl text-lg text-rs-ink leading-relaxed">
-                    {{ __('Rekam jejak GPS pendakianmu di HP. Kunci layar dan simpan HP di saku, rekamannya tetap berjalan.') }}
+                    {{ __('Rekaman tetap berjalan saat layar terkunci dan HP di saku. Setelah turun, putar ulang jalurnya dalam 3D.') }}
                 </p>
 
                 <div class="mt-7 flex flex-col min-[420px]:flex-row min-[420px]:items-center gap-x-5 gap-y-2">
@@ -588,7 +589,7 @@
 
             <ul class="lg:col-span-7 lg:col-start-1 min-w-0 grid sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-x-8 gap-y-5 max-w-3xl">
                 @foreach([
-                    ['users', __('Rombongan tanpa sinyal'), __('Obrolan, posisi anggota, dan SOS dikirim langsung antar-HP dalam rombongan, tanpa sinyal seluler.')],
+                    ['users', __('Rombongan tanpa sinyal'), __('Obrolan, posisi anggota, dan SOS dikirim antar-HP lewat Bluetooth atau Wi-Fi, tanpa sinyal seluler.')],
                     ['search', __('Cari jalur'), __('Tulis jalur yang kamu cari dengan kalimat sehari-hari, sama seperti di situs ini.')],
                     ['map', __('Jalur tersimpan offline'), __('Simpan jalur sebelum berangkat, lalu buka lagi tanpa internet.')],
                 ] as [$icon, $term, $desc])
@@ -612,11 +613,11 @@
         </svg>
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28">
             <div class="max-w-2xl">
-                <h2 id="upload-title" class="rs-display uppercase text-[clamp(2.25rem,8vw,4.5rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Punya file GPX dari pendakianmu?') }}</h2>
+                <h2 id="upload-title" class="rs-display uppercase text-[clamp(2.25rem,8vw,4.5rem)] leading-[0.95] text-rs-z9 [text-wrap:balance]">{{ __('Tambahkan jalur dari file GPX-mu.') }}</h2>
                 <p class="mt-4 text-rs-ink text-lg leading-relaxed">
-                    {{ __('Unggah filenya. Kami hitung jarak, total tanjakan, kemiringan, perkiraan waktu, dan tingkat kesulitannya, lalu jalurmu ikut muncul di pencarian.') }}
+                    {{ __('RuteStrip menghitung jarak, total tanjakan, kemiringan, perkiraan waktu, dan tingkat kesulitannya, lalu jalurmu ikut tampil di hasil pencarian.') }}
                 </p>
-                <p class="mt-2 text-sm text-rs-muted">{{ __('Perlu masuk dengan akun RuteStrip. Setiap versi file kami simpan, jadi perubahan jalur selalu bisa dilacak.') }}</p>
+                <p class="mt-2 text-sm text-rs-muted">{{ __('Perlu akun RuteStrip. Setiap versi file disimpan, jadi perubahan jalur bisa dilacak.') }}</p>
                 <div class="mt-7 flex flex-col sm:flex-row gap-3">
                     <a href="{{ route('routes.create') }}" class="rs-sign inline-flex items-center justify-center text-center leading-snug min-h-[52px] rounded-lg px-6 py-3 text-base font-bold transition-colors">
                         {{ __('Upload file GPX') }}

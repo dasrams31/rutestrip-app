@@ -518,7 +518,7 @@
                         @endforeach
                     </ul>
                     @else
-                    <p class="text-rs-muted text-sm pb-4">{{ __('Belum ada ulasan. Sudah pernah lewat jalur ini? Ceritakan buat pendaki berikutnya.') }}</p>
+                    <p class="text-rs-muted text-sm pb-4">{{ __('Belum ada ulasan. Kalau kamu pernah lewat jalur ini, tulis kondisinya untuk pendaki berikutnya.') }}</p>
                     @endif
 
                     @auth
@@ -539,8 +539,8 @@
                             </div>
                         </fieldset>
                         <div class="flex flex-col sm:flex-row gap-2">
-                            <label for="review-comment" class="sr-only">{{ __('Ceritakan pengalamanmu') }}</label>
-                            <input id="review-comment" type="text" name="comment" maxlength="1000" class="rs-input flex-1 min-w-0" placeholder="{{ __('Ceritakan singkat: kondisi jalur, air, tempat camp...') }}">
+                            <label for="review-comment" class="sr-only">{{ __('Ulasanmu') }}</label>
+                            <input id="review-comment" type="text" name="comment" maxlength="1000" class="rs-input flex-1 min-w-0" placeholder="{{ __('Kondisi jalur, sumber air, tempat camp...') }}">
                             <button type="submit" class="rs-btn">{{ __('Kirim ulasan') }}</button>
                         </div>
                     </form>

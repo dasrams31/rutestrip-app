@@ -119,7 +119,7 @@ class AppDownloadTest extends TestCase
 
         // The bottom card now offers the Android app; the PWA install moved to the settings page.
         $banner = substr($html, strpos($html, 'id="rs-install"'), 1500);
-        $this->assertStringContainsString('Download aplikasi', $banner);
+        $this->assertStringContainsString('Unduh aplikasi', $banner);
         $this->assertStringContainsString('href="' . route('app.download') . '"', $banner);
         $this->assertStringNotContainsString('Pasang RuteStrip di HP', $html);
     }

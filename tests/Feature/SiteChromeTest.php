@@ -47,7 +47,7 @@ class SiteChromeTest extends TestCase
             ->assertSee('id="rs-cookie"', false)
             ->assertSee('id="rs-install"', false)
             ->assertSee(route('cookies.policy'), false)
-            ->assertSee('Download aplikasi')
+            ->assertSee('Unduh aplikasi')
             ->assertSee('Publikasi')
             ->assertSee('10.32520/stmsi.v15i4.6087')
             ->assertDontSee('Precision@5')

@@ -16,9 +16,9 @@
     @include('partials.rs-head', [
         'back' => ['href' => route('routes.index'), 'label' => __('Kembali ke daftar jalur')],
         'eyebrow' => __('Upload GPX sekaligus'),
-        'title' => __('Banyak jejak, sekali unggah.'),
+        'title' => __('Tambahkan banyak jalur sekaligus.'),
         'lead' => __('Pilih sampai :max file GPX. Nama jalur diambil dari nama filenya, jadi rapikan dulu nama file sebelum diunggah.', ['max' => $maxFiles]),
-        'actions' => [['href' => route('routes.create'), 'label' => __('Satu file saja? Unggah satuan'), 'icon' => 'document-add']],
+        'actions' => [['href' => route('routes.create'), 'label' => __('Unggah satu file'), 'icon' => 'document-add']],
         'width' => 'max-w-5xl',
         'seed' => 61,
     ])
@@ -125,7 +125,7 @@
             <aside class="lg:col-span-4 mt-8 lg:mt-0">
                 <div class="lg:sticky lg:top-24 border-l-4 border-[#047857] pl-5">
                     <h2 class="rs-display uppercase text-2xl leading-none text-[#053b30]">{{ __('Tips nama file') }}</h2>
-                    <p class="mt-3">{{ __('Nama file jadi nama jalur. Contoh yang enak dibaca:') }}</p>
+                    <p class="mt-3">{{ __('Nama file menjadi nama jalur. Contoh nama yang jelas:') }}</p>
                     <p class="mt-2 font-semibold [overflow-wrap:anywhere]">Gunung Prau via Patak Banteng.gpx</p>
                     <p class="mt-4 text-sm rs-muted">{{ __('Setiap jalur bisa diberi cerita singkat nanti, dari halaman jalurnya.') }}</p>
                 </div>

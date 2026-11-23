@@ -7,7 +7,7 @@
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2"><x-icon name="user" class="w-7 h-7 text-emerald-600" /> {{ __('Edit Profil') }}</h1>
-            <p class="text-slate-600">{{ __('Ubah informasi akun Anda') }}</p>
+            <p class="text-slate-600">{{ __('Ubah nama, email, dan kata sandi akunmu.') }}</p>
         </div>
         <a href="{{ route('user.dashboard') }}" class="text-emerald-600 hover:underline inline-flex items-center gap-1"><x-icon name="arrow-left" class="w-4 h-4" /> {{ __('Kembali') }}</a>
     </div>

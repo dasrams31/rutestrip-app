@@ -718,7 +718,7 @@
                 </button>
             </div>
             <div class="mt-1.5 flex items-start justify-between gap-2 text-[11px] text-slate-600">
-                <span id="rs-community-hint">{{ __('Semua pendaki yang masuk bisa membaca pesanmu. Jaga sopan ya.') }}<span class="hidden md:inline"> {{ __('Enter untuk kirim, Shift+Enter untuk baris baru.') }}</span></span>
+                <span id="rs-community-hint">{{ __('Semua pendaki yang masuk bisa membaca pesanmu. Tulis dengan sopan.') }}<span class="hidden md:inline"> {{ __('Enter untuk kirim, Shift+Enter untuk baris baru.') }}</span></span>
                 <span x-show="cInput.length > cMax - 100" x-cloak class="flex-shrink-0 tabular-nums" :class="cInput.length >= cMax ? 'text-red-700 font-semibold' : ''" x-text="cInput.length + '/' + cMax"></span>
             </div>
         </form>
@@ -775,7 +775,7 @@
         <div x-ref="log" class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 space-y-3 bg-slate-50" role="log" aria-live="polite" aria-relevant="additions">
             <div class="flex justify-start">
                 <div class="max-w-[85%] rounded-2xl rounded-bl-md border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 leading-relaxed">
-                    {{ __('Halo, pendaki. Lagi cari jalur yang pas, mau upload GPX, atau penasaran cara kerja RuteStrip? Tanya saja, saya bantu.') }}
+                    {{ __('Halo, pendaki. Tanyakan jalur di RuteStrip, cara mengunggah GPX, atau cara pencarian mengurutkan jalur.') }}
                 </div>
             </div>
             <div x-show="!messages.length" class="flex flex-wrap gap-2 pt-1">

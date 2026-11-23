@@ -132,7 +132,7 @@
                 <x-icon name="upload" class="w-7 h-7 text-[#047857] shrink-0" />
                 <span class="min-w-0">
                     <span class="block font-semibold">{{ __('Upload GPX') }}</span>
-                    <span class="block text-sm rs-muted">{{ __('Bagikan jejak pendakianmu') }}</span>
+                    <span class="block text-sm rs-muted">{{ __('Tambahkan jalur dari file GPX') }}</span>
                 </span>
             </a>
             <a href="{{ route('account.submissions') }}" class="rs-card p-5 flex items-center gap-4 hover:border-[#047857] min-w-0 sm:col-span-2 lg:col-span-1">
@@ -148,7 +148,7 @@
         <section class="mt-10 rs-card p-5 sm:p-7 md:grid md:grid-cols-12 md:gap-8" aria-labelledby="app-only-title" data-app-only>
             <div class="md:col-span-5">
                 <h2 id="app-only-title" class="rs-display uppercase text-3xl leading-none text-[#053b30]">{{ __('Di aplikasi Android') }}</h2>
-                <p class="mt-2 rs-muted">{{ __('Fitur ini butuh GPS dan radio HP, jadi hanya ada di aplikasi.') }}</p>
+                <p class="mt-2 rs-muted">{{ __('Fitur berikut memakai GPS, Bluetooth, dan Wi-Fi di HP, jadi hanya tersedia di aplikasi.') }}</p>
                 <a href="https://app.rutestrip.ai.id" rel="noopener" class="mt-3 inline-flex items-center gap-1.5 min-h-[44px] font-semibold text-[#047857] underline decoration-[#047857]/40 underline-offset-4 hover:text-[#053b30]">
                     {{ __('Lihat semua fitur aplikasi') }}
                 </a>

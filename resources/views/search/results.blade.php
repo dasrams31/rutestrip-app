@@ -87,7 +87,7 @@
 
             <form action="{{ route('search.submit') }}" method="POST" role="search" class="mt-6 max-w-3xl" data-search-form>
                 @csrf
-                <label for="query-top" class="block text-sm font-semibold text-white mb-2">{{ __('Mau cari yang lain?') }}</label>
+                <label for="query-top" class="block text-sm font-semibold text-white mb-2">{{ __('Ubah pencarian') }}</label>
                 <div class="rs-on-light flex flex-col sm:flex-row gap-2 rounded-xl bg-white p-2">
                     <div class="relative flex-1 min-w-0">
                         <x-icon name="search" class="w-5 h-5 text-rs-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -117,8 +117,8 @@
         @elseif($results->isEmpty())
         {{-- Nothing close enough to the question. --}}
         <div class="rs-card p-6 sm:p-10 max-w-2xl mx-auto">
-            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Belum ketemu jalur yang pas.') }}</p>
-            <p class="mt-2 text-rs-muted leading-relaxed">{{ __('Coba tulis dengan cara lain. Sebut nama gunung, berapa lama mau jalan, atau seberapa curam jalurnya.') }}</p>
+            <p class="rs-display uppercase text-3xl text-rs-z9">{{ __('Tidak ada jalur yang cocok.') }}</p>
+            <p class="mt-2 text-rs-muted leading-relaxed">{{ __('Tulis dengan kata lain: sebut nama gunung, lama pendakian, atau seberapa curam jalurnya. Atau pilih salah satu contoh di bawah.') }}</p>
             <form action="{{ route('search.submit') }}" method="POST" class="mt-5 flex flex-wrap gap-2">
                 @csrf
                 @foreach($suggestions as $suggestion)
@@ -238,7 +238,7 @@
 
         <details class="rs-more mt-10 max-w-3xl rounded-lg border border-rs-line bg-white">
             <summary class="flex items-center justify-between gap-3 min-h-[48px] px-4 py-3 font-semibold text-rs-z9">
-                <span>{{ __('Cara kami mencocokkan (untuk yang penasaran)') }}</span>
+                <span>{{ __('Detail teknis pencocokan') }}</span>
                 <x-icon name="chevron-down" class="rs-more-icon w-5 h-5 shrink-0 transition-transform" />
             </summary>
             <div class="px-4 pb-4 text-sm text-rs-muted leading-relaxed space-y-2">
