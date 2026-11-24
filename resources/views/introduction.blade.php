@@ -50,21 +50,23 @@
     .rs-stage.is-full .rs-slide-frame { border: 0; border-radius: 0; background: transparent; }
     .rs-stage.is-full .rs-slide img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: contain; background: transparent; cursor: pointer; }
     .rs-stage.is-full .rs-slide-text { display: none; }
-    /* Quiet bar: a thin strip that fades into the slide, small outlined buttons, no yellow fill.
-       Behind the buttons the zamrud backdrop is at least 74%, so white text keeps 4.5:1 even
-       over the light slides (checked: 5.6:1 over the paper colour). */
-    .rs-stage.is-full .rs-deck-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; justify-content: center; gap: .5rem;
-        padding: 1.5rem 1rem calc(.5rem + env(safe-area-inset-bottom)); color: #fff; font-size: .875rem;
-        background: linear-gradient(to top, rgba(5, 59, 48, .88) 0, rgba(5, 59, 48, .74) 70%, rgba(5, 59, 48, 0) 100%);
-        transition: opacity .2s; }
-    .rs-stage.is-full .rs-deck-bar button { min-height: 36px; padding: 0 .8rem; font-size: .875rem; font-weight: 600; border-width: 1px; border-radius: 6px; }
-    .rs-stage.is-full .rs-deck-bar .rs-btn-ghost, .rs-stage.is-full .rs-deck-bar .rs-sign { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .45); }
-    /* Next slide keeps a yellow edge as the one accent; its text stays white (yellow text is only 3.9:1 here). */
-    .rs-stage.is-full .rs-deck-bar .rs-sign { border-color: #FCD34D; }
-    .rs-stage.is-full .rs-deck-bar button:hover { background: rgba(255, 255, 255, .12); }
-    .rs-stage.is-full .rs-deck-bar svg { width: 1rem; height: 1rem; }
-    @media (pointer: coarse) { .rs-stage.is-full .rs-deck-bar button { min-height: 44px; } }
+    /* Full screen controls: three bare icons in the bottom right corner, no strip and no fill.
+       White icons with a dark halo stay visible on light and dark slides alike. Labels remain
+       for screen readers; the slide number is printed on the slide itself. */
+    .rs-stage.is-full .rs-deck-bar { position: absolute; left: auto; right: .5rem; bottom: calc(.5rem + env(safe-area-inset-bottom)); z-index: 2;
+        margin: 0; padding: 0; gap: .125rem; flex-wrap: nowrap; background: none; transition: opacity .2s; }
+    .rs-stage.is-full .rs-deck-bar button { min-height: 0; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: #fff;
+        opacity: .9; filter: drop-shadow(0 0 .8px #000) drop-shadow(0 0 .8px #000) drop-shadow(0 0 2.5px rgba(0, 0, 0, .6)); }
+    .rs-stage.is-full .rs-deck-bar button:hover { background: transparent; opacity: 1; }
+    .rs-stage.is-full .rs-deck-bar button:disabled { opacity: .3; }
+    .rs-stage.is-full .rs-deck-bar button:focus-visible { outline: 2px solid #fff; outline-offset: 0; opacity: 1; }
+    .rs-stage.is-full .rs-deck-bar svg { width: 1.5rem; height: 1.5rem; stroke-width: 2.25; }
+    .rs-stage.is-full .rs-deck-bar svg path { stroke-width: 2.25; }
+    .rs-stage.is-full .rs-deck-bar button > span, .rs-stage.is-full #rs-count { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .rs-stage.is-full .rs-full-icon { display: block; }
+    @media (pointer: coarse) { .rs-stage.is-full .rs-deck-bar button { width: 44px; height: 44px; } }
     .rs-stage.is-full #rs-full { margin-left: 0; }
+    .rs-full-icon { display: none; }
     .rs-stage.is-full :focus-visible { outline-color: #fff; }
     .rs-stage.is-full.is-idle { cursor: none; }
     .rs-stage.is-full.is-idle .rs-deck-bar:not(:has(:focus-visible)) { opacity: 0; pointer-events: none; }
@@ -94,7 +96,7 @@
                     <span>{{ __('Berikutnya') }}</span> <x-icon name="arrow-right" class="w-5 h-5 shrink-0" />
                 </button>
                 <p class="rs-num font-semibold" id="rs-count" role="status" aria-live="polite"></p>
-                <button type="button" class="rs-btn-ghost sm:ml-auto" id="rs-full" hidden>{{ __('Layar penuh') }}</button>
+                <button type="button" class="rs-btn-ghost sm:ml-auto" id="rs-full" hidden><span id="rs-full-label">{{ __('Layar penuh') }}</span><x-icon name="x" class="rs-full-icon w-5 h-5 shrink-0" /></button>
             </div>
             <ol class="rs-deck space-y-8" id="rs-deck" aria-label="{{ __('Slide presentasi') }}">
                 @foreach($slides as $slide)
@@ -240,7 +242,7 @@
     function setFull(on) {
         stage.classList.toggle('is-full', on);
         document.documentElement.classList.toggle('rs-no-scroll', on);
-        full.textContent = on ? leave : enter;
+        document.getElementById('rs-full-label').textContent = on ? leave : enter;
         wake();
     }
     function isFull() { return stage.classList.contains('is-full'); }
