@@ -80,46 +80,6 @@
   },
   {
    "n": 6,
-   "title": "ANGKA GPX MENJADI KALIMAT",
-   "text": [
-    "Fusi data",
-    "Data numerik GPX",
-    "Narasi otomatis",
-    "distance_km: 5.2",
-    "“Jalur pendakian dengan jarak sedang sekitar 5.2 kilometer”",
-    "elevation_gain_m: 850",
-    "“Total kenaikan elevasi 850 meter”",
-    "average_grade_pct: 16.3",
-    "“Karakteristik jalur sangat curam dengan grade rata-rata 16.3%”",
-    "difficulty: sangat sulit",
-    "“Tingkat kesulitan: sangat sulit. Cocok untuk pendaki berpengalaman”",
-    "Lalu digabung dengan deskripsi dari literatur pendakian (vegetasi, sumber air, panorama) menjadi satu dokumen per jalur. Dengan begitu angka GPX ikut terbaca oleh model bahasa."
-   ]
-  },
-  {
-   "n": 7,
-   "title": "PREPROCESSING: STOPWORD SELEKTIF, TANPA STEMMING",
-   "text": [
-    "Preprocessing",
-    "Teks asli",
-    "Jalur ini SANGAT curam!!! Cocok untuk pendaki",
-    "Data cleaning",
-    "Jalur ini SANGAT curam Cocok untuk pendaki",
-    "Case folding",
-    "jalur ini sangat curam cocok untuk pendaki",
-    "Stopword selektif",
-    "jalur sangat curam cocok pendaki",
-    "Kelompok kata: Jumlah, Contoh",
-    "Stopword (dihapus): 47, yang, dan, di, ke, dari",
-    "Kata negasi (disimpan): 5, tidak, bukan, jangan, belum, tanpa",
-    "Kata sifat jalur (disimpan): 15, mudah, sulit, curam, landai, pemula",
-    "−32,5%",
-    "jumlah kata: 2.847 menjadi 1.923",
-    "Tanpa stemming. SBERT membaca konteks dari bentuk kata. “Pendakian” dan “mendaki” bernuansa beda, dan “daki” bisa bermakna ganda."
-   ]
-  },
-  {
-   "n": 8,
    "title": "SBERT DAN COSINE SIMILARITY",
    "text": [
     "Ekstraksi fitur dan kemiripan",
@@ -137,7 +97,7 @@
    ]
   },
   {
-   "n": 9,
+   "n": 7,
    "title": "EMPAT SKENARIO QUERY",
    "text": [
     "Pengujian",
@@ -158,7 +118,7 @@
    ]
   },
   {
-   "n": 10,
+   "n": 8,
    "title": "SBERT 140% DI ATAS TF-IDF",
    "text": [
     "Evaluasi",
@@ -170,7 +130,7 @@
    ]
   },
   {
-   "n": 11,
+   "n": 9,
    "title": "SKENARIO 3: ANGKA TIDAK TERBACA",
    "text": [
     "Keterbatasan",
@@ -185,46 +145,7 @@
    ]
   },
   {
-   "n": 12,
-   "title": "APLIKASI WEB DI PAPER",
-   "text": [
-    "Implementasi",
-    "Lapisan: Teknologi, Fungsi",
-    "Backend: Laravel 10, API, routing, basis data",
-    "Mesin ML: Python 3.10+, Olah GPX, SBERT, kemiripan",
-    "Model NLP: Sentence-Transformers 2.2+, Encoding teks",
-    "Basis data: MySQL / SQLite, Simpan data dan vektor",
-    "Antarmuka: Blade + JavaScript, Halaman pengguna",
-    "Uji batch upload: 39 file GPX, rata-rata 2,3 detik per file, sekitar 90 detik total, tanpa error. Setiap jalur menghasilkan vektor 384 dimensi yang valid.",
-    "Halaman detail jalur versi paper (Gambar 9)"
-   ]
-  },
-  {
-   "n": 13,
-   "title": "DARI PAPER KE RUTESTRIP.AI.ID",
-   "text": [
-    "Evaluasi setelah paper",
-    "Metode yang sama dipakai di situs publik, datanya diperbesar, lalu diuji ulang. Bagian ini menjawab saran di paper.",
-    "rutestrip.ai.id"
-   ]
-  },
-  {
-   "n": 14,
-   "title": "39 JALUR MENJADI 143",
-   "text": [
-    "Versi website",
-    "Paper: Website",
-    "Jumlah jalur: 39, 143",
-    "Sebaran: Pulau Jawa, Jabar 57, Jateng 50, Jatim 35, Lampung 1",
-    "Sumber GPX: Rekaman lapangan, 36 koleksi penelitian, 107 OpenStreetMap (ODbL)",
-    "Inti metode: SBERT + Cosine, Sama",
-    "Tambahan di atas metode paper",
-    "Dokumen per aspek: tiap kalimat narasi punya vektor sendiri. Nama gunung dan daerah yang disebut menjadi saringan. Kata kriteria diurutkan dengan angka GPX (dibahas di slide berikutnya).",
-    "Beranda rutestrip.ai.id, November 2026"
-   ]
-  },
-  {
-   "n": 15,
+   "n": 10,
    "title": "KATA KRITERIA DIURUTKAN DENGAN ANGKA GPX",
    "text": [
     "Menjawab skenario 3",
@@ -233,23 +154,7 @@
    ]
   },
   {
-   "n": 16,
-   "title": "REKAMAN GPX DIRAPIKAN",
-   "text": [
-    "Kualitas data",
-    "40",
-    "rekaman pulang-pergi dan loop",
-    "Dipotong menjadi satu jalur basecamp sampai puncak. Titik GPS hanya dibuang, tidak digeser atau ditambah.",
-    "21",
-    "jalur berhenti sebelum puncak",
-    "Dilengkapi dengan jalan setapak OpenStreetMap sampai titik puncak.",
-    "Contoh: Sebelum, Sesudah",
-    "Semeru: 38,95 km, 21,8 km",
-    "Lawu via Cemoro Sewu: 25,9 km, 6,5 km"
-   ]
-  },
-  {
-   "n": 17,
+   "n": 11,
    "title": "HASIL UJI ULANG PADA 143 JALUR",
    "text": [
     "Evaluasi ulang",
@@ -263,7 +168,7 @@
    ]
   },
   {
-   "n": 18,
+   "n": 12,
    "title": "RUTESTRIP MOBILE",
    "text": [
     "Pengembangan lanjutan, di luar cakupan paper",
@@ -287,7 +192,7 @@
    ]
   },
   {
-   "n": 19,
+   "n": 13,
    "title": "KESIMPULAN DAN SARAN",
    "text": [
     "Kesimpulan",
@@ -304,11 +209,97 @@
    ]
   },
   {
-   "n": 20,
+   "n": 14,
    "title": "TERIMA KASIH",
    "text": [
     "Saya siap menjawab pertanyaan Bapak dan Ibu penguji.",
     "Situs  rutestrip.ai.id Notebook  s.peka.ai.id/rutestrip-notebook Paper  doi.org/10.32520/stmsi.v15i4.6087 Aplikasi  rutestrip.ai.id/install"
+   ]
+  },
+  {
+   "n": 15,
+   "title": "Cadangan: ANGKA GPX MENJADI KALIMAT",
+   "text": [
+    "Fusi data",
+    "Data numerik GPX",
+    "Narasi otomatis",
+    "distance_km: 5.2",
+    "“Jalur pendakian dengan jarak sedang sekitar 5.2 kilometer”",
+    "elevation_gain_m: 850",
+    "“Total kenaikan elevasi 850 meter”",
+    "average_grade_pct: 16.3",
+    "“Karakteristik jalur sangat curam dengan grade rata-rata 16.3%”",
+    "difficulty: sangat sulit",
+    "“Tingkat kesulitan: sangat sulit. Cocok untuk pendaki berpengalaman”",
+    "Lalu digabung dengan deskripsi dari literatur pendakian (vegetasi, sumber air, panorama) menjadi satu dokumen per jalur. Dengan begitu angka GPX ikut terbaca oleh model bahasa."
+   ]
+  },
+  {
+   "n": 16,
+   "title": "Cadangan: PREPROCESSING: STOPWORD SELEKTIF, TANPA STEMMING",
+   "text": [
+    "Preprocessing",
+    "Teks asli",
+    "Jalur ini SANGAT curam!!! Cocok untuk pendaki",
+    "Data cleaning",
+    "Jalur ini SANGAT curam Cocok untuk pendaki",
+    "Case folding",
+    "jalur ini sangat curam cocok untuk pendaki",
+    "Stopword selektif",
+    "jalur sangat curam cocok pendaki",
+    "Kelompok kata: Jumlah, Contoh",
+    "Stopword (dihapus): 47, yang, dan, di, ke, dari",
+    "Kata negasi (disimpan): 5, tidak, bukan, jangan, belum, tanpa",
+    "Kata sifat jalur (disimpan): 15, mudah, sulit, curam, landai, pemula",
+    "−32,5%",
+    "jumlah kata: 2.847 menjadi 1.923",
+    "Tanpa stemming. SBERT membaca konteks dari bentuk kata. “Pendakian” dan “mendaki” bernuansa beda, dan “daki” bisa bermakna ganda."
+   ]
+  },
+  {
+   "n": 17,
+   "title": "Cadangan: APLIKASI WEB DI PAPER",
+   "text": [
+    "Implementasi",
+    "Lapisan: Teknologi, Fungsi",
+    "Backend: Laravel 10, API, routing, basis data",
+    "Mesin ML: Python 3.10+, Olah GPX, SBERT, kemiripan",
+    "Model NLP: Sentence-Transformers 2.2+, Encoding teks",
+    "Basis data: MySQL / SQLite, Simpan data dan vektor",
+    "Antarmuka: Blade + JavaScript, Halaman pengguna",
+    "Uji batch upload: 39 file GPX, rata-rata 2,3 detik per file, sekitar 90 detik total, tanpa error. Setiap jalur menghasilkan vektor 384 dimensi yang valid.",
+    "Halaman detail jalur versi paper (Gambar 9)"
+   ]
+  },
+  {
+   "n": 18,
+   "title": "Cadangan: 39 JALUR MENJADI 143",
+   "text": [
+    "Versi website",
+    "Paper: Website",
+    "Jumlah jalur: 39, 143",
+    "Sebaran: Pulau Jawa, Jabar 57, Jateng 50, Jatim 35, Lampung 1",
+    "Sumber GPX: Rekaman lapangan, 36 koleksi penelitian, 107 OpenStreetMap (ODbL)",
+    "Inti metode: SBERT + Cosine, Sama",
+    "Tambahan di atas metode paper",
+    "Dokumen per aspek: tiap kalimat narasi punya vektor sendiri. Nama gunung dan daerah yang disebut menjadi saringan. Kata kriteria diurutkan dengan angka GPX (dibahas di slide 10).",
+    "Beranda rutestrip.ai.id, November 2026"
+   ]
+  },
+  {
+   "n": 19,
+   "title": "Cadangan: REKAMAN GPX DIRAPIKAN",
+   "text": [
+    "Kualitas data",
+    "40",
+    "rekaman pulang-pergi dan loop",
+    "Dipotong menjadi satu jalur basecamp sampai puncak. Titik GPS hanya dibuang, tidak digeser atau ditambah.",
+    "21",
+    "jalur berhenti sebelum puncak",
+    "Dilengkapi dengan jalan setapak OpenStreetMap sampai titik puncak.",
+    "Contoh: Sebelum, Sesudah",
+    "Semeru: 38,95 km, 21,8 km",
+    "Lawu via Cemoro Sewu: 25,9 km, 6,5 km"
    ]
   }
  ]

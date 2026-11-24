@@ -9,7 +9,7 @@ from PIL import Image
 from pptx import Presentation
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DECK = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(REPO, "bahan sidang", "Sidang_RuteStrip_Rama.pptx")
+DECK = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(REPO, "bahan sidang", "PPT Jalur Non Reguler.pptx")
 IMG_DIR = os.path.join(REPO, "public", "images", "introduction")
 DATA = os.path.join(REPO, "resources", "data", "introduction.json")
 TMP = os.path.join(tempfile.gettempdir(), "rutestrip_introduction_png")
@@ -62,6 +62,10 @@ for i, s in enumerate(prs.slides, 1):
                     parts.append(": ".join([cells[0], ", ".join(cells[1:])]) if len(cells) > 1 else cells[0])
         elif sh.shape_type == 13 and sh.name.startswith("QR"):
             parts.append("Kode QR untuk memasang aplikasi: https://rutestrip.ai.id/install")
+    # Backup slides (behind the closing slide) carry "Cadangan" where the page number was.
+    if "Cadangan" in parts:
+        parts.remove("Cadangan")
+        title = "Cadangan: " + (title or f"Slide {i}")
     slides.append({"n": i, "title": title or f"Slide {i}", "text": [p for p in parts if p]})
 json.dump({"slides": slides}, open(DATA, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print(n, "slides,", round(total / 1e6, 2), "MB of images")
