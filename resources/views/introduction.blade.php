@@ -38,13 +38,32 @@
     }
     .rs-slide img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #053b30; }
     .rs-deck-bar button:disabled { opacity: .45; cursor: not-allowed; }
-    /* Full screen: slide centred on zamrud, the control bar stays reachable at the bottom. */
-    .rs-stage:fullscreen { background: #053b30; display: flex; flex-direction: column; justify-content: center; padding: 1rem; }
-    .rs-stage:fullscreen .rs-slide-frame { border: 0; border-radius: 0; background: transparent; max-width: calc((100vh - 6.5rem) * 16 / 9); width: 100%; margin: 0 auto; }
-    .rs-stage:fullscreen .rs-slide-text { display: none; }
-    .rs-stage:fullscreen .rs-deck-bar { color: #fff; order: 2; margin: 1rem auto 0; }
-    .rs-stage:fullscreen .rs-deck-bar .rs-btn-ghost { background: transparent; color: #fff; border-color: #a7f3d0; }
-    .rs-stage:fullscreen :focus-visible { outline-color: #fff; }
+    /*
+     * Full screen (.is-full, set by the script): the slide fills the whole screen and is never
+     * cropped (object-fit: contain adds bars only when the screen is not 16:9). The control bar
+     * lies over the bottom edge and fades out when the pointer rests, like a video player; it
+     * stays while a control has keyboard focus. position: fixed also covers browsers without the
+     * Fullscreen API (iPhone), where the stage simply takes over the window.
+     */
+    .rs-stage.is-full { position: fixed; inset: 0; z-index: 2147483000; width: 100vw; height: 100vh; height: 100dvh; margin: 0; padding: 0; overflow: hidden; background: #053b30; }
+    .rs-stage.is-full .rs-deck, .rs-stage.is-full .rs-slide.is-current, .rs-stage.is-full figure, .rs-stage.is-full .rs-slide-frame { height: 100%; margin: 0; }
+    .rs-stage.is-full .rs-slide-frame { border: 0; border-radius: 0; background: transparent; }
+    .rs-stage.is-full .rs-slide img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: contain; background: transparent; cursor: pointer; }
+    .rs-stage.is-full .rs-slide-text { display: none; }
+    .rs-stage.is-full .rs-deck-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; justify-content: center;
+        padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom)); background: rgba(5, 59, 48, .94); color: #fff; transition: opacity .2s; }
+    .rs-stage.is-full .rs-deck-bar .rs-btn-ghost { background: transparent; color: #fff; border-color: #a7f3d0; }
+    .rs-stage.is-full .rs-deck-bar .rs-btn-ghost:hover { background: rgba(255, 255, 255, .1); }
+    .rs-stage.is-full #rs-full { margin-left: 0; }
+    .rs-stage.is-full :focus-visible { outline-color: #fff; }
+    .rs-stage.is-full.is-idle { cursor: none; }
+    .rs-stage.is-full.is-idle .rs-deck-bar:not(:has(:focus-visible)) { opacity: 0; pointer-events: none; }
+    html.rs-no-scroll, html.rs-no-scroll body { overflow: hidden; }
+    /* Short screens (a phone held sideways): a slimmer bar, still 44 px to tap. */
+    @media (max-height: 480px) {
+        .rs-stage.is-full .rs-deck-bar { padding-top: .4rem; padding-bottom: calc(.4rem + env(safe-area-inset-bottom)); gap: .5rem; }
+        .rs-stage.is-full .rs-deck-bar button { min-height: 44px; padding: 0 .9rem; font-size: .875rem; }
+    }
     .rs-outline button[aria-current="true"] { background: #ecfdf5; border-color: #047857; }
 </style>
 @endpush
@@ -201,16 +220,51 @@
         startX = null;
     }, { passive: true });
 
-    if (stage.requestFullscreen) {
-        var enter = @js(__('Layar penuh')), leave = @js(__('Keluar dari layar penuh'));
-        full.hidden = false;
-        full.addEventListener('click', function () {
-            if (document.fullscreenElement) document.exitFullscreen(); else stage.requestFullscreen();
-        });
-        document.addEventListener('fullscreenchange', function () {
-            full.textContent = document.fullscreenElement ? leave : enter;
-        });
+    // Full screen. Real Fullscreen API where it exists; otherwise the stage takes over the window.
+    var enter = @js(__('Layar penuh')), leave = @js(__('Keluar dari layar penuh'));
+    var request = stage.requestFullscreen || stage.webkitRequestFullscreen;
+    var exit = document.exitFullscreen || document.webkitExitFullscreen;
+    var fsElement = function () { return document.fullscreenElement || document.webkitFullscreenElement; };
+    var idleTimer = null;
+
+    function wake() {
+        stage.classList.remove('is-idle');
+        clearTimeout(idleTimer);
+        if (stage.classList.contains('is-full')) idleTimer = setTimeout(function () { stage.classList.add('is-idle'); }, 2500);
     }
+    function setFull(on) {
+        stage.classList.toggle('is-full', on);
+        document.documentElement.classList.toggle('rs-no-scroll', on);
+        full.textContent = on ? leave : enter;
+        wake();
+    }
+    function isFull() { return stage.classList.contains('is-full'); }
+
+    full.hidden = false;
+    full.addEventListener('click', function () {
+        if (request && exit) {
+            if (fsElement()) exit.call(document); else request.call(stage);
+        } else {
+            setFull(!isFull());
+        }
+    });
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (name) {
+        document.addEventListener(name, function () { setFull(fsElement() === stage); });
+    });
+    // Pointer movement brings the bar back; arrow keys and space change slides without showing it.
+    ['mousemove', 'mousedown', 'touchstart'].forEach(function (name) {
+        stage.addEventListener(name, wake, { passive: true });
+    });
+    // In full screen a click on the slide moves on, and so does the space bar.
+    deck.addEventListener('click', function (event) {
+        if (isFull() && event.target.tagName === 'IMG') show(current + 1);
+    });
+    document.addEventListener('keydown', function (event) {
+        if (!isFull()) return;
+        if (event.key === 'Tab') wake();
+        if (event.key === ' ' && event.target.tagName !== 'BUTTON') { show(current + 1); event.preventDefault(); }
+        else if (event.key === 'Escape' && !fsElement()) setFull(false);
+    });
 
     function fromHash() { var m = /^#slide-(\d+)$/.exec(location.hash); return m ? Number(m[1]) - 1 : null; }
     window.addEventListener('hashchange', function () { var i = fromHash(); if (i !== null && i !== current) show(i, true, true); });
