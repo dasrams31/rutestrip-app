@@ -1,0 +1,315 @@
+{
+ "slides": [
+  {
+   "n": 1,
+   "title": "Sistem Rekomendasi Rute Pendakian Gunung menggunakan Content-Based Filtering berbasis SBERT dan Cosine Similarity",
+   "text": [
+    "Sidang Skripsi  ·  Jalur Non Reguler (Scientist)",
+    "Rama Danadipa Putra Wijaya NIM 23.12.2956  ·  S1 Sistem Informasi  ·  Fakultas Ilmu Komputer Universitas Amikom Yogyakarta  ·  Dosen pembimbing: Arif Nur Rahman",
+    "Terbit di SISTEMASI: Jurnal Sistem Informasi, Vol. 15 No. 4 (2026)  ·  SINTA 3"
+   ]
+  },
+  {
+   "n": 2,
+   "title": "SATU GUNUNG, BANYAK JALUR",
+   "text": [
+    "Latar belakang",
+    "1",
+    "Tiap jalur berbeda",
+    "Jarak, elevasi, kemiringan, dan sumber air tidak sama antar jalur di gunung yang sama.",
+    "2",
+    "Informasinya tersebar",
+    "Pendaki memilih dari cerita teman, media sosial, atau forum. Isinya subjektif dan tidak terstruktur.",
+    "3",
+    "Salah pilih berisiko",
+    "Jalur yang tidak cocok dengan kemampuan pendaki menambah risiko kelelahan dan keadaan darurat.",
+    "Tiga jalur menuju puncak Merbabu dari data GPX penelitian. Angka di legenda adalah rekaman pulang-pergi."
+   ]
+  },
+  {
+   "n": 3,
+   "title": "CELAH YANG DIISI",
+   "text": [
+    "Celah penelitian dan tujuan",
+    "Penelitian sebelumnya",
+    "Rekomendasi wisata alam dengan Content-Based Filtering memakai atribut numerik seperti jarak, lokasi, dan biaya. TF-IDF hanya menghitung frekuensi kata, sehingga sinonim dan konteks kalimat tidak terbaca. SBERT sudah terbukti di rekomendasi berita dan perpustakaan digital, tetapi belum dipakai untuk jalur pendakian.",
+    "Tujuan Membangun sistem rekomendasi jalur pendakian yang membaca deskripsi jalur dengan SBERT, lalu mengukur kemiripannya dengan Cosine Similarity.",
+    "Kebaruan",
+    "Penerapan SBERT pertama pada rekomendasi jalur pendakian di Indonesia. Fusi data: angka dari file GPX diubah menjadi kalimat agar bisa dibaca model bahasa. Stopword selektif: kata negasi dan kata sifat jalur tetap disimpan."
+   ]
+  },
+  {
+   "n": 4,
+   "title": "39 JALUR DI PULAU JAWA",
+   "text": [
+    "Data penelitian",
+    "39",
+    "jalur pendakian, file GPX rekaman lapangan",
+    "Purposive sampling",
+    "Minimal 100 trackpoint per jalur, agar statistiknya akurat. Jalur sudah diverifikasi komunitas pendaki. Berada di Pulau Jawa.",
+    "Atribut yang diekstrak dari GPX",
+    "Atribut: Cara hitung, Satuan",
+    "Jarak tempuh: gpx.length_3d(), km",
+    "Kenaikan elevasi: jumlah selisih elevasi yang naik, m",
+    "Durasi Naismith: jarak / 5 + elevasi / 600, jam",
+    "Grade rata-rata: elevasi / (jarak × 1000) × 100, %",
+    "Elevasi minimum / maksimum: min / max elevasi, mdpl"
+   ]
+  },
+  {
+   "n": 5,
+   "title": "DUA JALUR KERJA SISTEM",
+   "text": [
+    "Metode",
+    "Pengolahan data (offline, sekali per jalur)",
+    "File GPX + deskripsi literatur",
+    "Angka GPX jadi narasi",
+    "Fusi data",
+    "Preprocessing",
+    "SBERT",
+    "Basis vektor jalur",
+    "Pengolahan query (online, setiap pencarian)",
+    "Kalimat pendaki",
+    "Preprocessing",
+    "SBERT (encoder yang sama)",
+    "Cosine Similarity",
+    "Top-N rekomendasi",
+    "vektor jalur dibandingkan",
+    "Contoh query: “Saya ingin jalur landai dengan pemandangan sabana.” Query dan jalur masuk ke model yang sama, jadi keduanya berada di ruang vektor 384 dimensi yang sama."
+   ]
+  },
+  {
+   "n": 6,
+   "title": "ANGKA GPX MENJADI KALIMAT",
+   "text": [
+    "Fusi data",
+    "Data numerik GPX",
+    "Narasi otomatis",
+    "distance_km: 5.2",
+    "“Jalur pendakian dengan jarak sedang sekitar 5.2 kilometer”",
+    "elevation_gain_m: 850",
+    "“Total kenaikan elevasi 850 meter”",
+    "average_grade_pct: 16.3",
+    "“Karakteristik jalur sangat curam dengan grade rata-rata 16.3%”",
+    "difficulty: sangat sulit",
+    "“Tingkat kesulitan: sangat sulit. Cocok untuk pendaki berpengalaman”",
+    "Lalu digabung dengan deskripsi dari literatur pendakian (vegetasi, sumber air, panorama) menjadi satu dokumen per jalur. Dengan begitu angka GPX ikut terbaca oleh model bahasa."
+   ]
+  },
+  {
+   "n": 7,
+   "title": "PREPROCESSING: STOPWORD SELEKTIF, TANPA STEMMING",
+   "text": [
+    "Preprocessing",
+    "Teks asli",
+    "Jalur ini SANGAT curam!!! Cocok untuk pendaki",
+    "Data cleaning",
+    "Jalur ini SANGAT curam Cocok untuk pendaki",
+    "Case folding",
+    "jalur ini sangat curam cocok untuk pendaki",
+    "Stopword selektif",
+    "jalur sangat curam cocok pendaki",
+    "Kelompok kata: Jumlah, Contoh",
+    "Stopword (dihapus): 47, yang, dan, di, ke, dari",
+    "Kata negasi (disimpan): 5, tidak, bukan, jangan, belum, tanpa",
+    "Kata sifat jalur (disimpan): 15, mudah, sulit, curam, landai, pemula",
+    "−32,5%",
+    "jumlah kata: 2.847 menjadi 1.923",
+    "Tanpa stemming. SBERT membaca konteks dari bentuk kata. “Pendakian” dan “mendaki” bernuansa beda, dan “daki” bisa bermakna ganda."
+   ]
+  },
+  {
+   "n": 8,
+   "title": "SBERT DAN COSINE SIMILARITY",
+   "text": [
+    "Ekstraksi fitur dan kemiripan",
+    "paraphrase-multilingual-MiniLM-L12-v2",
+    "Parameter: Nilai",
+    "Arsitektur: Transformer, 12 layer",
+    "Dimensi embedding: 384",
+    "Bahasa: 50+ (termasuk Indonesia)",
+    "Panjang maksimum: 128 token",
+    "Encoding 39 dokumen: 0,92 detik",
+    "Multibahasa dipilih karena istilah pendakian sering campuran, misalnya summit, basecamp, elevation gain.",
+    "Kemiripan query (Q) dan dokumen jalur (D)",
+    "cos(Q, D) = (Q · D) / (‖Q‖ × ‖D‖)",
+    "Mengukur arah vektor, bukan panjangnya, jadi panjang dokumen tidak memengaruhi skor. Skor 0 sampai 1: makin dekat ke 1, makin mirip. Contoh: “jalur landai” bisa dekat dengan “cocok untuk pemula” walau tidak ada kata yang sama."
+   ]
+  },
+  {
+   "n": 9,
+   "title": "EMPAT SKENARIO QUERY",
+   "text": [
+    "Pengujian",
+    "Skenario: Query, P@3, P@5 SBERT, P@5 TF-IDF",
+    "1. Eksplisit: jalur mudah untuk pemula, 0,67, 0,40, 0,20",
+    "2. Atribut fisik: trek menantang elevasi tinggi, 1,00, 1,00, 0,60",
+    "3. Temporal: pendakian singkat 2-3 jam, 0,00, 0,00, 0,00",
+    "4. Kontekstual: gunung dengan sabana dan sunrise, 1,00, 1,00, 0,20",
+    "Rata-rata: 0,67, 0,60, 0,25",
+    "Skenario 4: lima hasil teratas",
+    "Jalur: Skor cosine",
+    "Lawu via Tambak: 0,5430",
+    "Lawu via Cetho: 0,5345",
+    "Lawu via Cemoro Sewu: 0,5309",
+    "Ijen - Sempol: 0,4847",
+    "Merbabu via Selo: 0,4774",
+    "Kelimanya relevan, jadi P@5 1,00. TF-IDF hanya 0,20 karena mencari kata yang persis sama. Ground truth ditetapkan oleh pakar domain pendakian."
+   ]
+  },
+  {
+   "n": 10,
+   "title": "SBERT 140% DI ATAS TF-IDF",
+   "text": [
+    "Evaluasi",
+    "0,60",
+    "rata-rata Precision@5 SBERT, dibanding 0,25 untuk TF-IDF",
+    "127-150 ms",
+    "waktu respons pencarian di aplikasi web",
+    "P@3 = 0,67"
+   ]
+  },
+  {
+   "n": 11,
+   "title": "SKENARIO 3: ANGKA TIDAK TERBACA",
+   "text": [
+    "Keterbatasan",
+    "Query: pendakian singkat 2-3 jam",
+    "Hasil teratas: Durasi (jam)",
+    "Argopuro Baderan: 14,96",
+    "Argopuro - Bremi Baderan: 16,17",
+    "Sumbing via Batursari: 6,59",
+    "Kenapa P@5 = 0,00",
+    "Batas angka “2-3 jam” tidak bisa dipahami secara semantik oleh SBERT. Durasi terpendek di dataset 5,40 jam, jadi tidak ada jalur yang cocok. Kata “pendakian” menarik hasil ke jalur Argopuro tanpa melihat durasinya.",
+    "Saran paper: gabungkan pemahaman semantik dengan filter numerik (hybrid), tambahkan data dinamis seperti cuaca, dan fine-tuning SBERT dengan korpus pendakian."
+   ]
+  },
+  {
+   "n": 12,
+   "title": "APLIKASI WEB DI PAPER",
+   "text": [
+    "Implementasi",
+    "Lapisan: Teknologi, Fungsi",
+    "Backend: Laravel 10, API, routing, basis data",
+    "Mesin ML: Python 3.10+, Olah GPX, SBERT, kemiripan",
+    "Model NLP: Sentence-Transformers 2.2+, Encoding teks",
+    "Basis data: MySQL / SQLite, Simpan data dan vektor",
+    "Antarmuka: Blade + JavaScript, Halaman pengguna",
+    "Uji batch upload: 39 file GPX, rata-rata 2,3 detik per file, sekitar 90 detik total, tanpa error. Setiap jalur menghasilkan vektor 384 dimensi yang valid.",
+    "Halaman detail jalur versi paper (Gambar 9)"
+   ]
+  },
+  {
+   "n": 13,
+   "title": "DARI PAPER KE RUTESTRIP.AI.ID",
+   "text": [
+    "Evaluasi setelah paper",
+    "Metode yang sama dipakai di situs publik, datanya diperbesar, lalu diuji ulang. Bagian ini menjawab saran di paper.",
+    "rutestrip.ai.id"
+   ]
+  },
+  {
+   "n": 14,
+   "title": "39 JALUR MENJADI 143",
+   "text": [
+    "Versi website",
+    "Paper: Website",
+    "Jumlah jalur: 39, 143",
+    "Sebaran: Pulau Jawa, Jabar 57, Jateng 50, Jatim 35, Lampung 1",
+    "Sumber GPX: Rekaman lapangan, 36 koleksi penelitian, 107 OpenStreetMap (ODbL)",
+    "Inti metode: SBERT + Cosine, Sama",
+    "Tambahan di atas metode paper",
+    "Dokumen per aspek: tiap kalimat narasi punya vektor sendiri. Nama gunung dan daerah yang disebut menjadi saringan. Kata kriteria diurutkan dengan angka GPX (dibahas di slide berikutnya).",
+    "Beranda rutestrip.ai.id, November 2026"
+   ]
+  },
+  {
+   "n": 15,
+   "title": "KATA KRITERIA DIURUTKAN DENGAN ANGKA GPX",
+   "text": [
+    "Menjawab skenario 3",
+    "Kata kriteria seperti landai, mudah, sulit, curam, singkat, panjang, juga bentuk tercepat dan termudah, mengurutkan hasil dengan statistik GPX. Singkat atau tercepat diurutkan dari waktu Naismith terkecil. SBERT tetap dipakai untuk skor relevansi, kalimat bebas tanpa kriteria, dan pemecah seri. Nama gunung menjadi saringan, jadi “merbabu” hanya menampilkan jalur Merbabu.",
+    "Pencarian “jalur tercepat ke merbabu”: Wonolelo 3 jam 2 menit di urutan pertama"
+   ]
+  },
+  {
+   "n": 16,
+   "title": "REKAMAN GPX DIRAPIKAN",
+   "text": [
+    "Kualitas data",
+    "40",
+    "rekaman pulang-pergi dan loop",
+    "Dipotong menjadi satu jalur basecamp sampai puncak. Titik GPS hanya dibuang, tidak digeser atau ditambah.",
+    "21",
+    "jalur berhenti sebelum puncak",
+    "Dilengkapi dengan jalan setapak OpenStreetMap sampai titik puncak.",
+    "Contoh: Sebelum, Sesudah",
+    "Semeru: 38,95 km, 21,8 km",
+    "Lawu via Cemoro Sewu: 25,9 km, 6,5 km"
+   ]
+  },
+  {
+   "n": 17,
+   "title": "HASIL UJI ULANG PADA 143 JALUR",
+   "text": [
+    "Evaluasi ulang",
+    "0,965",
+    "Precision@5, 17 kalimat uji",
+    "0,961",
+    "MRR, 17 kalimat uji",
+    "1,000",
+    "P@5 kalimat daerah (4 kalimat)",
+    "Label relevan dibuat otomatis dari statistik GPX, misalnya singkat berarti sepertiga jalur dengan waktu Naismith terkecil. Yang belum 1,00: “jalur curam dan menantang” P@5 0,60, dan “pendakian lawu” 0,80 karena hanya ada 4 jalur Lawu."
+   ]
+  },
+  {
+   "n": 18,
+   "title": "RUTESTRIP MOBILE",
+   "text": [
+    "Pengembangan lanjutan, di luar cakupan paper",
+    "Aplikasi Android dari sistem yang sama, dibuat dengan Flutter.",
+    "1",
+    "Pencarian yang sama",
+    "Kalimat dikirim ke API situs, jadi urutan SBERT dan Cosine Similarity-nya sama.",
+    "2",
+    "Rekam dan ajukan jalur",
+    "GPS merekam pendakian. Rekaman bisa jadi jalur baru setelah disetujui admin.",
+    "3",
+    "Rombongan tanpa sinyal",
+    "Chat, posisi teman, dan SOS antar HP lewat Bluetooth dan Wi-Fi.",
+    "Hasil pencarian",
+    "Rekam jalur",
+    "Rombongan",
+    "Kode QR untuk memasang aplikasi: https://rutestrip.ai.id/install",
+    "Pindai untuk memasang",
+    "rutestrip.ai.id/install",
+    "Android 7.0 ke atas · versi 1.2.3"
+   ]
+  },
+  {
+   "n": 19,
+   "title": "KESIMPULAN DAN SARAN",
+   "text": [
+    "Kesimpulan",
+    "1",
+    "SBERT mengenali makna yang tersirat",
+    "Rata-rata Precision@5 0,60, naik 140% dari TF-IDF (0,25). Paling kuat pada query kontekstual seperti sabana dan sunrise.",
+    "2",
+    "Angka GPX terbaca lewat narasi",
+    "Atribut jalur ikut masuk ke vektor 384 dimensi. Pencarian berjalan 127-150 ms.",
+    "3",
+    "Kriteria angka ditangani di versi website",
+    "Kata kriteria diurutkan dengan statistik GPX. Uji ulang pada 143 jalur: P@5 0,965 dan MRR 0,961.",
+    "Saran Uji pengguna langsung dengan pendaki. Label relevan dari penilai manusia, agar evaluasi tidak memakai angka yang sama dengan pengurutan. Fine-tuning SBERT dengan korpus pendakian. Memasukkan cuaca dan kondisi jalur ke perhitungan rekomendasi."
+   ]
+  },
+  {
+   "n": 20,
+   "title": "TERIMA KASIH",
+   "text": [
+    "Saya siap menjawab pertanyaan Bapak dan Ibu penguji.",
+    "Situs  rutestrip.ai.id Notebook  s.peka.ai.id/rutestrip-notebook Paper  doi.org/10.32520/stmsi.v15i4.6087 Aplikasi  rutestrip.ai.id/install"
+   ]
+  }
+ ]
+}

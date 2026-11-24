@@ -87,6 +87,13 @@ Route::get('/arsitektur', function () {
 // Cookie policy (linked from the cookie notice and the footer).
 Route::view('/kebijakan-cookie', 'legal.cookies')->name('cookies.policy');
 
+// Thesis defense slides, exported from the PowerPoint deck (python/tools/export_introduction_slides.py).
+Route::get('/introduction', function () {
+    $data = json_decode((string) file_get_contents(resource_path('data/introduction.json')), true);
+
+    return view('introduction', ['slides' => $data['slides'] ?? []]);
+})->name('introduction');
+
 // User Authentication (Guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
