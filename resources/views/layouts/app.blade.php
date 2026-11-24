@@ -128,6 +128,9 @@
 
         /* Headings: condensed and bold like a trail sign. */
         .rs-display, .rs-display * { font-family: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed, 'Inter', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.005em; }
+        /* Wordmark: the same as on app.rutestrip.ai.id (Barlow Condensed 700, "RuteStrip" in mixed case, 1.45rem and 1.65rem from 640 px). */
+        .rs-brand { font-family: 'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed, 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: 0.01em; line-height: 1; font-size: 1.45rem; text-transform: none; }
+        @media (min-width: 640px) { .rs-brand { font-size: 1.65rem; } }
         .rs-num { font-variant-numeric: tabular-nums; }
 
         /* Kuning fajar = the next step (search, upload, confirm). Bordered like a trail sign. */
@@ -226,7 +229,7 @@
                 <!-- Logo -->
                 <a href="{{ route('search.index') }}" class="flex items-center gap-2.5 min-w-0 rounded-lg">
                     <img src="/images/logo.svg" alt="" width="40" height="40" class="w-9 h-9 rounded-lg flex-shrink-0">
-                    <span class="rs-display uppercase text-2xl leading-none text-rs-z9">RuteStrip</span>
+                    <span class="rs-brand text-rs-z9">RuteStrip</span>
                 </a>
 
                 <!-- Desktop links -->
@@ -464,7 +467,7 @@
                 <div class="lg:col-span-5">
                     <a href="{{ route('search.index') }}" class="inline-flex items-center gap-3 rounded-lg">
                         <img src="/images/logo.svg" alt="" width="40" height="40" class="w-10 h-10 rounded-lg">
-                        <span class="rs-display uppercase text-3xl leading-none text-white">RuteStrip</span>
+                        <span class="rs-brand text-white">RuteStrip</span>
                     </a>
                     <p class="mt-3 text-sm leading-relaxed max-w-sm">
                         {{ __('Cari jalur pendakian gunung di Pulau Jawa dengan kalimat sehari-hari, lalu bandingkan jarak, tanjakan, dan waktunya dari file GPX. Data jalur untuk perencanaan, bukan alat navigasi.') }}

@@ -50,20 +50,25 @@
     .rs-stage.is-full .rs-slide-frame { border: 0; border-radius: 0; background: transparent; }
     .rs-stage.is-full .rs-slide img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: contain; background: transparent; cursor: pointer; }
     .rs-stage.is-full .rs-slide-text { display: none; }
-    .rs-stage.is-full .rs-deck-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; justify-content: center;
-        padding: .75rem 1rem calc(.75rem + env(safe-area-inset-bottom)); background: rgba(5, 59, 48, .94); color: #fff; transition: opacity .2s; }
-    .rs-stage.is-full .rs-deck-bar .rs-btn-ghost { background: transparent; color: #fff; border-color: #a7f3d0; }
-    .rs-stage.is-full .rs-deck-bar .rs-btn-ghost:hover { background: rgba(255, 255, 255, .1); }
+    /* Quiet bar: a thin strip that fades into the slide, small outlined buttons, no yellow fill.
+       Behind the buttons the zamrud backdrop is at least 74%, so white text keeps 4.5:1 even
+       over the light slides (checked: 5.6:1 over the paper colour). */
+    .rs-stage.is-full .rs-deck-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; justify-content: center; gap: .5rem;
+        padding: 1.5rem 1rem calc(.5rem + env(safe-area-inset-bottom)); color: #fff; font-size: .875rem;
+        background: linear-gradient(to top, rgba(5, 59, 48, .88) 0, rgba(5, 59, 48, .74) 70%, rgba(5, 59, 48, 0) 100%);
+        transition: opacity .2s; }
+    .rs-stage.is-full .rs-deck-bar button { min-height: 36px; padding: 0 .8rem; font-size: .875rem; font-weight: 600; border-width: 1px; border-radius: 6px; }
+    .rs-stage.is-full .rs-deck-bar .rs-btn-ghost, .rs-stage.is-full .rs-deck-bar .rs-sign { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .45); }
+    /* Next slide keeps a yellow edge as the one accent; its text stays white (yellow text is only 3.9:1 here). */
+    .rs-stage.is-full .rs-deck-bar .rs-sign { border-color: #FCD34D; }
+    .rs-stage.is-full .rs-deck-bar button:hover { background: rgba(255, 255, 255, .12); }
+    .rs-stage.is-full .rs-deck-bar svg { width: 1rem; height: 1rem; }
+    @media (pointer: coarse) { .rs-stage.is-full .rs-deck-bar button { min-height: 44px; } }
     .rs-stage.is-full #rs-full { margin-left: 0; }
     .rs-stage.is-full :focus-visible { outline-color: #fff; }
     .rs-stage.is-full.is-idle { cursor: none; }
     .rs-stage.is-full.is-idle .rs-deck-bar:not(:has(:focus-visible)) { opacity: 0; pointer-events: none; }
     html.rs-no-scroll, html.rs-no-scroll body { overflow: hidden; }
-    /* Short screens (a phone held sideways): a slimmer bar, still 44 px to tap. */
-    @media (max-height: 480px) {
-        .rs-stage.is-full .rs-deck-bar { padding-top: .4rem; padding-bottom: calc(.4rem + env(safe-area-inset-bottom)); gap: .5rem; }
-        .rs-stage.is-full .rs-deck-bar button { min-height: 44px; padding: 0 .9rem; font-size: .875rem; }
-    }
     .rs-outline button[aria-current="true"] { background: #ecfdf5; border-color: #047857; }
 </style>
 @endpush
