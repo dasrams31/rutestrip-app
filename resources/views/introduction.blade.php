@@ -40,8 +40,8 @@
     .rs-deck-bar button:disabled { opacity: .45; cursor: not-allowed; }
     /*
      * Full screen (.is-full, set by the script): the slide fills the whole screen and is never
-     * cropped (object-fit: contain adds bars only when the screen is not 16:9). The control bar
-     * lies over the bottom edge and fades out when the pointer rests, like a video player; it
+     * cropped (object-fit: contain adds bars only when the screen is not 16:9). The controls
+     * sit in the top right corner and fade out when the pointer rests, like a video player; they
      * stays while a control has keyboard focus. position: fixed also covers browsers without the
      * Fullscreen API (iPhone), where the stage simply takes over the window.
      */
@@ -50,10 +50,11 @@
     .rs-stage.is-full .rs-slide-frame { border: 0; border-radius: 0; background: transparent; }
     .rs-stage.is-full .rs-slide img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: contain; background: transparent; cursor: pointer; }
     .rs-stage.is-full .rs-slide-text { display: none; }
-    /* Full screen controls: three bare icons in the bottom right corner, no strip and no fill.
+    /* Full screen controls: three bare icons in the top right corner (clear of the page number
+       printed at the bottom right of each slide), no strip and no fill.
        White icons with a dark halo stay visible on light and dark slides alike. Labels remain
        for screen readers; the slide number is printed on the slide itself. */
-    .rs-stage.is-full .rs-deck-bar { position: absolute; left: auto; right: .5rem; bottom: calc(.5rem + env(safe-area-inset-bottom)); z-index: 2;
+    .rs-stage.is-full .rs-deck-bar { position: absolute; left: auto; right: .5rem; top: calc(.5rem + env(safe-area-inset-top)); bottom: auto; z-index: 2;
         margin: 0; padding: 0; gap: .125rem; flex-wrap: nowrap; background: none; transition: opacity .2s; }
     .rs-stage.is-full .rs-deck-bar button { min-height: 0; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: #fff;
         opacity: .9; filter: drop-shadow(0 0 .8px #000) drop-shadow(0 0 .8px #000) drop-shadow(0 0 2.5px rgba(0, 0, 0, .6)); }
