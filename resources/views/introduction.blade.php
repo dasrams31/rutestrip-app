@@ -52,7 +52,7 @@
 @section('content')
 <div class="rs-app">
     @include('partials.rs-head', [
-        'eyebrow' => __('Sidang skripsi · Rama Danadipa Putra Wijaya'),
+        'eyebrow' => __('S1 Sistem Informasi · Rama Danadipa Putra Wijaya'),
         'title' => __('Presentasi RuteStrip'),
         'lead' => __(':count slide: isi paper, lalu evaluasi di situs dan aplikasi Android.', ['count' => $count]),
         'seed' => 23,

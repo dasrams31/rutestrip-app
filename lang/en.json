@@ -1467,7 +1467,6 @@
     "Di HP Android, aplikasi RuteStrip merekam jejak GPS dan menyimpan jalur untuk dibuka tanpa sinyal.": "On Android phones, the RuteStrip app records your GPS track and saves trails to open without signal.",
     "Presentasi RuteStrip": "RuteStrip presentation",
     "Slide presentasi skripsi RuteStrip: rekomendasi jalur pendakian dengan SBERT dan Cosine Similarity, hasil di paper, dan evaluasi di situs serta aplikasi Android.": "Slides from the RuteStrip thesis defense: hiking route recommendation with SBERT and cosine similarity, the paper's results, and the evaluation on the site and the Android app.",
-    "Sidang skripsi · Rama Danadipa Putra Wijaya": "Thesis defense · Rama Danadipa Putra Wijaya",
     ":count slide: isi paper, lalu evaluasi di situs dan aplikasi Android.": ":count slides: the paper, then the evaluation on the site and the Android app. The slides are in Indonesian.",
     "Slide presentasi": "Presentation slides",
     "Slide :n dari :count": "Slide :n of :count",
@@ -1480,5 +1479,6 @@
     "Daftar slide": "Slide list",
     "Paper di SISTEMASI, Vol. 15 No. 4 (2026)": "Paper in SISTEMASI, Vol. 15 No. 4 (2026)",
     "Notebook Colab: perhitungan yang bisa dijalankan ulang": "Colab notebook: calculations you can run again",
-    "Unduh aplikasi Android RuteStrip (APK)": "Download the RuteStrip Android app (APK)"
+    "Unduh aplikasi Android RuteStrip (APK)": "Download the RuteStrip Android app (APK)",
+    "S1 Sistem Informasi · Rama Danadipa Putra Wijaya": "Information Systems (undergraduate) · Rama Danadipa Putra Wijaya"
 }
