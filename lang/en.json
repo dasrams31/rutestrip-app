@@ -1637,5 +1637,6 @@
     "Komentar dari :name dihapus.": "The comment by :name was deleted.",
     "Laporan diabaikan. Komentarnya tetap tampil.": "Report dismissed. The comment stays.",
     "hilang dalam :time": "gone in :time",
-    "Kiriman dengan client_id ini sudah dihapus.": "The post with this client_id was deleted."
+    "Kiriman dengan client_id ini sudah dihapus.": "The post with this client_id was deleted.",
+    "Aplikasi": "App"
 }

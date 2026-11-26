@@ -254,13 +254,15 @@
                     {{-- Android app site (features and the APK): a plain link, not the yellow main action. --}}
                     {{-- Between lg and xl the row has no room for the label: icon with a tooltip and an accessible name. --}}
                     <a href="{{ $appSiteUrl }}" rel="noopener" data-nav-app aria-label="{{ __('Unduh aplikasi Android') }}" title="{{ __('Unduh aplikasi Android') }}"
-                       class="px-3 xl:px-3.5 min-w-[44px] h-11 rounded-lg text-[15px] font-semibold transition-colors inline-flex items-center justify-center gap-2 text-rs-muted hover:text-rs-z9 hover:bg-rs-paper">
-                        <x-icon name="download" class="w-5 h-5 xl:w-4 xl:h-4" />
-                        <span class="hidden xl:inline">{{ __('Unduh aplikasi') }}</span>
+                       class="px-2.5 xl:px-3.5 min-w-[44px] h-11 rounded-lg text-[15px] font-semibold whitespace-nowrap transition-colors inline-flex items-center justify-center gap-2 text-rs-muted hover:text-rs-z9 hover:bg-rs-paper">
+                        <x-icon name="device-mobile" class="w-5 h-5 xl:w-4 xl:h-4" />
+                        <span class="hidden xl:inline">{{ __('Aplikasi') }}</span>
                     </a>
 
+                    <div class="w-px h-6 bg-rs-line mx-2" aria-hidden="true"></div>
+
                     <!-- Upload Dropdown -->
-                    <div class="relative ml-2" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
                                 class="h-11 px-4 bg-rs-z9 text-white rounded-lg text-sm font-semibold whitespace-nowrap hover:bg-rs-z8 transition-colors inline-flex items-center gap-2
                                        {{ $uploadActive ? 'ring-2 ring-rs-z7 ring-offset-2' : '' }}">
@@ -289,7 +291,7 @@
 
                     <x-lang-switch class="ml-2" />
 
-                    <div class="w-px h-6 bg-rs-line mx-2"></div>
+                    <div class="w-px h-6 bg-rs-line mx-2" aria-hidden="true"></div>
 
                     @auth
                     <!-- User menu -->
