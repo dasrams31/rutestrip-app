@@ -10,7 +10,10 @@ class AdminNav
 {
     public static function tabs(string $active): array
     {
-        $reports = CommunityMessage::whereNotNull('reported_at')->count();
+        // Chat messages plus Linimasa posts and comments waiting on /admin/moderasi.
+        $reports = CommunityMessage::whereNotNull('reported_at')->count()
+            + \App\Models\Post::whereNotNull('reported_at')->count()
+            + \App\Models\PostComment::whereNotNull('reported_at')->whereHas('post')->count();
         $pending = HikingRoute::withoutGlobalScope('published')->where('review_status', HikingRoute::PENDING)->count();
 
         $tabs = [

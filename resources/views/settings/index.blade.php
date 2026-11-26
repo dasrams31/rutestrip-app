@@ -66,6 +66,18 @@
                         @enderror
                     </div>
 
+                    {{-- Bio on the Linimasa profile (/u/{id}): one line of plain text. --}}
+                    <div>
+                        <label for="bio" class="rs-label">{{ __('Bio') }} <span class="font-normal rs-muted">({{ __('opsional') }})</span></label>
+                        <textarea name="bio" id="bio" rows="2" maxlength="{{ \App\Services\SocialService::BIO_MAX }}"
+                                  aria-describedby="bio-hint @error('bio') bio-error @enderror"
+                                  class="rs-input" @error('bio') aria-invalid="true" @enderror>{{ old('bio', $user->bio) }}</textarea>
+                        <p id="bio-hint" class="rs-hint">{{ __('Tampil di profil linimasamu, maks. :max karakter. Contoh: gunung favorit atau sejak kapan mendaki.', ['max' => \App\Services\SocialService::BIO_MAX]) }}</p>
+                        @error('bio')
+                            <p id="bio-error" class="rs-error"><x-icon name="exclamation" class="w-4 h-4 mt-0.5 shrink-0" /><span>{{ $message }}</span></p>
+                        @enderror
+                    </div>
+
                     <button type="submit" class="rs-btn w-full sm:w-auto">{{ __('account.settings.save_profile') }}</button>
                 </form>
             </section>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AccountApiController;
 use App\Http\Controllers\Api\V1\RouteApiController;
 use App\Http\Controllers\Api\V1\RouteExtrasApiController;
 use App\Http\Controllers\Api\V1\SearchApiController;
+use App\Http\Controllers\Api\V1\SocialApiController;
 use App\Http\Controllers\Api\V1\UploadApiController;
 use App\Http\Controllers\SsoApiController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,31 @@ Route::prefix('v1')->name('api.v1.')->middleware(\App\Http\Middleware\ApiLocale:
 
         Route::post('/routes/{route}/reviews', [RouteExtrasApiController::class, 'storeReview'])
             ->middleware('throttle:10,1,api-v1-review')->name('routes.reviews.store');
+
+        // Linimasa (social timeline), docs/API.md. Behind SsoBearer the throttles count per account.
+        Route::controller(SocialApiController::class)->group(function () {
+            Route::middleware('throttle:60,1,api-v1-social-read')->group(function () {
+                Route::get('/feed', 'feed')->name('feed');
+                Route::get('/stories', 'stories')->name('stories');
+                Route::get('/posts/{id}', 'show')->whereNumber('id')->name('posts.show');
+                Route::get('/posts/{id}/comments', 'comments')->whereNumber('id')->name('posts.comments');
+                Route::get('/users/{id}', 'user')->whereNumber('id')->name('users.show');
+                Route::get('/users/{id}/posts', 'userPosts')->whereNumber('id')->name('users.posts');
+                Route::get('/users/{id}/followers', 'people')->whereNumber('id')->name('users.followers');
+                Route::get('/users/{id}/following', 'people')->whereNumber('id')->name('users.following');
+                Route::get('/me/saved', 'saved')->name('me.saved');
+            });
+            Route::get('/users/search', 'searchUsers')->middleware('throttle:30,1,api-v1-user-search')->name('users.search');
+            Route::post('/posts', 'store')->middleware('throttle:10,1,api-v1-post')->name('posts.store');
+            Route::delete('/posts/{id}', 'destroy')->whereNumber('id')->middleware('throttle:30,1,api-v1-post-delete')->name('posts.destroy');
+            Route::match(['post', 'delete'], '/posts/{id}/like', 'like')->whereNumber('id')->middleware('throttle:60,1,api-v1-post-like')->name('posts.like');
+            Route::match(['post', 'delete'], '/posts/{id}/save', 'save')->whereNumber('id')->middleware('throttle:60,1,api-v1-post-save')->name('posts.save');
+            Route::post('/posts/{id}/comments', 'storeComment')->whereNumber('id')->middleware('throttle:20,1,api-v1-comment')->name('posts.comments.store');
+            Route::delete('/comments/{id}', 'destroyComment')->whereNumber('id')->middleware('throttle:30,1,api-v1-comment-delete')->name('comments.destroy');
+            Route::post('/posts/{id}/report', 'report')->whereNumber('id')->middleware('throttle:20,1,api-v1-social-report')->name('posts.report');
+            Route::post('/comments/{id}/report', 'reportComment')->whereNumber('id')->middleware('throttle:20,1,api-v1-social-report')->name('comments.report');
+            Route::match(['post', 'delete'], '/users/{id}/follow', 'follow')->whereNumber('id')->middleware('throttle:30,1,api-v1-follow')->name('users.follow');
+        });
 
         Route::prefix('me')->name('me.')->controller(AccountApiController::class)->group(function () {
             Route::get('/', 'show')->middleware('throttle:60,1,api-v1')->name('show');

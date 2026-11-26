@@ -145,6 +145,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/kiriman/{route}/setujui', [\App\Http\Controllers\Admin\AdminSubmissionController::class, 'approve'])->whereNumber('route')->name('submissions.approve');
     Route::post('/kiriman/{route}/tolak', [\App\Http\Controllers\Admin\AdminSubmissionController::class, 'reject'])->whereNumber('route')->name('submissions.reject');
     Route::post('/moderasi/{message}/abaikan', [\App\Http\Controllers\Admin\AdminModerationController::class, 'dismiss'])->whereNumber('message')->name('moderation.dismiss');
+    // Linimasa posts and comments that hikers reported (same page, own forms).
+    Route::delete('/moderasi/kiriman/{post}', [\App\Http\Controllers\Admin\AdminModerationController::class, 'destroyPost'])->whereNumber('post')->name('moderation.posts.destroy');
+    Route::post('/moderasi/kiriman/{post}/abaikan', [\App\Http\Controllers\Admin\AdminModerationController::class, 'dismissPost'])->whereNumber('post')->name('moderation.posts.dismiss');
+    Route::delete('/moderasi/komentar/{comment}', [\App\Http\Controllers\Admin\AdminModerationController::class, 'destroyComment'])->whereNumber('comment')->name('moderation.comments.destroy');
+    Route::post('/moderasi/komentar/{comment}/abaikan', [\App\Http\Controllers\Admin\AdminModerationController::class, 'dismissComment'])->whereNumber('comment')->name('moderation.comments.dismiss');
     Route::post('/bulk-provenance-action', [AdminController::class, 'bulkProvenanceAction'])->name('bulk-provenance-action');
     Route::get('/paper-readiness', [AdminController::class, 'paperReadiness'])->name('paper-readiness');
     Route::get('/paper-readiness/export', [AdminController::class, 'exportPaperReadiness'])->name('paper-readiness.export');
@@ -178,6 +183,34 @@ Route::middleware('auth')->group(function () {
     Route::put('/user/password', [\App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('user.password.update');
     // Own uploads and app recordings with their review status (pending / published / rejected).
     Route::get('/akun/kiriman', [\App\Http\Controllers\SubmissionController::class, 'index'])->name('account.submissions');
+});
+
+// ---------------------------------------------------------------------------
+// Linimasa (social timeline, docs/API.md): post and profile pages are public and
+// read-only for guests (noindex); the timeline, saved posts and every action need
+// a login. Actions are CSRF forms that answer JSON when fetched (LinimasaController).
+// ---------------------------------------------------------------------------
+Route::controller(\App\Http\Controllers\LinimasaController::class)->group(function () {
+    Route::middleware('throttle:120,1,web-social-read')->group(function () {
+        Route::get('/p/{post}', 'show')->whereNumber('post')->name('posts.show');
+        Route::get('/p/{post}/masuk', 'login')->whereNumber('post')->name('posts.login');
+        Route::get('/u/{user}', 'profile')->whereNumber('user')->name('profiles.show');
+        Route::get('/u/{user}/pengikut', 'followers')->whereNumber('user')->name('profiles.followers');
+        Route::get('/u/{user}/mengikuti', 'following')->whereNumber('user')->name('profiles.following');
+    });
+    Route::middleware('auth')->group(function () {
+        Route::get('/linimasa', 'index')->name('linimasa');
+        Route::get('/akun/disimpan', 'saved')->name('account.saved');
+        Route::post('/linimasa', 'store')->middleware('throttle:10,1,web-post')->name('posts.store');
+        Route::delete('/p/{post}', 'destroy')->whereNumber('post')->middleware('throttle:30,1,web-post-delete')->name('posts.destroy');
+        Route::match(['post', 'delete'], '/p/{post}/suka', 'like')->whereNumber('post')->middleware('throttle:60,1,web-post-like')->name('posts.like');
+        Route::match(['post', 'delete'], '/p/{post}/simpan', 'save')->whereNumber('post')->middleware('throttle:60,1,web-post-save')->name('posts.save');
+        Route::post('/p/{post}/komentar', 'comment')->whereNumber('post')->middleware('throttle:20,1,web-comment')->name('posts.comments.store');
+        Route::delete('/komentar/{comment}', 'destroyComment')->whereNumber('comment')->middleware('throttle:30,1,web-comment-delete')->name('comments.destroy');
+        Route::post('/p/{post}/laporkan', 'report')->whereNumber('post')->middleware('throttle:20,1,web-social-report')->name('posts.report');
+        Route::post('/komentar/{comment}/laporkan', 'reportComment')->whereNumber('comment')->middleware('throttle:20,1,web-social-report')->name('comments.report');
+        Route::match(['post', 'delete'], '/u/{user}/ikuti', 'follow')->whereNumber('user')->middleware('throttle:30,1,web-follow')->name('profiles.follow');
+    });
 });
 
 // ---------------------------------------------------------------------------

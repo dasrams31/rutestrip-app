@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Controller;
+use App\Services\SocialService;
 use App\Services\SsoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,21 +52,36 @@ class AccountApiController extends Controller
         ]);
     }
 
-    /** PUT /api/v1/me/profile {name, email} */
+    /**
+     * PUT /api/v1/me/profile {name, email, bio?}. A request with only `bio` (Linimasa,
+     * "edit bio" in the app) changes just the bio; name and email stay required otherwise.
+     */
     public function updateProfile(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $data = $this->validate($request, [
-            'name'  => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+        $user    = $request->user();
+        $bioOnly = $request->exists('bio') && ! $request->exists('name') && ! $request->exists('email');
+        $data    = $this->validate($request, [
+            'name'  => [Rule::requiredIf(! $bioOnly), 'string', 'max:255'],
+            'email' => [Rule::requiredIf(! $bioOnly), 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'bio'   => ['nullable', 'string', 'max:' . (SocialService::BIO_MAX * 2)],
         ]);
         if ($data instanceof JsonResponse) {
             return $data;
         }
+        if (array_key_exists('bio', $data)) {
+            $data['bio'] = app(SocialService::class)->line($data['bio']);
+            if ($data['bio'] !== null && mb_strlen($data['bio']) > SocialService::BIO_MAX) {
+                $message = __('Bio maks. :max karakter.', ['max' => SocialService::BIO_MAX]);
+
+                return response()->json(['error' => $message, 'errors' => ['bio' => [$message]]], 422);
+            }
+        }
 
         $user->update($data);
+        $user = $user->fresh();
 
-        return response()->json(['user' => $this->sso->userPayload($user->fresh()), 'message' => __('account.settings.profile_saved')]);
+        // `bio` only here: the SSO `user` object is shared with the web chat and keeps its shape.
+        return response()->json(['user' => $this->sso->userPayload($user) + ['bio' => $user->bio], 'message' => __('account.settings.profile_saved')]);
     }
 
     /** PUT /api/v1/me/password {current_password, password, password_confirmation}: returns a new token. */

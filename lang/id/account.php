@@ -117,6 +117,12 @@ return [
         'password'         => 'kata sandi',
         'current_password' => 'kata sandi sekarang',
         'locale'           => 'bahasa',
+        'bio'              => 'bio',
+    ],
+
+    // Linimasa (social timeline): words that already mean something else in lang/*.json.
+    'linimasa' => [
+        'posts' => 'Kiriman',
     ],
 
 ];

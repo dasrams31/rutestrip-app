@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SocialService;
 use App\Services\SsoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,7 +43,16 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'name'  => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'bio'   => ['nullable', 'string', 'max:' . (SocialService::BIO_MAX * 2)],
         ], ...AuthController::validationTexts());
+
+        // Bio (Linimasa profile): one line of plain text, max 300 characters.
+        if ($request->exists('bio')) {
+            $validated['bio'] = app(SocialService::class)->line($validated['bio'] ?? null);
+            if ($validated['bio'] !== null && mb_strlen($validated['bio']) > SocialService::BIO_MAX) {
+                throw ValidationException::withMessages(['bio' => __('Bio maks. :max karakter.', ['max' => SocialService::BIO_MAX])]);
+            }
+        }
 
         $user->update($validated);
         $this->reissueCookie($user);

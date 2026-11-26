@@ -28,7 +28,9 @@
         // Account/admin/upload pages and POSTed search results stay out of search engines.
         $seoPrivate = request()->isMethod('post') || request()->is(
             'admin*', 'dashboard*', 'profile*', 'favorites*', 'history*', 'login', 'register',
-            'routes/create', 'routes-batch', 'evaluation*', 'routes/*/versions/*', 'user/*', 'settings*', 'akun*'
+            'routes/create', 'routes-batch', 'evaluation*', 'routes/*/versions/*', 'user/*', 'settings*', 'akun*',
+            // Linimasa: people's posts and profiles stay out of search engines (privacy).
+            'linimasa*', 'p/*', 'u/*'
         );
         $seoRobots = trim($__env->yieldContent('robots')) ?: ($seoPrivate ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
     @endphp
@@ -204,6 +206,8 @@
         $navLinks = [
             ['href' => route('search.index'), 'label' => __('Cari Rute'), 'icon' => 'search', 'active' => request()->routeIs('search.*', 'home')],
             ['href' => route('routes.index'), 'label' => __('Semua Rute'), 'icon' => 'map', 'active' => request()->routeIs('routes.index', 'routes.show', 'routes.similar', 'routes.provenance')],
+            // Signed-out visitors are asked to log in first, then land on the timeline.
+            ['href' => route('linimasa'), 'label' => __('Linimasa'), 'icon' => 'users', 'active' => request()->routeIs('linimasa', 'posts.*', 'profiles.*', 'account.saved')],
             ['href' => $webchatUrl, 'label' => __('AI Chat'), 'icon' => 'chat', 'active' => false],
         ];
         $uploadActive = request()->routeIs('routes.create', 'routes.batch');
@@ -216,6 +220,8 @@
             ['href' => route('user.dashboard'), 'label' => __('Dashboard'), 'icon' => 'home'],
             ['href' => route('user.favorites'), 'label' => __('Rute Favorit'), 'icon' => 'heart-outline'],
             ['href' => route('account.submissions'), 'label' => __('Kiriman jalurku'), 'icon' => 'clipboard-list'],
+            ['href' => route('profiles.show', $navUser->id), 'label' => __('Profil linimasa'), 'icon' => 'user'],
+            ['href' => route('account.saved'), 'label' => __('Kiriman disimpan'), 'icon' => 'bookmark'],
             ['href' => route('user.history'), 'label' => __('Riwayat Pencarian'), 'icon' => 'clock'],
             $hasSettings
                 ? ['href' => route('settings'), 'label' => __('Pengaturan'), 'icon' => 'cog']
@@ -237,11 +243,11 @@
                     @foreach($navLinks as $link)
                     <a href="{{ $link['href'] }}"
                        @if($link['active']) aria-current="page" @endif
-                       class="relative px-3.5 h-11 rounded-lg text-[15px] font-semibold transition-colors inline-flex items-center gap-2
+                       class="relative px-2.5 xl:px-3.5 h-11 rounded-lg text-[15px] font-semibold whitespace-nowrap transition-colors inline-flex items-center gap-2
                               {{ $link['active'] ? 'text-rs-z9' : 'text-rs-muted hover:text-rs-z9 hover:bg-rs-paper' }}">
                         <x-icon :name="$link['icon']" class="w-4 h-4 hidden xl:block" />
                         <span>{{ $link['label'] }}</span>
-                        @if($link['active'])<span class="absolute left-3.5 right-3.5 -bottom-[11px] h-[3px] rounded-sm bg-rs-z7" aria-hidden="true"></span>@endif
+                        @if($link['active'])<span class="absolute left-2.5 right-2.5 xl:left-3.5 xl:right-3.5 -bottom-[11px] h-[3px] rounded-sm bg-rs-z7" aria-hidden="true"></span>@endif
                     </a>
                     @endforeach
 
@@ -256,7 +262,7 @@
                     <!-- Upload Dropdown -->
                     <div class="relative ml-2" x-data="{ open: false }" @click.outside="open = false" @keydown.escape="open = false">
                         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
-                                class="h-11 px-4 bg-rs-z9 text-white rounded-lg text-sm font-semibold hover:bg-rs-z8 transition-colors inline-flex items-center gap-2
+                                class="h-11 px-4 bg-rs-z9 text-white rounded-lg text-sm font-semibold whitespace-nowrap hover:bg-rs-z8 transition-colors inline-flex items-center gap-2
                                        {{ $uploadActive ? 'ring-2 ring-rs-z7 ring-offset-2' : '' }}">
                             <x-icon name="upload" class="w-4 h-4" />
                             <span>{{ __('Upload GPX') }}</span>
@@ -291,7 +297,9 @@
                         <button type="button" @click="open = !open" :aria-expanded="open" aria-haspopup="true"
                                 class="flex items-center gap-2 pl-1 pr-2.5 h-11 rounded-lg border border-rs-line bg-white hover:border-rs-z7 transition-colors">
                             <span class="w-8 h-8 rounded-md bg-rs-z7 text-white text-sm font-bold flex items-center justify-center">{{ $navInitial }}</span>
-                            <span class="text-sm font-semibold text-rs-ink max-w-[6rem] xl:max-w-[9rem] truncate" title="{{ $navUser->name }}">{{ $navShortName }}</span>
+                            {{-- Between lg and xl the row also holds Linimasa: the initial alone, the name from xl. --}}
+                            <span class="hidden xl:inline text-sm font-semibold text-rs-ink max-w-[9rem] truncate" title="{{ $navUser->name }}">{{ $navShortName }}</span>
+                            <span class="sr-only xl:hidden">{{ $navUser->name }}</span>
                             <x-icon name="chevron-down" class="w-3.5 h-3.5 text-rs-muted transition-transform" x-bind:class="{ 'rotate-180': open }" />
                         </button>
                         <div x-show="open" x-cloak x-transition.origin.top.right
@@ -315,8 +323,9 @@
                         </div>
                     </div>
                     @else
-                    <a href="{{ route('login') }}" class="px-3.5 h-11 inline-flex items-center rounded-lg text-sm font-semibold text-rs-ink hover:bg-rs-paper">{{ __('Masuk') }}</a>
-                    <a href="{{ route('register') }}" class="px-4 h-11 inline-flex items-center rounded-lg text-sm font-semibold text-rs-z7 border-2 border-rs-z7 hover:bg-rs-mist">{{ __('Daftar') }}</a>
+                    <a href="{{ route('login') }}" class="px-3.5 h-11 inline-flex items-center rounded-lg text-sm font-semibold text-rs-ink hover:bg-rs-paper whitespace-nowrap">{{ __('Masuk') }}</a>
+                    {{-- From xl only: between lg and xl the row has no room left (the login page links to sign-up). --}}
+                    <a href="{{ route('register') }}" class="hidden xl:inline-flex px-4 h-11 items-center rounded-lg text-sm font-semibold text-rs-z7 border-2 border-rs-z7 hover:bg-rs-mist">{{ __('Daftar') }}</a>
                     @endauth
                 </div>
 
